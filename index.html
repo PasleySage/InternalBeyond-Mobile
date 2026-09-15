@@ -12690,7 +12690,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v252-p',IB_VER_DATE='2026-09-16';
+var IB_VER='v253-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _lkVeilOff(){try{window.__ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* v252-p：置 __ibVeilOff，供晚到的预遮罩创建逻辑让路 *//* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
@@ -12744,13 +12744,23 @@ function _ibSafeMode(){try{if(localStorage.getItem('ib_safe_boot')==='1')return 
 function _ibFailBump(){try{var n=(parseInt(localStorage.getItem('ib_boot_fail')||'0',10)||0)+1;localStorage.setItem('ib_boot_fail',String(n));return n}catch(e){return 0}}
 function _ibMarkOK(){try{localStorage.setItem('ib_boot_fail','0');localStorage.removeItem('ib_safe_boot')}catch(e){}window.__ibBootOK=true;window.__ibBootErr='';try{var _g=document.getElementById('ib-guard');if(_g)_g.remove()}catch(e){}/* v248-p：启动成功就把可能已弹出的诊断面板收掉，别盖住正常的应用 */}
 function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return !!(_v&&!_v.classList.contains('off'))}catch(e){return false}}/* v249-p：预遮罩还挂着 = 界面被全屏挡住，等于白屏 */
+/* v253-p：面板对外展示/复制前的脱敏——隐去密钥类参数与 token，网址只留首尾标签、去掉路径与查询 */
+function _ibRedact(s){
+  try{
+    s=String(s==null?'':s);
+    s=s.replace(/(^|[?&]|[\s,;(])((?:key|api[_-]?key|apiKey|token|access_token|auth|password|pwd|secret)=)[^&\s"']+/gi,'$1$2***');
+    s=s.replace(/(sk-[A-Za-z0-9_\-]{6,}|AIza[A-Za-z0-9_\-]{8,}|gh[pousr]_[A-Za-z0-9]{6,}|xox[baprs]-[A-Za-z0-9\-]{6,}|Bearer\s+[A-Za-z0-9._\-]{8,})/g,'***');
+    s=s.replace(/https?:\/\/([^\/\s"']+)([^\s"']*)/gi,function(m,host){var p=String(host).split('.');if(p.length>2)host=p[0]+'.***.'+p[p.length-1];return 'https://'+host+'/…'});
+    return s.replace(/[\u0000-\u001f]/g,' ').slice(0,600);
+  }catch(e){return '(脱敏失败)'}
+}
 (function _ibGuard(){
   var shown=false;
   function _st(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function _ss(k,v){try{localStorage.setItem(k,v)}catch(e){}}
   function _diag(){
     var o=[];o.push('IB '+IB_VER+'（'+IB_VER_DATE+'）');
-    o.push('错误：'+(window.__ibBootErr||_st('ib_last_err')||'无'));
+    o.push('错误：'+_ibRedact(window.__ibBootErr||_st('ib_last_err')||'无'));
     o.push('连续未完成启动：'+(_st('ib_boot_fail')||'0')+' 次');
     o.push('安全模式：'+(_ibSafeMode()?'开':'关'));
     try{o.push('独立窗口(PWA)：'+((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)?'是':'否'))}catch(e){}
@@ -12769,24 +12779,28 @@ function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return 
     if(shown)return;shown=true;
     try{
       var old=document.getElementById('ib-guard');if(old)old.remove();
-      var bs='padding:11px 15px;border:0;border-radius:11px;background:#2f5f96;color:#fff;font-size:14px;font-weight:600';
+      var dk=false;try{dk=(localStorage.getItem('ib_m_theme')||'internal')==='infernal'}catch(e){}
+      var bg=dk?'#141a2e':'#dfe9f6',fg=dk?'#e9f0fb':'#1f3552',sub=dk?'rgba(233,240,251,.62)':'rgba(31,53,82,.6)',card=dk?'#1b2334':'#f7fafd',line=dk?'rgba(255,255,255,.14)':'rgba(62,98,143,.18)',code=dk?'#cfe0f5':'#22344f';
+      var btnP='flex:1 1 46%;padding:12px 14px;border:0;border-radius:12px;background:#3d6a9e;color:#fff;font-size:14px;font-weight:600';
+      var btnS='flex:1 1 46%;padding:12px 14px;border:1px solid rgba(61,106,158,.55);border-radius:12px;background:transparent;color:'+(dk?'#9dc0e6':'#3d6a9e')+';font-size:14px;font-weight:600';
+      var btnD='flex:1 1 46%;padding:12px 14px;border:1px solid rgba(163,75,61,.5);border-radius:12px;background:transparent;color:'+(dk?'#e0a396':'#a34b3d')+';font-size:14px;font-weight:600';
       var w=document.createElement('div');w.id='ib-guard';
-      w.setAttribute('style','position:fixed;inset:0;z-index:99999;background:rgba(14,21,34,.96);color:#e9f1fb;font:14px/1.65 system-ui,-apple-system,"Noto Sans SC",sans-serif;padding:24px 18px;overflow:auto;-webkit-overflow-scrolling:touch');
+      w.setAttribute('style','position:fixed;inset:0;z-index:99999;background:'+bg+';color:'+fg+';font:15px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif;padding:calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));overflow:auto;-webkit-overflow-scrolling:touch');
       w.innerHTML='<div style="max-width:560px;margin:0 auto">'
-        +'<div style="font-size:18px;font-weight:600;margin-bottom:8px">启动没有完成</div>'
-        +'<div style="opacity:.8;font-size:13px;margin-bottom:14px" id="ib-guard-msg"></div>'
-        +'<textarea id="ib-guard-diag" readonly style="width:100%;height:150px;background:#0b1220;color:#cfe0f5;border:1px solid #2a3d5c;border-radius:10px;padding:10px;font:12px/1.5 ui-monospace,Menlo,monospace"></textarea>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">'
-        +'<button id="ib-guard-reload" style="'+bs+'">重新加载</button>'
-        +'<button id="ib-guard-safe" style="'+bs+'">以安全模式重载</button>'
-        +'<button id="ib-guard-cache" style="'+bs+'">清离线缓存后重载</button>'
-        +'<button id="ib-guard-copy" style="padding:11px 15px;border:1px solid #43608c;border-radius:11px;background:transparent;color:#dce8f7;font-size:14px">复制诊断信息</button>'
+        +'<div style="font-family:Cormorant Garamond,Georgia,Noto Serif SC,serif;font-size:21px;letter-spacing:.04em;opacity:.92">Internal Beyond</div>'
+        +'<div style="margin-top:8px;font-size:16px;font-weight:600">启动没有完成</div>'
+        +'<div id="ib-guard-msg" style="margin-top:6px;font-size:13px;color:'+sub+'"></div>'
+        +'<pre id="ib-guard-diag" style="margin:14px 0 0;padding:12px;border-radius:12px;background:'+card+';border:1px solid '+line+';color:'+code+';font:12px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;max-height:42vh;overflow:auto"></pre>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">'
+        +'<button id="ib-guard-reload" style="'+btnP+'">重新加载</button>'
+        +'<button id="ib-guard-safe" style="'+btnS+'">安全模式重载</button>'
+        +'<button id="ib-guard-cache" style="'+btnD+'">清离线缓存后重载</button>'
+        +'<button id="ib-guard-copy" style="'+btnS+'">复制诊断信息</button>'
         +'</div>'
-        +'<div style="opacity:.68;font-size:12px;margin-top:16px">聊天与记忆存在浏览器本地数据库（IndexedDB）里，上面三个按钮都不会删数据。<b>切勿</b>使用浏览器的「清除 Cookie 和站点数据 / 清除站点数据」，那会连数据一起清空。</div>'
+        +'<div style="margin-top:16px;font-size:12px;line-height:1.75;color:'+sub+'">诊断信息里不含聊天记录与记忆内容；密钥类参数与网址细节已自动隐去。<br>上面三个按钮都不会删除本地数据；<b>请勿</b>使用浏览器的「清除站点数据」，那会连数据一起清空。</div>'
         +'</div>';
       document.body.appendChild(w);
-      var mEl=document.getElementById('ib-guard-msg');
-      if(mEl)mEl.textContent=String(msg||'');
+      var mEl=document.getElementById('ib-guard-msg');if(mEl)mEl.textContent=_ibRedact(String(msg||''));
       var ta=document.getElementById('ib-guard-diag');
       function draw(){try{ta.value=_diag()}catch(e){}}
       draw();setTimeout(draw,700);
