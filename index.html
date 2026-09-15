@@ -12797,7 +12797,7 @@ function _ibRedact(s){
         +'<button id="ib-guard-cache" style="'+btnD+'">清离线缓存后重载</button>'
         +'<button id="ib-guard-copy" style="'+btnS+'">复制诊断信息</button>'
         +'</div>'
-        +'<div style="margin-top:16px;font-size:12px;line-height:1.75;color:'+sub+'">诊断信息里不含聊天记录与记忆内容；密钥类参数与网址细节已自动隐去。<br>上面三个按钮都不会删除本地数据；<b>请勿</b>使用浏览器的「清除站点数据」，那会连数据一起清空。</div>'
+        +'<div style="margin-top:16px;font-size:12px;line-height:1.75;color:'+sub+'">诊断信息里不含聊天记录与记忆内容；密钥类参数与网址细节已自动隐去。<br>上面三个按钮都不会删除本地数据；<b>请勿</b>使用浏览器的「清除站点数据」，那会连数据一起清空。<br>若要贴到公开的 issue 评论或群聊，建议先看一眼「错误」那一行，或直接删掉那行再贴。</div>'
         +'</div>';
       document.body.appendChild(w);
       var mEl=document.getElementById('ib-guard-msg');if(mEl)mEl.textContent=_ibRedact(String(msg||''));
