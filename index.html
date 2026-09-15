@@ -12682,7 +12682,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v249-p',IB_VER_DATE='2026-09-16';
+var IB_VER='v250-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _lkVeilOff(){try{var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
@@ -12724,6 +12724,14 @@ function _lkPatternSheet(){
 /* ═══════════ 启动 ═══════════ */
 /* v245-p 白屏防御三件套：①单步超时护栏 _ibCap ②启动看门狗 + 诊断面板 ③安全模式 */
 function _ibCap(p,ms){try{return Promise.race([p,new Promise(function(r){setTimeout(r,ms||6000)})])}catch(e){return p}}
+/* v250-p：启动各步耗时记录（诊断面板会打出来）——用来定位"卡在 96%"到底是哪一步不走完 */
+function _ibStepLog(n,ms){try{(window.__ibSteps=window.__ibSteps||[]).push(n+':'+Math.round(ms)+'ms')}catch(e){}}
+function _ibTimed(n,p,ms){
+  var t0=Date.now(),done=false;
+  try{if(p&&typeof p.then==='function')p.then(function(){if(!done){done=true;_ibStepLog(n,Date.now()-t0)}},function(e){if(!done){done=true;_ibStepLog(n+' 失败',Date.now()-t0)}})}catch(e){}
+  if(!(p&&typeof p.then==='function')){_ibStepLog(n,Date.now()-t0);return Promise.resolve(p)}
+  return Promise.race([p,new Promise(function(r){setTimeout(function(){if(!done){done=true;_ibStepLog(n+' 超时',Date.now()-t0)}r()},ms||6000)})]);
+}
 function _ibSafeMode(){try{if(localStorage.getItem('ib_safe_boot')==='1')return true;return (parseInt(localStorage.getItem('ib_boot_fail')||'0',10)||0)>=2}catch(e){return false}}
 function _ibFailBump(){try{var n=(parseInt(localStorage.getItem('ib_boot_fail')||'0',10)||0)+1;localStorage.setItem('ib_boot_fail',String(n));return n}catch(e){return 0}}
 function _ibMarkOK(){try{localStorage.setItem('ib_boot_fail','0');localStorage.removeItem('ib_safe_boot')}catch(e){}window.__ibBootOK=true;window.__ibBootErr='';try{var _g=document.getElementById('ib-guard');if(_g)_g.remove()}catch(e){}/* v248-p：启动成功就把可能已弹出的诊断面板收掉，别盖住正常的应用 */}
@@ -12742,6 +12750,8 @@ function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return 
     try{o.push('内存档：'+(navigator.deviceMemory||'未知')+'GB')}catch(e){}
     try{o.push('存储：'+((navigator.storage&&navigator.storage.estimate)?'探测中':'不可用'))}catch(e){}
     try{o.push('UA：'+String(navigator.userAgent||'').slice(0,120))}catch(e){}
+    o.push('启动各步耗时：'+(((window.__ibSteps||[]).join(' · '))||'（尚未记录）'));
+    o.push('启动画面是否还在：'+(document.getElementById('ib-splash')?'在（进度条未走完）':'已撤'));
     return o.join('\n')+'\n'+(window.__ibGuardStorage||'');
   }
   window.__ibGuardShow=function(msg){
@@ -12784,13 +12794,18 @@ function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return 
   };
   window.addEventListener('error',function(e){try{if(!e||!e.message)return;_ss('ib_last_err',String(e.message).slice(0,200));if(!window.__ibBootOK)window.__ibGuardShow('脚本错误：'+e.message)}catch(x){}});
   window.addEventListener('unhandledrejection',function(e){try{var m=String((e&&e.reason&&(e.reason.message||e.reason))||'');_ss('ib_last_err',m.slice(0,220));if(!window.__ibBootOK)window.__ibGuardShow('异步错误：'+m.slice(0,120))}catch(x){}});
-  setTimeout(function(){try{if(window.__ibBootOK)return;_ibFailBump();window.__ibGuardShow(window.__ibBootErr||'启动超时（12 秒仍未完成）')}catch(e){}},12000);
+  /* v250-p：看门狗不只盯 __ibBootOK，也盯"启动画面还在不在"——进度条卡住时同样要能弹出面板取数据 */
+  setTimeout(function(){try{
+    if(document.getElementById('ib-splash')){_ibFailBump();window.__ibGuardShow('启动画面停留超过 12 秒（进度条未走完）——下面是各步耗时');return}
+    if(window.__ibBootOK)return;
+    _ibFailBump();window.__ibGuardShow(window.__ibBootErr||'启动超时（12 秒仍未完成）');
+  }catch(e){}},12000);
 })();
 (async function init(){
   let dark=false;
   try{var _tm0=localStorage.getItem('ib_m_theme')||'internal';if(_tm0==='aurora')_tm0='infernal';window._ibThemeMode=_tm0;dark=(_tm0==='infernal')}catch(e){}/* v86-m r5：aurora 存值降级为 infernal（本轮任务 1） */
   applyTheme(dark);/* v85-m：启动恢复三态（任务 4） */
-  try{await openDB()}catch(e){
+  try{await _ibTimed('openDB',openDB(),15000)}catch(e){
     try{if(typeof _lkVeilOff==='function')_lkVeilOff()}catch(e2){}/* fix-r4：数据库打不开时也撤预遮罩，露出提示（任务 8） */
     /* v247-p 自愈：库里已有的版本比这份 HTML 新 → 多半是 SW 在网络太慢时给了旧的离线副本；清掉离线缓存重载一次（只做一次，防循环） */
     try{
@@ -12813,27 +12828,27 @@ function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return 
   }
   var SAFE=_ibSafeMode();/* v245-p：连续 2 次没启动完 / 手动选择 → 轻量启动 */
   try{
-  await _ibCap(loadMP(),8000);
+  await _ibTimed('loadMP',loadMP(),8000);
   try{if(navigator.storage&&navigator.storage.persist&&navigator.storage.persisted){navigator.storage.persisted().then(function(p){if(!p)return navigator.storage.persist()}).catch(function(){})}}catch(e){}
   try{_pwaApply()}catch(e){}/* v14：启动即应用运行时 manifest / 图标（_pwaApply 补定义） */
-  await _ibCap(loadAbout(),8000);
-  await _ibCap(loadCfgs(),8000);
+  await _ibTimed('loadAbout',loadAbout(),8000);
+  await _ibTimed('loadCfgs',loadCfgs(),8000);
   try{if($('bt-ai')){sw2($('bt-ai'),!!(_mp&&_mp.bt&&_mp.bt.aiTools));_btDraw()}}catch(e){}
   try{if(window._ibBeaconPurged)toast('已拦截并移除 '+window._ibBeaconPurged+' 个第三方统计脚本（Cloudflare 信标）——文件曾被在线渠道自动注入')}catch(e){}/* fix-r2：净化哨兵启动提示 */
-  try{await _ibCap(_ibRtAnameRepairM(),8000)}catch(e){}
-  try{await _ibCap(_ibMemOneLineRepairM(),8000)}catch(e){}/* 本轮：#2 清掉 oneLine＝summary 的手机端双写残留（导出到电脑端才不会再出现概述＋引言同句） *//* fix-r2：历史转发署名一次性修复 */
+  try{await _ibTimed('修复1',_ibRtAnameRepairM(),8000)}catch(e){}
+  try{await _ibTimed('修复2',_ibMemOneLineRepairM(),8000)}catch(e){}/* 本轮：#2 清掉 oneLine＝summary 的手机端双写残留（导出到电脑端才不会再出现概述＋引言同句） *//* fix-r2：历史转发署名一次性修复 */
   try{var _ibNat=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());if(!_ibNat&&'serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('./ib-sw.js').catch(function(){})}catch(e){}/* v114-m：原生壳内不注册 SW（assets 环境无此文件，离线由壳保证） */
   _uiApply();/* v66-m：全局字号/天气/视觉个性化在 DB 就绪后再恢复，原解析时抢跑会把默认值当真值缓存 */
   if(!SAFE){
-  try{if(window.IBApps)IBApps._boot()}catch(e){}
+  try{if(window.IBApps)_ibTimed('IBApps._boot',IBApps._boot(),6000)}catch(e){}
   loadBgs().then(b=>{if(!b._volatile)_uiApplyBg(b)}).catch(function(){});/* v69-m t12：自定义背景随启动恢复 */
-  try{await _ibCap(deskApplyLayout(),8000)}catch(e){}
+  try{await _ibTimed('deskApplyLayout',deskApplyLayout(),8000)}catch(e){}
   }else{try{toast('安全模式：已跳过桌面布局与自定义背景恢复')}catch(e){}}
   /* v249-p：_ibCap 超时是"正常返回"而不是抛错，原来写在 catch 里的撤预遮罩永远不会跑 →
      预遮罩留下 = 进度条永远停在 96% 的白屏，且因为接着打了 __ibBootOK，看门狗也不会报警。
      现在改为无条件检查：只要预遮罩还挂着，就撤掉、并补一次锁屏尝试；仍挂着就不打"启动成功"，让看门狗照常弹出诊断面板。 */
-  try{await _ibCap(_lkBoot(),6000)}catch(e){}
-  if(_ibVeilStuck()){try{_lkVeilOff()}catch(x8){};try{await _ibCap(_lkBoot(),5000)}catch(x7){}}
+  try{await _ibTimed('_lkBoot',_lkBoot(),6000)}catch(e){}
+  if(_ibVeilStuck()){try{_lkVeilOff()}catch(x8){};try{await _ibTimed('_lkBoot重试',_lkBoot(),5000)}catch(x7){}}
   try{_lkStateDraw()}catch(e){}
   navTo('profile');
   if(_ibVeilStuck())_ibFailBump();else _ibMarkOK();
