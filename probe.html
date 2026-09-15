@@ -8,7 +8,7 @@
 :root{color-scheme:light}
 body{margin:0;padding:16px 14px 28px;font:14px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif;background:#eef2f8;color:#22344f}
 h1{margin:0 0 4px;font-size:17px;font-weight:600}
-.sub{opacity:.7;font-size:12px;margin-bottom:14px}
+.sub{opacity:.72;font-size:12px;margin-bottom:14px}
 pre{background:#fff;border:1px solid #d3dcea;border-radius:10px;padding:12px;font:12px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;margin:0 0 12px}
 button{display:block;width:100%;padding:12px;margin-bottom:10px;border:0;border-radius:11px;background:#2f5f96;color:#fff;font-size:14px;font-weight:600}
 button.alt{background:#fff;color:#2f5f96;border:1px solid #9db6d4}
@@ -18,9 +18,9 @@ button.danger{background:#a34b3d}
 </head>
 <body>
 <h1>IB 自测页</h1>
-<div class="sub">请在<b>不开 VPN</b> 的情况下打开本页；能打开本身就说明 github.io 此刻可达。</div>
+<div class="sub">本页可能从缓存打开，所以"能不能打开本页"不算证据——<b>只看「网络探测」那一行</b>：显示 404 就是真摸到了服务器，显示失败就是网络到 github.io 不通。</div>
 <pre id="out">正在检测…</pre>
-<div class="note">「清离线缓存并重载」只会清掉缓存里的网页副本 + 注销 Service Worker，<b>不会动 IndexedDB，你的聊天与记忆不受影响</b>。网络不通时不要点它——清了缓存就真拿不到页面了。</div>
+<div class="note">「清离线缓存并重载」只清缓存里的网页副本 + 注销 Service Worker，<b>不动 IndexedDB，聊天与记忆不受影响</b>。网络不通时千万别点——清了缓存就真没页面可用了。</div>
 <button id="reload" class="alt">仅重新加载</button>
 <button id="clean" class="danger">清离线缓存并重载</button>
 <button id="copy" class="alt">复制上面全部内容</button>
@@ -29,17 +29,31 @@ button.danger{background:#a34b3d}
   var lines=[], el=document.getElementById('out');
   function P(k,v){lines.push(k+'：'+v);el.textContent=lines.join('\n')}
   function fmt(n){return n>1048576?(n/1048576).toFixed(2)+'MB':(n>1024?(n/1024).toFixed(0)+'KB':n+'B')}
+  function rt(url){
+    try{
+      var es=performance.getEntriesByName(url);if(!es.length)return'';
+      var e=es[es.length-1];
+      return '｜真实传输'+e.transferSize+'B｜协议'+(e.nextHopProtocol||'?')+'｜用时'+Math.round(e.duration)+'ms';
+    }catch(e){return''}
+  }
   async function run(){
-    try{P('时间',new Date().toLocaleString())}catch(e){}
-    try{P('UA',navigator.userAgent.slice(0,110))}catch(e){}
+    P('时间',new Date().toLocaleString());
     try{P('独立窗口(PWA)',matchMedia('(display-mode: standalone)').matches?'是':'否')}catch(e){}
-    try{P('在线',navigator.onLine?'是':'否')}catch(e){}
-    try{var c=navigator.connection||navigator.webkitConnection;if(c)P('网络类型',(c.effectiveType||'?')+' 下行约'+(c.downlink||'?')+'Mbps'+(c.saveData?' 省流量':''))}catch(e){}
-    try{P('内存档',(navigator.deviceMemory||'未知')+'GB')}catch(e){}
+    try{P('在线标记',navigator.onLine?'是':'否')}catch(e){}
+    try{var c=navigator.connection||navigator.webkitConnection;if(c)P('网络类型',(c.effectiveType||'?')+'／下行约'+(c.downlink||'?')+'Mbps'+(c.saveData?'／省流量':''))}catch(e){}
+
+    /* —— 关键：网络探测。请求一个不存在的路径：收到 404 = 真的摸到了服务器；抛错 = 网络不通 —— */
+    var t2=performance.now();
+    try{
+      var r3=await fetch('./__ib_netcheck_' + Date.now() + '.txt',{cache:'no-store'});
+      P('★ 网络探测', '收到 HTTP '+r3.status+' → github.io 此刻【可达】'+rt(r3.url||'')+'  用时'+Math.round(performance.now()-t2)+'ms');
+    }catch(e){
+      P('★ 网络探测', '失败（'+String(e&&e.message||e).slice(0,60)+'） → github.io 此刻【不可达】  等待'+Math.round(performance.now()-t2)+'ms');
+    }
+
     try{var s=await navigator.storage.estimate();P('存储用量',fmt(s.usage||0)+' / 配额'+fmt(s.quota||0))}catch(e){}
     try{
       if(navigator.serviceWorker){
-        P('SW 支持','是');
         var regs=await navigator.serviceWorker.getRegistrations();
         P('SW 注册数',regs.length);
         regs.forEach(function(r,i){P('  #'+(i+1)+' 脚本',r.active?r.active.scriptURL:(r.installing?'(安装中)':'(等待)'))});
@@ -58,7 +72,7 @@ button.danger{background:#a34b3d}
           var t=await hit.clone().text();
           var m=t.match(/IB_VER='([^']+)'/);
           P('  → 缓存里的版本',(m?m[1]:'(未识别)')+'  体积'+fmt(t.length));
-          P('  → 缓存是否完整',t.indexOf('</html>')>0?'是':'否·被截断');
+          P('  → 缓存是否完整',t.indexOf('</html>')>0?'完整':'不完整·被截断');
         }else P('  → 缓存里没有 index.html','(离线时起不来)');
       }
     }catch(e){P('缓存查询失败',String(e&&e.message||e))}
@@ -66,18 +80,22 @@ button.danger{background:#a34b3d}
       try{var v=localStorage.getItem(k);P('本地标记 '+k,v===null?'(无)':String(v).slice(0,90))}catch(e){}
     }
     try{
+      var u='./index.html?_='+Date.now();
       var t0=performance.now();
-      var r=await fetch('./index.html?_='+Date.now(),{cache:'no-store'});
+      var r=await fetch(u,{cache:'no-store'});
       var b=await r.blob();
-      P('现场拉取 index.html',r.status+' '+fmt(b.size)+' 用时'+Math.round(performance.now()-t0)+'ms');
-    }catch(e){P('现场拉取 index.html','失败：'+String(e&&e.message||e))}
+      P('现场拉取 index.html',r.status+' '+fmt(b.size)+'  用时'+Math.round(performance.now()-t0)+'ms'+rt(u));
+      P('  → 是否来自本地缓存',(r.headers.get('x-ib-complete')==='1')?'是（SW 给了缓存副本，网络没送到）':'否（来自网络）');
+    }catch(e){P('现场拉取 index.html','失败：'+String(e&&e.message||e).slice(0,60))}
     try{
+      var u2='./ib-sw.js?_='+Date.now();
       var t1=performance.now();
-      var r2=await fetch('./ib-sw.js?_='+Date.now(),{cache:'no-store'});
+      var r2=await fetch(u2,{cache:'no-store'});
       await r2.text();
-      P('现场拉取 ib-sw.js',r2.status+' 用时'+Math.round(performance.now()-t1)+'ms');
-    }catch(e){P('现场拉取 ib-sw.js','失败：'+String(e&&e.message||e))}
-    P('结论提示','缓存里版本=247 且现场拉取很快 → 应用本体没问题；两项都失败 → 是网络到 github.io 不通');
+      P('现场拉取 ib-sw.js',r2.status+'  用时'+Math.round(performance.now()-t1)+'ms'+rt(u2));
+    }catch(e){P('现场拉取 ib-sw.js','失败：'+String(e&&e.message||e).slice(0,60))}
+    P('','');
+    P('怎么读','★网络探测=404 且现场拉取很快 → 站点没问题，白屏另有原因；★网络探测=失败 → 是网络到 github.io 不通，代码无解');
   }
   document.getElementById('reload').onclick=function(){location.reload()};
   document.getElementById('clean').onclick=async function(){
