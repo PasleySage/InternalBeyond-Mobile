@@ -1,15 +1,21 @@
-/* InternalBeyond Mobile — ib-sw.js（联网优先 + 超时护栏；离线回退缓存）
+/* InternalBeyond Mobile — ib-sw.js（导航"快速回退" + 超时护栏；离线兜底）
    与手机端 HTML 放在同一目录，经 HTTPS 访问时页面会自动注册本文件。
    只接管本站的 GET 请求；发往 AI 服务商 / 中转站的请求原样放行、绝不缓存。
 
-   v245-p 白屏防御（原版三个坑）：
-   ① 原版 fetch 无超时：弱网下导航请求永久挂起 → 冷启动纯白屏、且安装形态没有刷新入口；
-   ② 原版把任何 r.ok 的响应都写进缓存：连接中途断掉的**截断 HTML** 也会入库，
-      之后反复白屏（"关掉重开好几次才好"）；
-   ③ 原版离线兜底失败直接抛错 → 浏览器默认错误页/白屏。
-   现在：取数带超时；只有**完整**响应（content-length 对得上）才入库；兜底返回可读的离线页。 */
-const IB_CACHE = 'ib-cache-v3';
+   v247-p 变更（针对"下载慢 → 等半天白屏"）：
+   导航请求不再死等网络：若 3.5 秒内网络还没把页面送达，就先把缓存里那一份交给浏览器
+   （页面立刻能起来），同时让网络请求继续跑，完整到达后写入缓存供下次使用。
+   首次访问（本地无缓存）仍走网络，最长 12 秒，失败给可读的离线页。
+   —— 起因：单文件 HTML 有 1.33MB(gzip)，实测从 GitHub Pages 拉取 7~14 秒，
+      旧版"网络优先且无超时"会让冷启动长时间纯白（页面还没到，任何应用代码都跑不了）。
+
+   v245-p 变更（此前的三个坑）：
+   ① fetch 无超时 → 弱网下导航永久挂起；② 任何 r.ok 都写缓存 → 截断 HTML 也会入库，反复白屏；
+   ③ 离线兜底直接抛错 → 浏览器默认错误页/白屏。 */
+const IB_CACHE = 'ib-cache-v4';
 const NET_TIMEOUT = 9000;
+const NAV_NET_TIMEOUT = 12000;
+const NAV_FAST_MS = 3500;
 
 function timedFetch(req, ms) {
   var ctl = null;
@@ -54,6 +60,46 @@ function offlinePage() {
   });
 }
 
+function cachedPage(req) {
+  return caches.match(req, { ignoreSearch: true }).then(function (m) {
+    if (m) return m;
+    return caches.match('./index.html', { ignoreSearch: true }).then(function (m2) {
+      if (m2) return m2;
+      return caches.match('./', { ignoreSearch: true });
+    });
+  });
+}
+
+/* 导航：缓存里有一份就"网络快则用网络、网络慢则先用缓存"，两不耽误 */
+function handleNavigate(req) {
+  var netP = timedFetch(req, NAV_NET_TIMEOUT).then(function (r) {
+    cacheIfComplete(req, r);
+    return r;
+  });
+  return cachedPage(req).then(function (cached) {
+    if (!cached) {
+      return netP.catch(function () { return offlinePage(); });
+    }
+    return new Promise(function (resolve) {
+      var done = false;
+      var t = setTimeout(function () {
+        if (done) return;
+        done = true;
+        resolve(cached); /* 网络太慢：先让应用起来，网络请求继续跑、回来补缓存 */
+      }, NAV_FAST_MS);
+      netP.then(function (r) {
+        if (done) return;
+        done = true; clearTimeout(t);
+        resolve(r);
+      }, function () {
+        if (done) return;
+        done = true; clearTimeout(t);
+        resolve(cached);
+      });
+    });
+  });
+}
+
 self.addEventListener('install', function () { self.skipWaiting(); });
 
 self.addEventListener('activate', function (e) {
@@ -70,21 +116,19 @@ self.addEventListener('fetch', function (e) {
 
   var isNav = (e.request.mode === 'navigate' || e.request.destination === 'document');
 
+  if (isNav) {
+    e.respondWith(handleNavigate(e.request));
+    return;
+  }
+
   e.respondWith(
-    timedFetch(e.request, isNav ? 12000 : NET_TIMEOUT).then(function (r) {
-      if (isNav || r.ok) cacheIfComplete(e.request, r);
+    timedFetch(e.request, NET_TIMEOUT).then(function (r) {
+      if (r.ok) cacheIfComplete(e.request, r);
       return r;
     }).catch(function () {
       return caches.match(e.request, { ignoreSearch: true }).then(function (m) {
         if (m) return m;
-        return caches.match('./index.html', { ignoreSearch: true }).then(function (m2) {
-          if (m2 && isNav) return m2;
-          return caches.match('./', { ignoreSearch: true }).then(function (m3) {
-            if (m3 && isNav) return m3;
-            if (isNav) return offlinePage();
-            throw new Error('offline');
-          });
-        });
+        throw new Error('offline');
       });
     })
   );

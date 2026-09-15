@@ -12676,7 +12676,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v246-p',IB_VER_DATE='2026-09-15';
+var IB_VER='v247-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _lkVeilOff(){try{var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
@@ -12785,7 +12785,23 @@ function _ibMarkOK(){try{localStorage.setItem('ib_boot_fail','0');localStorage.r
   applyTheme(dark);/* v85-m：启动恢复三态（任务 4） */
   try{await openDB()}catch(e){
     try{if(typeof _lkVeilOff==='function')_lkVeilOff()}catch(e2){}/* fix-r4：数据库打不开时也撤预遮罩，露出提示（任务 8） */
-    document.querySelector('main').innerHTML='<div class="empty">本地数据库无法打开。<br>请换用 Chrome / Edge / Safari 直接打开本文件。</div>';
+    /* v247-p 自愈：库里已有的版本比这份 HTML 新 → 多半是 SW 在网络太慢时给了旧的离线副本；清掉离线缓存重载一次（只做一次，防循环） */
+    try{
+      if(e&&e.name==='VersionError'&&!sessionStorage.getItem('ib_verfix')){
+        sessionStorage.setItem('ib_verfix','1');
+        try{if(window.__ibGuardShow)window.__ibGuardShow('本地数据库比当前页面新（多半拿到了旧的离线副本），正在清缓存并重新加载…')}catch(x0){}
+        var _cp=Promise.resolve();
+        if(window.caches&&caches.keys)_cp=caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))});
+        _cp.then(function(){return navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[]})
+           .then(function(rs){return Promise.all((rs||[]).map(function(r){try{return r.unregister()}catch(x1){}}))})
+           .then(function(){location.reload()},function(){location.reload()});
+        return;
+      }
+    }catch(x2){}
+    var _em2=String(e&&e.message||e);
+    window.__ibBootErr='DB_OPEN '+_em2;
+    document.querySelector('main').innerHTML='<div class="empty">本地数据库无法打开。<br>请换用 Chrome / Edge / Safari 直接打开本文件。<br><span style="font-size:12px;opacity:.75">'+_em2.slice(0,160)+'</span></div>';
+    try{if(window.__ibGuardShow)window.__ibGuardShow('数据库无法打开：'+_em2)}catch(x3){}
     return;
   }
   var SAFE=_ibSafeMode();/* v245-p：连续 2 次没启动完 / 手动选择 → 轻量启动 */
