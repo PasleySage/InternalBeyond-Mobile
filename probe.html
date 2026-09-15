@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IB 自测</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;padding:16px 14px 28px;font:14px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif;background:#eef2f8;color:#22344f}
+h1{margin:0 0 4px;font-size:17px;font-weight:600}
+.sub{opacity:.7;font-size:12px;margin-bottom:14px}
+pre{background:#fff;border:1px solid #d3dcea;border-radius:10px;padding:12px;font:12px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;margin:0 0 12px}
+button{display:block;width:100%;padding:12px;margin-bottom:10px;border:0;border-radius:11px;background:#2f5f96;color:#fff;font-size:14px;font-weight:600}
+button.alt{background:#fff;color:#2f5f96;border:1px solid #9db6d4}
+button.danger{background:#a34b3d}
+.note{font-size:12px;opacity:.72;margin:10px 0 16px}
+</style>
+</head>
+<body>
+<h1>IB 自测页</h1>
+<div class="sub">请在<b>不开 VPN</b> 的情况下打开本页；能打开本身就说明 github.io 此刻可达。</div>
+<pre id="out">正在检测…</pre>
+<div class="note">「清离线缓存并重载」只会清掉缓存里的网页副本 + 注销 Service Worker，<b>不会动 IndexedDB，你的聊天与记忆不受影响</b>。网络不通时不要点它——清了缓存就真拿不到页面了。</div>
+<button id="reload" class="alt">仅重新加载</button>
+<button id="clean" class="danger">清离线缓存并重载</button>
+<button id="copy" class="alt">复制上面全部内容</button>
+<script>
+(function(){
+  var lines=[], el=document.getElementById('out');
+  function P(k,v){lines.push(k+'：'+v);el.textContent=lines.join('\n')}
+  function fmt(n){return n>1048576?(n/1048576).toFixed(2)+'MB':(n>1024?(n/1024).toFixed(0)+'KB':n+'B')}
+  async function run(){
+    try{P('时间',new Date().toLocaleString())}catch(e){}
+    try{P('UA',navigator.userAgent.slice(0,110))}catch(e){}
+    try{P('独立窗口(PWA)',matchMedia('(display-mode: standalone)').matches?'是':'否')}catch(e){}
+    try{P('在线',navigator.onLine?'是':'否')}catch(e){}
+    try{var c=navigator.connection||navigator.webkitConnection;if(c)P('网络类型',(c.effectiveType||'?')+' 下行约'+(c.downlink||'?')+'Mbps'+(c.saveData?' 省流量':''))}catch(e){}
+    try{P('内存档',(navigator.deviceMemory||'未知')+'GB')}catch(e){}
+    try{var s=await navigator.storage.estimate();P('存储用量',fmt(s.usage||0)+' / 配额'+fmt(s.quota||0))}catch(e){}
+    try{
+      if(navigator.serviceWorker){
+        P('SW 支持','是');
+        var regs=await navigator.serviceWorker.getRegistrations();
+        P('SW 注册数',regs.length);
+        regs.forEach(function(r,i){P('  #'+(i+1)+' 脚本',r.active?r.active.scriptURL:(r.installing?'(安装中)':'(等待)'))});
+        P('SW 正在控制本页',navigator.serviceWorker.controller?'是':'否');
+      }else P('SW 支持','否');
+    }catch(e){P('SW 查询失败',String(e&&e.message||e))}
+    try{
+      var ks=await caches.keys();
+      P('缓存库',ks.length?ks.join(', '):'(无)');
+      for(var i=0;i<ks.length;i++){
+        var c2=await caches.open(ks[i]),rq=await c2.keys();
+        P('  '+ks[i]+' 条目',rq.length+' 个');
+        var hit=await c2.match('./index.html',{ignoreSearch:true});
+        if(!hit)hit=await c2.match('./',{ignoreSearch:true});
+        if(hit){
+          var t=await hit.clone().text();
+          var m=t.match(/IB_VER='([^']+)'/);
+          P('  → 缓存里的版本',(m?m[1]:'(未识别)')+'  体积'+fmt(t.length));
+          P('  → 缓存是否完整',t.indexOf('</html>')>0?'是':'否·被截断');
+        }else P('  → 缓存里没有 index.html','(离线时起不来)');
+      }
+    }catch(e){P('缓存查询失败',String(e&&e.message||e))}
+    for(var k of ['ib_boot_fail','ib_safe_boot','ib_last_err','ib_lockOn','ib_m_theme','ib_verfix']){
+      try{var v=localStorage.getItem(k);P('本地标记 '+k,v===null?'(无)':String(v).slice(0,90))}catch(e){}
+    }
+    try{
+      var t0=performance.now();
+      var r=await fetch('./index.html?_='+Date.now(),{cache:'no-store'});
+      var b=await r.blob();
+      P('现场拉取 index.html',r.status+' '+fmt(b.size)+' 用时'+Math.round(performance.now()-t0)+'ms');
+    }catch(e){P('现场拉取 index.html','失败：'+String(e&&e.message||e))}
+    try{
+      var t1=performance.now();
+      var r2=await fetch('./ib-sw.js?_='+Date.now(),{cache:'no-store'});
+      await r2.text();
+      P('现场拉取 ib-sw.js',r2.status+' 用时'+Math.round(performance.now()-t1)+'ms');
+    }catch(e){P('现场拉取 ib-sw.js','失败：'+String(e&&e.message||e))}
+    P('结论提示','缓存里版本=247 且现场拉取很快 → 应用本体没问题；两项都失败 → 是网络到 github.io 不通');
+  }
+  document.getElementById('reload').onclick=function(){location.reload()};
+  document.getElementById('clean').onclick=async function(){
+    this.disabled=true;this.textContent='正在清理…';
+    try{var ks=await caches.keys();for(var i=0;i<ks.length;i++)await caches.delete(ks[i])}catch(e){}
+    try{var regs=await navigator.serviceWorker.getRegistrations();for(var j=0;j<regs.length;j++)await regs[j].unregister()}catch(e){}
+    location.reload();
+  };
+  document.getElementById('copy').onclick=function(){try{navigator.clipboard.writeText(el.textContent)}catch(e){}};
+  run();
+})();
+</script>
+</body>
+</html>
