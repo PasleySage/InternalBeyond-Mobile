@@ -2047,15 +2047,19 @@ addEventListener('load',function(){loaded=true},{once:true});
 function ready(now){/* v248-p：进度条不再"到点就走"——必须应用真的就绪（预遮罩已撤 + 主界面已渲染）才允许走完；否则一直停在 96% */
   try{
     var v=document.getElementById('lk-preveil');
-    if(v&&!v.classList.contains('off'))return false;
     var lk=document.getElementById('lockscr');
     var m=document.querySelector('main');
-    return !!(lk||(m&&m.children&&m.children.length));
+    var ok=!(v&&!v.classList.contains('off'))&&!!(lk||(m&&m.children&&m.children.length));
+    window.__ibReadyDbg='预遮罩'+(v?(v.classList.contains('off')?'已撤':'仍在'):'已移除')+'｜锁屏'+(lk?'有':'无')+'｜主容器子节点='+(m?m.children.length:'无main')+'｜启动完成='+(window.__ibBootOK?'是':'否');
+    if(ok)return true;
+    if(window.__ibBootOK&&now-t0>20000)return true;/* v251-p 兜底①：初始化已标记完成却判不过 → 放行 */
+    if(now-t0>30000)return true;/* v251-p 兜底②：无论如何不再无限停在 96%（12 秒时诊断面板已弹出过） */
+    return false;
   }catch(e){return false}}
 var MIN=RM?1800:5200,fin=false,finT=0,lastPct=-1;
 function draw(v){var x=Math.max(0,Math.min(100,v));fill.style.transform='translateZ(0) scaleX('+(x/100).toFixed(4)+')';
   var n=Math.round(x);if(n!==lastPct){lastPct=n;pct.textContent=n+'%'}}
-function frame(now){if(dead)return;if(document.hidden){raf=requestAnimationFrame(frame);return}
+function frame(now){if(dead)return;try{window.__ibFrameAt=Date.now();window.__ibFrameEl=Math.round(now-t0)}catch(e){}if(document.hidden){raf=requestAnimationFrame(frame);return}
   var el=now-t0;
   if(!fin){var k=Math.min(1,el/MIN),e=1-Math.pow(1-k,3);draw(e*96);
     if(k>=1&&ready(now)){fin=true;finT=now}}
@@ -12682,7 +12686,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v250-p',IB_VER_DATE='2026-09-16';
+var IB_VER='v251-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _lkVeilOff(){try{var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
@@ -12752,6 +12756,9 @@ function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return 
     try{o.push('UA：'+String(navigator.userAgent||'').slice(0,120))}catch(e){}
     o.push('启动各步耗时：'+(((window.__ibSteps||[]).join(' · '))||'（尚未记录）'));
     o.push('启动画面是否还在：'+(document.getElementById('ib-splash')?'在（进度条未走完）':'已撤'));
+    o.push('就绪判定：'+(window.__ibReadyDbg||'（未触发）'));
+    o.push('启动画面心跳：'+(window.__ibFrameAt?(Math.round((Date.now()-window.__ibFrameAt)/1000)+' 秒前（帧内计时'+(window.__ibFrameEl||0)+'ms）'):'无记录'));
+    o.push('启动完成标记：'+(window.__ibBootOK?'已标记':'未标记'));
     return o.join('\n')+'\n'+(window.__ibGuardStorage||'');
   }
   window.__ibGuardShow=function(msg){
