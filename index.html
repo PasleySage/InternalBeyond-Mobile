@@ -12682,7 +12682,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v248-p',IB_VER_DATE='2026-09-16';
+var IB_VER='v249-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _lkVeilOff(){try{var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
@@ -12727,6 +12727,7 @@ function _ibCap(p,ms){try{return Promise.race([p,new Promise(function(r){setTime
 function _ibSafeMode(){try{if(localStorage.getItem('ib_safe_boot')==='1')return true;return (parseInt(localStorage.getItem('ib_boot_fail')||'0',10)||0)>=2}catch(e){return false}}
 function _ibFailBump(){try{var n=(parseInt(localStorage.getItem('ib_boot_fail')||'0',10)||0)+1;localStorage.setItem('ib_boot_fail',String(n));return n}catch(e){return 0}}
 function _ibMarkOK(){try{localStorage.setItem('ib_boot_fail','0');localStorage.removeItem('ib_safe_boot')}catch(e){}window.__ibBootOK=true;window.__ibBootErr='';try{var _g=document.getElementById('ib-guard');if(_g)_g.remove()}catch(e){}/* v248-p：启动成功就把可能已弹出的诊断面板收掉，别盖住正常的应用 */}
+function _ibVeilStuck(){try{var _v=document.getElementById('lk-preveil');return !!(_v&&!_v.classList.contains('off'))}catch(e){return false}}/* v249-p：预遮罩还挂着 = 界面被全屏挡住，等于白屏 */
 (function _ibGuard(){
   var shown=false;
   function _st(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -12828,10 +12829,14 @@ function _ibMarkOK(){try{localStorage.setItem('ib_boot_fail','0');localStorage.r
   loadBgs().then(b=>{if(!b._volatile)_uiApplyBg(b)}).catch(function(){});/* v69-m t12：自定义背景随启动恢复 */
   try{await _ibCap(deskApplyLayout(),8000)}catch(e){}
   }else{try{toast('安全模式：已跳过桌面布局与自定义背景恢复')}catch(e){}}
-  try{await _ibCap(_lkBoot(),6000)}catch(e){try{if(typeof _lkVeilOff==='function')_lkVeilOff()}catch(x9){}}
+  /* v249-p：_ibCap 超时是"正常返回"而不是抛错，原来写在 catch 里的撤预遮罩永远不会跑 →
+     预遮罩留下 = 进度条永远停在 96% 的白屏，且因为接着打了 __ibBootOK，看门狗也不会报警。
+     现在改为无条件检查：只要预遮罩还挂着，就撤掉、并补一次锁屏尝试；仍挂着就不打"启动成功"，让看门狗照常弹出诊断面板。 */
+  try{await _ibCap(_lkBoot(),6000)}catch(e){}
+  if(_ibVeilStuck()){try{_lkVeilOff()}catch(x8){};try{await _ibCap(_lkBoot(),5000)}catch(x7){}}
   try{_lkStateDraw()}catch(e){}
   navTo('profile');
-  _ibMarkOK();
+  if(_ibVeilStuck())_ibFailBump();else _ibMarkOK();
   }catch(e){
     var _em=String(e&&e.message||e);
     console.error('[IB] init 失败',e);
