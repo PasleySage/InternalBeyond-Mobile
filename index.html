@@ -52,7 +52,11 @@ try{if(localStorage.getItem('ib_m_theme')==='infernal'){document.documentElement
   var st=document.createElement('style');st.id='lk-preveil-style';
   st.textContent='#lk-preveil{position:fixed;inset:0;z-index:4001;background:'+(dk?'#0d1524':'#eef2f8')+';transition:opacity 0.4s}#lk-preveil.off{opacity:0;pointer-events:none}';
   document.head.appendChild(st);
-  document.addEventListener('DOMContentLoaded',function(){try{var v=document.createElement('div');v.id='lk-preveil';document.body.appendChild(v)}catch(e){}});
+  document.addEventListener('DOMContentLoaded',function(){try{
+    /* v252-p：初始化早于 DOMContentLoaded 跑完时，预遮罩会在"揭幕"之后才被挂上 → 永久挡住界面（卡 96% / 白屏的根因） */
+    if(window.__ibVeilOff||window.__ibBootOK)return;
+    var v=document.createElement('div');v.id='lk-preveil';document.body.appendChild(v)
+  }catch(e){}});
 }catch(e){}})();
 </script>
 <title>InternalBeyond · Mobile</title>
@@ -12686,9 +12690,9 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v251-p',IB_VER_DATE='2026-09-16';
+var IB_VER='v252-p',IB_VER_DATE='2026-09-16';
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
-function _lkVeilOff(){try{var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
+function _lkVeilOff(){try{window.__ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* v252-p：置 __ibVeilOff，供晚到的预遮罩创建逻辑让路 *//* fix-r4：预遮罩揭幕（任务 8） */
 async function _lkBoot(){try{await Promise.race([loadBgs(),new Promise(function(r){setTimeout(r,4000)})])}catch(e){}/* v245-p：背景加载最多等 4 秒，不许拖住预遮罩 */var lk=_lkCfg();try{localStorage.setItem('ib_lockOn',lk&&lk.on?'1':'0')}catch(e){}/* v101-m：启动后把 DB 真值回写同步镜像 */if(lk&&lk.on)_lkShow();else _lkVeilOff()}
 function _lkStateDraw(){var lk=_lkCfg();try{sw2($('lk-on'),!!lk.on)}catch(e){}
   var ps=$('lk-pt-state');if(ps)ps.textContent=lk.pattern?'（已设置——画图案解锁）':'（未设置——上滑解锁）';
