@@ -9165,7 +9165,7 @@ async function generateSummaryM(cfg,prevSummary,newMessages,charLimit,names){
   const r=await callAI(clean,[{role:'user',content:prompt}],'',()=>{},null,{maxTokens:4000,_noThink:true});/* fix-r6：摘要不许思考——对默认开启思考的端点（DeepSeek 两档都是）下发关闭参数 *//* 本轮：1200 会被带思考的模型全数吃在思考上，正文空返；上限是天花板不是目标，非思考模型费用不变 */
   let text=String((r&&r.t)||'').trim();
   if(!text&&r&&r.k&&r.fin!=='length'&&r.fin!=='max_tokens')text=String(r.k).trim();
-  if(!text){_sumLastErrM='摘要没写出来：模型把输出预算用在思考上了（finish='+String((r&&r.fin)||'?')+'，可换个不带思考的模型执笔）';return null}/* fix-r6：把真因留给调用方 */
+  if(!text){_sumLastErrM=((r&&r.fin)==='length')?'摘要没写出来：模型把输出预算用在思考上了（finish=length，可换个不带思考的模型执笔）':'摘要没写出来：正文是空的（finish='+String((r&&r.fin)||'?')+'），可稍后再试';return null}/* fix-r6：按 finish 区分真因（对齐电脑端 :12207 的口径），不把"思考吃光"当成唯一解释 */
   if(text.length>LIM+100)text=text.slice(0,LIM)+'…';
   return text;
 }
