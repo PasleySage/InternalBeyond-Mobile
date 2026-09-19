@@ -9182,14 +9182,14 @@ async function maybeSummarizeM(cfg,threadId,opts){
   if(_summarizingM){_sumLastErrM='正在整理中，请稍候再试';return null}/* fix-r6：并发早退给真话，不再报"消息不足" */
   _summarizingM=true;_sumLastErrM='';/* fix-r6：每次尝试先清空上一次的真因，避免读到陈旧原因 */
   try{
-    const ss=await getSummarySettingsM();if(!ss.enabled)return null;
+    const ss=await getSummarySettingsM();if(!ss.enabled){_sumLastErrM='对话摘要未启用';return null}/* fix-r6：出口都给真因（v4） */
     let seal=Number(cfg.sealTimestamp||0);
-    if(threadId){let thr0=null;try{thr0=await dbGet('chatThreads',threadId)}catch(e){}if(!thr0)return null;seal=Number(thr0.sealTimestamp||0)}/* v174：⑧频道按频道封档线取窗 */
+    if(threadId){let thr0=null;try{thr0=await dbGet('chatThreads',threadId)}catch(e){}if(!thr0){_sumLastErrM='读不到这条话题频道的记录（重进频道再试）';return null}seal=Number(thr0.sealTimestamp||0)}/* v174：⑧频道按频道封档线取窗 */
     let all=[];
     const TRIGGER=10;
     const keep=_sumKeepM(ss,cfg);
     const win=ss.summaryWindow||60;
-    try{all=await _sumTailM(cfg.id,threadId,seal,win+keep)}catch(e){return null}
+    try{all=await _sumTailM(cfg.id,threadId,seal,win+keep)}catch(e){_sumLastErrM='读取消息窗口失败：'+String((e&&e.message)||e);return null}/* fix-r6：出口都给真因（v4） */
     const charLimit=SUMMARY_WINDOW_LIMITS_M[win]||600;
     const force=!!(opts&&opts.force);
     const cdK=cfg.id+'|'+(threadId||'');
@@ -9207,7 +9207,7 @@ async function maybeSummarizeM(cfg,threadId,opts){
     if(toSum.length<2){_sumLastErrM='窗口之外已无新消息可摘（等新消息挤出窗口后再试）';return null}/* fix-r6：说清真因，不再报"消息不足或 API 不可用" */
     let sumCfg=cfg;
     if(ss.summaryApiId){const sc=_cfgs.find(a=>a.id===ss.summaryApiId);if(sc&&sc.apiKey)sumCfg=sc}
-    if(!sumCfg.apiKey)return null;
+    if(!sumCfg.apiKey){_sumLastErrM='摘要所用的 API 没有可用 Key';return null}/* fix-r6：出口都给真因（v4） */
     const uName=(_about&&_about.name)||'用户';
     const aName=cfgName(cfg);
     let _gNames9=null;try{if(cfg._sumMember||String(cfg.id||'').indexOf('group_')===0){const _g9=await dbGet('groups',cfg.id);if(_g9)_gNames9={name:_g9.name||'',members:(_g9.members||[]).map(id=>(_cfgs||[]).find(c=>c.id===id)).filter(Boolean).map(c=>cfgName(c))}}}catch(e){}
@@ -9222,7 +9222,7 @@ async function maybeSummarizeM(cfg,threadId,opts){
     {let latest=cfg.sealTimestamp;
       if(threadId){let thr1=null;try{thr1=await dbGet('chatThreads',threadId)}catch(e){}if(!thr1)return null;latest=thr1.sealTimestamp}
       else{try{const fresh=await dbGet('apiConfigs',cfg.id);latest=fresh?fresh.sealTimestamp:latest}catch(e){}}
-      if(Number(latest||0)!==seal)return null;
+      if(Number(latest||0)!==seal){_sumLastErrM='整理期间封档线变了，本次结果未保存';return null}/* fix-r6：出口都给真因（v4） */
     }
     delete _sumFailCdM[cdK];
     const author=cfgName(sumCfg)+(sumCfg.id!==cfg.id?' (摘要专用)':'');
@@ -12815,7 +12815,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v262-p',IB_VER_DATE='2026-09-18';
+var IB_VER='v262-p-r6',IB_VER_DATE='2026-09-18';/* fix-r6：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 */
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _ibVeilHeal(){try{setTimeout(function(){try{var v=document.getElementById('lk-preveil');if(!v||v.classList.contains('off'))return;var lk=document.getElementById('lockscr');if(lk){_lkVeilOff();return}if(localStorage.getItem('ib_lockOn')==='1')return;_lkVeilOff()}catch(e){}},1600)}catch(e){}}/* v246-p：启动完成后仍盖幕的静默自愈 */
 function _lkVeilOff(){try{window._ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>IB 版本探针</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1f2328;--tx2:#5f6368;--line:#e3e6ea;--ok:#1a7f37;--bad:#b3261e;--acc:#185fa5}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--bg);color:var(--tx);font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{margin:0 0 4px;font-size:17px;font-weight:500}
+p.sub{margin:0 0 14px;color:var(--tx2);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:14px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:3px 0;vertical-align:top}
+td.k{color:var(--tx2);white-space:nowrap;padding-right:10px}
+td.v{font-variant-numeric:tabular-nums;word-break:break-all}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.acc{color:var(--acc)}
+button{appearance:none;border:1px solid var(--line);background:#fff;color:var(--tx);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;width:100%}
+button:active{background:#eef0f3}
+ol{margin:8px 0 0;padding-left:20px;color:var(--tx2);font-size:13px}
+li{margin:2px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#eef0f3;padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>Internal Beyond · 版本探针</h1>
+<p class="sub">看两件事：<b>线上服务的那份</b>、以及 <b>离线缓存里存的那份</b>，各自是哪个版本。只读，不改任何东西。</p>
+
+<div class="card">
+<h2>① 线上服务的那份（绕过 HTTP 缓存取）</h2>
+<table id="t-served"><tr><td class="k">状态</td><td class="v">读取中…</td></tr></table>
+</div>
+
+<div class="card">
+<h2>② 离线缓存里的那份（应用冷启动时可能拿到它）</h2>
+<table id="t-cache"><tr><td class="k">状态</td><td class="v">读取中…</td></tr></table>
+</div>
+
+<div class="card">
+<h2>清掉离线缓存（<b>不动对话数据</b>）</h2>
+<p class="sub" style="margin:0 0 10px">只删 Service Worker 的 Cache Storage；对话、记忆、设置都在 IndexedDB 里，<b>不会被动</b>。</p>
+<button id="btn">清除离线缓存</button>
+</div>
+
+<div class="card">
+<h2>怎么用</h2>
+<ol>
+<li>先看①：若「版本标记」是 <code>v262-p-r6</code>，说明线上已是 v4。</li>
+<li>再看②：若②里仍是 <code>v262-p</code>（没有 <code>-r6</code>），说明应用冷启动拿到的可能是旧缓存。</li>
+<li>必要时点「清除离线缓存」，然后<b>彻底关闭应用</b>（从多任务里划掉）连 Wi-Fi 重开。</li>
+<li>回到应用的 <b>Data 页 →「版本」</b> 一行核对：显示 <code>v262-p-r6</code> 就是新构建。</li>
+</ol>
+</div>
+
+<script>
+var M=[['fix-r6','补丁标记'],['正在整理中','v2 并发提示'],['窗口之外已无新消息可摘','v3 窗口提示'],["v262-p-r6",'版本标记']];
+function row(k,v,cls){return '<tr><td class="k">'+k+'</td><td class="v '+(cls||'')+'">'+v+'</td></tr>'}
+function marks(t){
+  return M.map(function(m){
+    var n=t.split(m[0]).length-1;
+    return '<tr><td class="k">'+m[1]+'</td><td class="v '+(n?'ok':'bad')+'">'+m[0]+' × '+n+'</td></tr>';
+  }).join('');
+}
+(function(){
+  fetch('index.html',{cache:'reload'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.text();
+  }).then(function(t){
+    document.getElementById('t-served').innerHTML=
+      row('字节数',t.length+' B','acc')+
+      row('含 thinking:disabled',(t.indexOf("thinking={type:'disabled'}")>=0?'是':'否'),'')+
+      marks(t);
+  }).catch(function(e){
+    document.getElementById('t-served').innerHTML=row('读取失败',String(e&&e.message||e),'bad');
+  });
+
+  (function(){
+    if(!window.caches){document.getElementById('t-cache').innerHTML=row('不可用','这个浏览器没有 Cache Storage','bad');return}
+    caches.keys().then(function(ks){
+      if(!ks.length){document.getElementById('t-cache').innerHTML=row('缓存区','空的（没有离线缓存）','ok');return}
+      var jobs=ks.map(function(k){
+        return caches.open(k).then(function(c){
+          return c.keys().then(function(reqs){
+            var hit=null;
+            reqs.forEach(function(q){if(/index\.html$|\/$/.test(q.url.split('?')[0]))hit=hit||q});
+            if(!hit)return '<tr><td class="k">'+k+'</td><td class="v">共 '+reqs.length+' 条，未找到 index.html</td></tr>';
+            return c.match(hit).then(function(res){return res?res.text():''}).then(function(t){
+              var ver=(/v262-p-r6/.test(t)?'v262-p-r6':(/v262-p/.test(t)?'v262-p':'未知'));
+              return '<tr><td class="k">'+k+'</td><td class="v '+(ver==='v262-p-r6'?'ok':'bad')+'">'+t.length+' B · 版本 '+ver+' · fix-r6 × '+(t.split('fix-r6').length-1)+'</td></tr>';
+            });
+          });
+        });
+      });
+      Promise.all(jobs).then(function(rows){
+        document.getElementById('t-cache').innerHTML=rows.join('');
+      });
+    }).catch(function(e){
+      document.getElementById('t-cache').innerHTML=row('读取失败',String(e&&e.message||e),'bad');
+    });
+  })();
+
+  document.getElementById('btn').addEventListener('click',function(){
+    if(!confirm('清除离线缓存？对话与设置都在 IndexedDB 里，不会被动到。'))return;
+    caches.keys().then(function(ks){
+      return Promise.all(ks.map(function(k){return caches.delete(k)})).then(function(){return ks.length});
+    }).then(function(n){alert('已清除 '+n+' 个缓存区。现在彻底关闭应用、连 Wi-Fi 重开。');location.reload()});
+  });
+})();
+</script>
+</body>
+</html>
