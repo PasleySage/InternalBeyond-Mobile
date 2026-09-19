@@ -3172,6 +3172,13 @@ self.addEventListener(&#x27;fetch&#x27;,function(e){
         <div class="tog"><div class="tog-m"><div class="tog-t">主动发社交圈动态</div><div class="tog-s">推送触发时，若该 AI 已到社交圈自动发布间隔，则本次改为发布一条动态。需同时开启主页设置 → Circle 的「AI 自动发布动态」。</div></div><div class="sw2" id="pres-hb-post"></div></div>
         <div class="tog"><div class="tog-m"><div class="tog-t">主动提醒日程 / 留笺</div><div class="tog-s">推送触发时，若日历里有临近事项，则改为提醒你这件事，并顺手在日历里留一张便笺。需要该 AI 的日历读取与留言权限。</div></div><div class="sw2" id="pres-hb-note"></div></div>
         <div class="tog"><div class="tog-m"><div class="tog-t">主动查岗（实验）</div><div class="tog-s">开启后，TA 的普通主动开口有约 1/3 概率先看一眼你的实时状态——按 Permissions 里已开启的权限静默调取定位 / 天气 / 手机状态，只进 TA 的背景资料（不发标签、不出卡）。默认关闭；三项权限全关时不生效。</div></div><div class="sw2" id="pres-hb-check"></div></div><!-- v123-p：#A 查岗轻量版（默认关） -->
+        <div class="tog"><div class="tog-m"><div class="tog-t">打开应用后等待</div><div class="tog-s">开启后，打开应用的一段时间内 TA 不会主动开口；等待期一过就交回原有判断——这段时间你没说话，它便照常开口；你已说了话，它就不再插话。不影响你说话与它回复。默认关闭。</div></div><div class="sw2" id="pres-wait"></div></div><!-- fix-r7：启动等待 -->
+        <div id="pres-wait-row" style="display:none">
+          <div class="f-group" style="margin:12px 0 0"><label>等待时长</label><div class="sel"><select id="pres-wait-min"><option value="1">1 分钟</option><option value="3">3 分钟</option><option value="5">5 分钟（默认）</option><option value="10">10 分钟</option><option value="15">15 分钟</option><option value="20">20 分钟</option><option value="30">30 分钟</option><option value="60">60 分钟</option></select></div></div>
+          <div class="f-group" style="margin:12px 0 0"><label>从什么时候起算</label><div class="sel"><select id="pres-wait-from"><option value="resume">冷启动与回到前台都算（默认）</option><option value="boot">只算冷启动</option></select></div></div>
+          <p class="hint" style="margin-bottom:0">冷启动＝把应用完全关掉后再打开；回到前台＝应用还在后台、你切回来的那一次。</p>
+          <p class="hint" style="margin-bottom:0">留出这段等待，是为了给同步、导入数据留出余裕。</p>
+        </div>
       </div>
       <!-- ── 通知（v116-p 迁自 DIY：与定时推送同区归类；三个 id 全部不变，旧设置与绑定原样沿用） ── -->
       <div class="sec-label">通知（Notifications）</div>
@@ -10370,7 +10377,7 @@ async function _presCheck(){
 }
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='hidden')_presTouch();
-  else _presCheck();
+  else{_presCheck();try{var _pw9=(_mp&&_mp.presence)||{};if(_pw9.waitOn&&_pw9.waitFrom!=='boot')_hbWaitArm()}catch(e){}}/* fix-r7：起点模式含"回到前台"时重新计时 */
 });
 window.addEventListener('pagehide',_presTouch);
 setTimeout(function(){_presCheck()},2500);/* 开站补一次：上次关站的时刻还留在本机 */
@@ -11647,6 +11654,7 @@ async function renderApiGlobal(){
   var _hg=String(_mp.presence.hbGapMin||30),_hgS=$('pres-hb-gap'),_hgC=$('pres-hb-gap-c');
   if(['3','5','10','20','30','60'].indexOf(_hg)!==-1){_hgS.value=_hg;if(_hgC)_hgC.style.display='none'}else{_hgS.value='custom';if(_hgC){_hgC.style.display='';_hgC.value=_hg}}/* fix-r4：间隔自定义（任务 2） */
   sw2($('pres-hb-post'),!!_mp.presence.hbPost);
+  sw2($('pres-wait'),!!_mp.presence.waitOn);try{var _wr9=$('pres-wait-row');if(_wr9)_wr9.style.display=_mp.presence.waitOn?'':'none';var _wm9=$('pres-wait-min');if(_wm9){var _wv9=String(_mp.presence.waitMin||5);if(['1','3','5','10','15','20','30','60'].indexOf(_wv9)===-1)_wv9='5';_wm9.value=_wv9}var _wf9=$('pres-wait-from');if(_wf9)_wf9.value=(_mp.presence.waitFrom==='boot'?'boot':'resume')}catch(e){}/* fix-r7 */
   var _pm=$('pres-mode');if(_pm){_pm.value=_mp.presence.hbMode==='rand'?'rand':'fixed';var _fr9=$('pres-fixed-row'),_rr9=$('pres-rand-row');if(_fr9)_fr9.style.display=_pm.value==='rand'?'none':'';if(_rr9)_rr9.style.display=_pm.value==='rand'?'':'none'}/* fix-r4 */
   var _rf=$('pres-rd-from'),_rt2=$('pres-rd-to');
   if(_rf&&_rt2&&!_rf.options.length){for(var _h9=0;_h9<24;_h9++){var _o1=document.createElement('option');_o1.value=_h9;_o1.textContent=_h9+':00';_rf.appendChild(_o1);var _o2=document.createElement('option');_o2.value=_h9;_o2.textContent=_h9+':00';_rt2.appendChild(_o2)}}
@@ -11756,6 +11764,9 @@ $('pres-rd-p').addEventListener('change',async()=>{await loadMP();_mp.presence=_
 $('pres-hb-note').addEventListener('click',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.hbNote=!_mp.presence.hbNote;sw2($('pres-hb-note'),_mp.presence.hbNote);await saveMP()});/* fix-r4：提醒日程/留笺（任务 2/3） */
 $('pres-hb-check').addEventListener('click',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.hbCheck=_mp.presence.hbCheck===true?false:true;sw2($('pres-hb-check'),_mp.presence.hbCheck===true);await saveMP()});/* v123-p：#A 查岗轻量版开关（默认关） */
 $('pres-hb-post').addEventListener('click',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.hbPost=!_mp.presence.hbPost;sw2($('pres-hb-post'),_mp.presence.hbPost);await saveMP()});
+$('pres-wait').addEventListener('click',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.waitOn=!_mp.presence.waitOn;sw2($('pres-wait'),_mp.presence.waitOn);var _wr8=$('pres-wait-row');if(_wr8)_wr8.style.display=_mp.presence.waitOn?'':'none';await saveMP();try{_hbWaitArm()}catch(e){}});/* fix-r7 */
+$('pres-wait-min').addEventListener('change',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.waitMin=parseInt($('pres-wait-min').value)||5;await saveMP();try{_hbWaitArm()}catch(e){}});/* fix-r7 */
+$('pres-wait-from').addEventListener('change',async()=>{await loadMP();_mp.presence=_mp.presence||{};_mp.presence.waitFrom=$('pres-wait-from').value==='boot'?'boot':'resume';await saveMP()});/* fix-r7 */
 $('music-share').addEventListener('click',async()=>{await loadMP();_mp.musicAi=_mp.musicAi||{};_mp.musicAi.share=!_mp.musicAi.share;sw2($('music-share'),_mp.musicAi.share);await saveMP()});/* v72-m 模块五 */
 $('music-ctl').addEventListener('click',async()=>{await loadMP();_mp.musicAi=_mp.musicAi||{};_mp.musicAi.ctl=!_mp.musicAi.ctl;sw2($('music-ctl'),_mp.musicAi.ctl);await saveMP()});
 $('out-cont').addEventListener('change',async()=>{
@@ -12469,6 +12480,7 @@ async function _mioRunImport(){
   if(_mioBusy||!_mioData)return;
   _mioBusy=true;var e=_mioEl();e.ft.innerHTML='<button class="btn" disabled>导入中…</button>';
   var fail=[],cnt={};
+  var _keepW9=null;try{var _kr9=await dbGet('apiSettings','mobilePrefs');var _kp9=(_kr9&&_kr9.presence)||{};_keepW9={waitOn:_kp9.waitOn,waitMin:_kp9.waitMin,waitFrom:_kp9.waitFrom}}catch(e){}/* fix-r7：导入语义的第一个例外——本机的「启动等待」三字段以本机为准 */
   for(var i=0;i<_mioFound.length;i++){
     var s=_mioFound[i],row=e.bd.querySelector('.mio-row[data-s="'+s+'"]'),st=row&&row.querySelector('.st');
     if(_mioSel[s]===false){if(st)st.textContent='—';continue}/* v120-p：#3 未勾选跳过 */
@@ -12481,6 +12493,7 @@ async function _mioRunImport(){
   _mbgs=null;try{window._pfBgDrop&&window._pfBgDrop()}catch(e){}try{loadBgs().then(function(b){if(!b._volatile)_uiApplyBg(b)}).catch(function(){})}catch(e){}
   _calEvents=[];_calNotes=[];
   await loadCfgs();await loadMP();
+  if(_keepW9){try{var _kr10=await dbGet('apiSettings','mobilePrefs');if(_kr10&&typeof _kr10==='object'){var _kn9=0;_kr10.presence=_kr10.presence||{};if(_keepW9.waitOn!==undefined){_kr10.presence.waitOn=_keepW9.waitOn;_kn9++}if(_keepW9.waitMin!==undefined){_kr10.presence.waitMin=_keepW9.waitMin;_kn9++}if(_keepW9.waitFrom!==undefined){_kr10.presence.waitFrom=_keepW9.waitFrom;_kn9++}if(_kn9){await dbPut('apiSettings',_kr10);_mp=null;_mpFromDb=false;await loadMP()}}}catch(e){}}/* fix-r7：本机没设过的字段（undefined）不覆盖，导入进来的值照旧保留 */
   try{renderDataSum()}catch(err){}
   try{showSec()}catch(err){}/* v67-m d2：统一走 showSec 分发 */
   var _unsel=_mioFound.filter(function(s){return _mioSel[s]===false});
@@ -12815,7 +12828,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v262-p-r6',IB_VER_DATE='2026-09-18';/* fix-r6：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 */
+var IB_VER='v262-p-r7',IB_VER_DATE='2026-09-19';/* fix-r7：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 */
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _ibVeilHeal(){try{setTimeout(function(){try{var v=document.getElementById('lk-preveil');if(!v||v.classList.contains('off'))return;var lk=document.getElementById('lockscr');if(lk){_lkVeilOff();return}if(localStorage.getItem('ib_lockOn')==='1')return;_lkVeilOff()}catch(e){}},1600)}catch(e){}}/* v246-p：启动完成后仍盖幕的静默自愈 */
 function _lkVeilOff(){try{window._ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
@@ -12867,6 +12880,7 @@ function _lkPatternSheet(){
   }
   try{
   await loadMP();
+  try{_hbWaitArm()}catch(e){}/* fix-r7：启动即按设置确立等待期（紧随 loadMP，_mp 已就绪） */
   try{if(navigator.storage&&navigator.storage.persist&&navigator.storage.persisted){navigator.storage.persisted().then(function(p){if(!p)return navigator.storage.persist()}).catch(function(){})}}catch(e){}
   try{_pwaApply()}catch(e){}/* v14：启动即应用运行时 manifest / 图标（_pwaApply 补定义） */
   await loadAbout();
@@ -16691,6 +16705,8 @@ async function ibAutoTick(trigger){
 setTimeout(function(){try{ibAutoTick('open')}catch(e){}},3400);
 
 var _hbLastFire=0;
+var _hbWaitUntil=0,_hbWaitDone=0,_hbNoRoll=0;/* fix-r7：启动等待期截止 / 是否已放行过 / 本次是否免掷概率（都只在进程内，不落库） */
+function _hbWaitArm(){try{var ps=(_mp&&_mp.presence)||{};if(!ps.waitOn)return;var m=Math.max(1,Math.min(720,parseInt(ps.waitMin)||5));_hbWaitUntil=Date.now()+m*60000;_hbWaitDone=0;_hbNoRoll=0}catch(e){}}/* fix-r7：按设置确立（或重新确立）等待期 */
 function _hbMuted(id){try{return !!(_mp&&_mp.perAi&&_mp.perAi[id]&&_mp.perAi[id].hbOff)}catch(e){return false}}/* v116-p：每好友「主动消息」开关统一判定 */
 async function _hbPickTarget(){try{
   if(!_cfgs.length){try{await loadCfgs()}catch(e){}}
@@ -16798,6 +16814,7 @@ async function _ibRouteGo(r){try{/* v115-m：通知点击直达（conv:对话 id
 async function _ibPresenceWake(convId){try{
   await loadMP();var ps=(_mp&&_mp.presence)||{};
   if(!ps.hbOn||!ps.bgOn)return;
+  if(Date.now()<_hbWaitUntil)return;/* fix-r7：启动等待期内，原生唤醒这条路由也按住（与心跳口径一致） */
   if(typeof _dndActive==='function'&&_dndActive())return;
   if(!_cfgs.length){try{await loadCfgs()}catch(e){}}
   var c=null;for(var i=0;i<_cfgs.length;i++){if(_cfgs[i].id===convId){c=_cfgs[i];break}}
@@ -16811,6 +16828,8 @@ setInterval(async function(){
   try{
     await loadMP();var ps=_mp.presence||{};
     try{_hbSyncNative()}catch(e){}/* v115-m：每分钟镜像一次，开关/参数/目标变化 60s 内送达原生 */
+    if(Date.now()<_hbWaitUntil)return;/* fix-r7：启动等待期内按住不动（只 return，不记任何状态） */
+    if(_hbWaitUntil&&!_hbWaitDone){_hbWaitDone=1;_hbNoRoll=1}/* fix-r7：等待期刚结束的这一次免掷概率，保证"等到点即发"；开关关着时 _hbWaitUntil 恒为 0，不进这里 */
     if(!ps.hbOn)return;
     if(typeof _dndActive==='function'&&_dndActive())return;/* v86-m r5：勿扰时段（任务 8） */
     var _nat=!!(window.IBNative&&window.IBNative.available);
@@ -16834,7 +16853,8 @@ setInterval(async function(){
     if(now-_hbLastFire<gapMs)return;
     try{var _ta9=convEl('cv-ta');if((_ta9&&String(_ta9.value||'').trim())||(window._ibLastType&&now-window._ibLastType<90000))return}catch(e){}
     _hbLastFire=now;
-    if(_md&&Math.random()*100>=Math.max(1,Math.min(100,parseInt(ps.randP)||35)))return;
+    var _roll9=(_md&&!_hbNoRoll);_hbNoRoll=0;/* fix-r7：等待期刚结束的那一次免掷概率（读一次即清，之后照旧随机） */
+    if(_roll9&&Math.random()*100>=Math.max(1,Math.min(100,parseInt(ps.randP)||35)))return;
     /* 到点：优先改发 Beyond 动态（需 hbPost + IB 自动发布 + 该 AI 到发布间隔），否则主动开口 */
     if(ps.hbPost){
       var ib=_mp.ib||{};
