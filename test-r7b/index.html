@@ -12828,7 +12828,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v262-p-r7',IB_VER_DATE='2026-09-19';/* fix-r7：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 *//* fix-r6：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 */
+var IB_VER='v262-p-r7',IB_VER_DATE='2026-09-19';/* fix-r7：镜像专用版本标记（Data 页可辨认是否已换构建）；提上游的 PR 不含这一处 */
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _ibVeilHeal(){try{setTimeout(function(){try{var v=document.getElementById('lk-preveil');if(!v||v.classList.contains('off'))return;var lk=document.getElementById('lockscr');if(lk){_lkVeilOff();return}if(localStorage.getItem('ib_lockOn')==='1')return;_lkVeilOff()}catch(e){}},1600)}catch(e){}}/* v246-p：启动完成后仍盖幕的静默自愈 */
 function _lkVeilOff(){try{window._ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
