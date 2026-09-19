@@ -9165,7 +9165,7 @@ async function generateSummaryM(cfg,prevSummary,newMessages,charLimit,names){
   const r=await callAI(clean,[{role:'user',content:prompt}],'',()=>{},null,{maxTokens:4000,_noThink:true});/* fix-r6：摘要不许思考——对默认开启思考的端点（DeepSeek 两档都是）下发关闭参数 *//* 本轮：1200 会被带思考的模型全数吃在思考上，正文空返；上限是天花板不是目标，非思考模型费用不变 */
   let text=String((r&&r.t)||'').trim();
   if(!text&&r&&r.k&&r.fin!=='length'&&r.fin!=='max_tokens')text=String(r.k).trim();
-  if(!text){_sumLastErrM='模型返回了空正文（finish='+String((r&&r.fin)||'?')+'）——多半是思考内容占了输出预算';return null}/* fix-r6：把真因留给调用方 */
+  if(!text){_sumLastErrM='摘要没写出来：模型把输出预算用在思考上了（finish='+String((r&&r.fin)||'?')+'，可换个不带思考的模型执笔）';return null}/* fix-r6：把真因留给调用方 */
   if(text.length>LIM+100)text=text.slice(0,LIM)+'…';
   return text;
 }
@@ -9179,17 +9179,17 @@ function _sumTailM(fid,threadId,seal,n){return new Promise((res,rej)=>{const out
     if(v&&(_tid?v.threadId===_tid:!v.threadId)&&(v.timestamp||0)>seal){out.push(v);if(out.length>=n){res(out.reverse());return}}c.continue()};
   req.onerror=()=>rej(req.error)})}/* v198-p：摘要窗口尾部读取（游标倒序，攒够就停） */
 async function maybeSummarizeM(cfg,threadId,opts){
-  if(_summarizingM){_sumLastErrM='正在整理中，请稍候再试';return null}/* fix-r6：并发早退给真话，不再报"消息不足" */
+  if(_summarizingM){_sumLastErrM='摘要正在整理中，稍等十几秒再点一次';return null}/* fix-r6：并发早退给真话 */
   _summarizingM=true;_sumLastErrM='';/* fix-r6：每次尝试先清空上一次的真因，避免读到陈旧原因 */
   try{
-    const ss=await getSummarySettingsM();if(!ss.enabled){_sumLastErrM='对话摘要未启用';return null}/* fix-r6：出口都给真因（v4） */
+    const ss=await getSummarySettingsM();if(!ss.enabled){_sumLastErrM='对话摘要没有开启：API 页 → 全局设置 → 对话摘要 里打开';return null}/* fix-r6：出口都给真因 */
     let seal=Number(cfg.sealTimestamp||0);
-    if(threadId){let thr0=null;try{thr0=await dbGet('chatThreads',threadId)}catch(e){}if(!thr0){_sumLastErrM='读不到这条话题频道的记录（重进频道再试）';return null}seal=Number(thr0.sealTimestamp||0)}/* v174：⑧频道按频道封档线取窗 */
+    if(threadId){let thr0=null;try{thr0=await dbGet('chatThreads',threadId)}catch(e){}if(!thr0){_sumLastErrM='读不到这个频道的记录：退出去重进一次再试';return null}seal=Number(thr0.sealTimestamp||0)}/* v174：⑧频道按频道封档线取窗 */
     let all=[];
     const TRIGGER=10;
     const keep=_sumKeepM(ss,cfg);
     const win=ss.summaryWindow||60;
-    try{all=await _sumTailM(cfg.id,threadId,seal,win+keep)}catch(e){_sumLastErrM='读取消息窗口失败：'+String((e&&e.message)||e);return null}/* fix-r6：出口都给真因（v4） */
+    try{all=await _sumTailM(cfg.id,threadId,seal,win+keep)}catch(e){_sumLastErrM='读取本地记录失败：'+String((e&&e.message)||e);return null}/* fix-r6：出口都给真因 */
     const charLimit=SUMMARY_WINDOW_LIMITS_M[win]||600;
     const force=!!(opts&&opts.force);
     const cdK=cfg.id+'|'+(threadId||'');
@@ -9204,10 +9204,10 @@ async function maybeSummarizeM(cfg,threadId,opts){
     }
     if(!force&&winMsgs.length-covered-keep<TRIGGER)return null;
     const toSum=winMsgs.slice(covered,Math.max(covered,winMsgs.length-keep));
-    if(toSum.length<2){_sumLastErrM='窗口之外已无新消息可摘（等新消息挤出窗口后再试）';return null}/* fix-r6：说清真因，不再报"消息不足或 API 不可用" */
+    if(toSum.length<2){_sumLastErrM='摘要已是最新：暂时没有要补的内容（再聊多些，会自动跟上）';return null}/* fix-r6：文案由用户定稿 */
     let sumCfg=cfg;
     if(ss.summaryApiId){const sc=_cfgs.find(a=>a.id===ss.summaryApiId);if(sc&&sc.apiKey)sumCfg=sc}
-    if(!sumCfg.apiKey){_sumLastErrM='摘要所用的 API 没有可用 Key';return null}/* fix-r6：出口都给真因（v4） */
+    if(!sumCfg.apiKey){_sumLastErrM='摘要用的 API 没填 Key，去 API 页补上就能用';return null}/* fix-r6：出口都给真因 */
     const uName=(_about&&_about.name)||'用户';
     const aName=cfgName(cfg);
     let _gNames9=null;try{if(cfg._sumMember||String(cfg.id||'').indexOf('group_')===0){const _g9=await dbGet('groups',cfg.id);if(_g9)_gNames9={name:_g9.name||'',members:(_g9.members||[]).map(id=>(_cfgs||[]).find(c=>c.id===id)).filter(Boolean).map(c=>cfgName(c))}}}catch(e){}
@@ -9222,7 +9222,7 @@ async function maybeSummarizeM(cfg,threadId,opts){
     {let latest=cfg.sealTimestamp;
       if(threadId){let thr1=null;try{thr1=await dbGet('chatThreads',threadId)}catch(e){}if(!thr1)return null;latest=thr1.sealTimestamp}
       else{try{const fresh=await dbGet('apiConfigs',cfg.id);latest=fresh?fresh.sealTimestamp:latest}catch(e){}}
-      if(Number(latest||0)!==seal){_sumLastErrM='整理期间封档线变了，本次结果未保存';return null}/* fix-r6：出口都给真因（v4） */
+      if(Number(latest||0)!==seal){_sumLastErrM='这次整理作废了：期间封档位置变了，再点一次即可';return null}/* fix-r6：出口都给真因 */
     }
     delete _sumFailCdM[cdK];
     const author=cfgName(sumCfg)+(sumCfg.id!==cfg.id?' (摘要专用)':'');
@@ -10905,7 +10905,7 @@ $('sum-now').addEventListener('click',async()=>{
   toast('正在整理对话记录…');
   const rec=await maybeSummarizeM(cfg,_activeThread?_activeThread.id:null,{force:true}).catch(()=>null);
   if(rec){$('sum-body').textContent=rec.summary;$('sum-meta').textContent='覆盖至 '+new Date(rec.coveredUpTo||0).toLocaleString('zh-CN');toast('摘要已更新')}
-  else toast('未生成：'+(_sumLastErrM||'消息不足或 API 不可用'));/* fix-r6：优先显示真因（对齐电脑端口径） */
+  else toast(_sumLastErrM||'未生成：消息不足或 API 不可用');/* fix-r6：直接显示真因（各出口都写好了人话，不再套前缀） */
 });
 
 const MEM_FIELD_KEYS_M=['标题','概括','内容','领域','标签','效价','唤醒度','重要性','是否已解决','可见性'];
