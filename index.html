@@ -9204,7 +9204,7 @@ async function maybeSummarizeM(cfg,threadId,opts){
     }
     if(!force&&winMsgs.length-covered-keep<TRIGGER)return null;
     const toSum=winMsgs.slice(covered,Math.max(covered,winMsgs.length-keep));
-    if(toSum.length<2)return null;
+    if(toSum.length<2){_sumLastErrM='窗口之外已无新消息可摘（等新消息挤出窗口后再试）';return null}/* fix-r6：说清真因，不再报"消息不足或 API 不可用" */
     let sumCfg=cfg;
     if(ss.summaryApiId){const sc=_cfgs.find(a=>a.id===ss.summaryApiId);if(sc&&sc.apiKey)sumCfg=sc}
     if(!sumCfg.apiKey)return null;
