@@ -8950,6 +8950,7 @@ async function callAI(cfg,hist,sys,onDelta,signal,pa){
     const msgs=(sys?[{role:'system',content:sys}]:[]).concat(_histFor('openai',hist));
     const b={model:model,messages:msgs,stream:stream};
     b.max_tokens=maxT;
+    if(pa&&pa._noThink&&(cfg.provider==='deepseek'||/deepseek\.com/i.test(ep)))b.thinking={type:'disabled'};/* fix-r6：DeepSeek 官方参数 thinking:{type:'disabled'} */
     if(cfg.promptCache!==false)b.prompt_cache_key='ib_'+String(cfg.id||'');
     if(stream&&cfg.promptCache!==false)b.stream_options={include_usage:true};/* 缓存追平电脑版：开启提示缓存时请求 usage 尾块；不支持的中转会走下方去参重试 */
     if(useWS)b.web_search_options={};
@@ -9161,14 +9162,14 @@ async function generateSummaryM(cfg,prevSummary,newMessages,charLimit,names){
     +(newMessages.length?'【新对话】\n'+newMessages.map(m=>m.gift?_giftLineM(m):((m.role==='user'?uN:(m.senderName||aN))+'：'+String(m.content||''))).join('\n'):'【新对话】\n（本次没有新对话——只需把旧摘要压缩到字数上限以内，按上面的取舍，话题与说定的事一件不丢。）')
     +'\n\n直接输出摘要。';/* v171-p：礼物消息按礼物记录口径入摘要 */
   const clean=Object.assign({},cfg,{systemPrompt:'',streaming:false,thinkingEnabled:false,promptCache:false,webSearch:false});
-  const r=await callAI(clean,[{role:'user',content:prompt}],'',()=>{},null,{maxTokens:4000});/* 本轮：1200 会被带思考的模型全数吃在思考上，正文空返；上限是天花板不是目标，非思考模型费用不变 */
+  const r=await callAI(clean,[{role:'user',content:prompt}],'',()=>{},null,{maxTokens:4000,_noThink:true});/* fix-r6：摘要不许思考——对默认开启思考的端点（DeepSeek 两档都是）下发关闭参数 *//* 本轮：1200 会被带思考的模型全数吃在思考上，正文空返；上限是天花板不是目标，非思考模型费用不变 */
   let text=String((r&&r.t)||'').trim();
   if(!text&&r&&r.k&&r.fin!=='length'&&r.fin!=='max_tokens')text=String(r.k).trim();
-  if(!text)return null;
+  if(!text){_sumLastErrM='模型返回了空正文（finish='+String((r&&r.fin)||'?')+'）——多半是思考内容占了输出预算';return null}/* fix-r6：把真因留给调用方 */
   if(text.length>LIM+100)text=text.slice(0,LIM)+'…';
   return text;
 }
-let _summarizingM=false;const _sumFailCdM={};
+let _summarizingM=false;let _sumLastErrM='';const _sumFailCdM={};/* fix-r6 */
 function _sumKeepM(ss,cfg){
   if(!ss||ss.summaryScope!=='ctx')return (ss&&ss.keepCount)||6;
   try{const isG=!!(cfg&&(cfg._group||String(cfg.id||'').indexOf('group_')===0));const pa=mpAi({id:(cfg&&(cfg._sumMember||cfg.id))||''});return Math.max(2,isG?(pa.grpLimit||30):(pa.histLimit||40))}catch(e){return (ss&&ss.keepCount)||6}
@@ -10903,7 +10904,7 @@ $('sum-now').addEventListener('click',async()=>{
   toast('正在整理对话记录…');
   const rec=await maybeSummarizeM(cfg,_activeThread?_activeThread.id:null,{force:true}).catch(()=>null);
   if(rec){$('sum-body').textContent=rec.summary;$('sum-meta').textContent='覆盖至 '+new Date(rec.coveredUpTo||0).toLocaleString('zh-CN');toast('摘要已更新')}
-  else toast('未生成：消息不足或 API 不可用');
+  else toast('未生成：'+(_sumLastErrM||'消息不足或 API 不可用'));/* fix-r6：优先显示真因（对齐电脑端口径） */
 });
 
 const MEM_FIELD_KEYS_M=['标题','概括','内容','领域','标签','效价','唤醒度','重要性','是否已解决','可见性'];
