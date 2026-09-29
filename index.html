@@ -8033,7 +8033,7 @@ function buildMsgEl(m,prev,opt){/* v189-p：opt.noPress＝不挂长按菜单（�
   if(_vmStack&&_vmBelow){_col.appendChild(_vmStack);if(!(opt&&opt.noPress))pressable(_vmStack,()=>msgActions(m,d));
     if(!txt.hasChildNodes()&&!d.querySelector('.m-imgs,.m-files,.m-quote,.lk-card'))d.classList.add('vm-only')}
   if(!isUser&&Array.isArray(m.ibPays)&&m.ibPays.length){m.ibPays.forEach(function(_pr,_pi){try{_col.appendChild(_prCardM(m,_pi))}catch(e){}})}/* v97-m 任务7 */
-  if(!_isGrp){const _tm=document.createElement('div');_tm.className='m-time';_tm.textContent=_hmOnly(m.timestamp);_col.appendChild(_tm)}/* v62-m t8：群聊照电脑端不逐条标时 */
+  if(!_isGrp){const _tm=document.createElement('div');_tm.className='m-time';var _tmT=_hmOnly(m.timestamp);if(m.ctxStat&&m.ctxStat.histN!=null)_tmT+=' · '+m.ctxStat.histN;if(m.usage&&m.usage.cr)_tmT+=' · '+m.usage.cr;_tm.textContent=_tmT;_col.appendChild(_tm)}/* v62-m t8：群聊照电脑端不逐条标时；cdiag：脚注＝时间 · 进历史条数 · 缓存读 */
   body.appendChild(_col);
   row.dataset.ts=String(m.timestamp||0);/* v97-m 任务3：时间折叠用 */
   row.appendChild(body);
