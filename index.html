@@ -8136,6 +8136,7 @@ function openMsgInfo(m,el){
   if(Array.isArray(m.files)&&m.files.length)rows.push(['附件',m.files.length+' 个']);
   if(m.voice)rows.push(['语音',Math.max(1,Math.round(m.voice.duration||1))+' 秒']);
   if(m.usage&&(m.usage.i||m.usage.o||m.usage.cr||m.usage.cw))rows.push(['Token',(m.usage.i||0)+' 入 / '+(m.usage.o||0)+' 出'+((m.usage.cr)?(' · 缓存读 '+m.usage.cr):'')+((m.usage.cw)?(' · 缓存写 '+m.usage.cw):'')]);
+  if(m.ctxStat&&(m.ctxStat.histN!=null||m.ctxStat.histLim!=null||m.ctxStat.sysChars!=null))rows.push(['上下文',(m.ctxStat.histN!=null?(m.ctxStat.histN+' 条进历史'):'')+(m.ctxStat.histLim!=null?(' / 上限 '+m.ctxStat.histLim):'')+(m.ctxStat.sysChars!=null?(' · system '+m.ctxStat.sysChars+' 字'):'')]);/* cdiag */
   if(m.proactive)rows.push(['来源','主动消息']);
   b.innerHTML='<div class="mi-head"><div class="mh-ava mi-ava" id="mi-ava"></div><div class="mi-who"><div class="mi-nm">'+esc(av.name||'')+'</div><div class="mi-rl">'+(m.role==='user'?'你发出的消息':'AI 的回复')+'</div></div></div>'
     +'<div class="mi-grid">'+rows.map(r=>'<div class="mi-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+'</div>'
@@ -8955,12 +8956,12 @@ function _ibOaiCacheDiagM(cfg,msgs){
     var parts=[],lastStart=0;
     for(var i=0;i<msgs.length;i++){if(i===msgs.length-1)lastStart=parts.join('').length;var c=msgs[i]&&msgs[i].content;parts.push('¶'+(msgs[i].role||'')+'§'+(typeof c==='string'?c:JSON.stringify(c)))}
     var full=parts.join(''),key=String((cfg&&cfg.id)||''),prev=_ibOaiCachePrevM[key];
-    _ibOaiCachePrevM[key]={full:full,lastStart:lastStart};
-    if(!prev){console.info('[IB手机缓存诊断] 已记录前缀基线（'+full.length+' 字符）');return}
+    _ibOaiCachePrevM[key]={full:full,lastStart:lastStart,n:msgs.length};
+    if(!prev){console.info('[IB手机缓存诊断] 已记录前缀基线（'+full.length+' 字符 · '+msgs.length+' 条）');return}
     var n=Math.min(prev.full.length,full.length),d=0;while(d<n&&prev.full.charCodeAt(d)===full.charCodeAt(d))d++;
-    try{var _who=(cfg&&typeof cfgName==='function')?cfgName(cfg):key;var _lg=window._ibCacheDiagLog=window._ibCacheDiagLog||[];_lg.push({at:Date.now(),who:_who,ok:d>=prev.lastStart,d:d,total:prev.full.length,last:prev.lastStart});if(_lg.length>20)_lg.splice(0,_lg.length-20)}catch(e){}/* v223-p：留档最近 20 轮 */
-    if(d>=prev.lastStart)console.info('[IB手机缓存诊断] ✓ system+历史前缀稳定，变化位于最新动态区之后（'+d+' / '+prev.full.length+'）');
-    else console.warn('[IB手机缓存诊断] ✗ 前缀提前变化（第 '+d+' 字符；上一轮最新消息起点 '+prev.lastStart+'），请检查 system/历史是否混入逐轮变化内容。');
+    try{var _who=(cfg&&typeof cfgName==='function')?cfgName(cfg):key;var _lg=window._ibCacheDiagLog=window._ibCacheDiagLog||[];var _ok=d>=prev.lastStart;var _rec={at:Date.now(),who:_who,ok:_ok,d:d,total:prev.full.length,last:prev.lastStart,n:msgs.length,prevN:prev.n||0};if(!_ok){var _a=Math.max(0,d-16),_b=d+48;_rec.snipPrev=String(prev.full||'').slice(_a,Math.min(prev.full.length,_b));_rec.snipNow=String(full).slice(_a,Math.min(full.length,_b))}/* cdiag：断点两侧片段与条数 */_lg.push(_rec);if(_lg.length>20)_lg.splice(0,_lg.length-20)}catch(e){}/* v223-p：留档最近 20 轮 */
+    if(d>=prev.lastStart)console.info('[IB手机缓存诊断] ✓ system+历史前缀稳定，变化位于最新动态区之后（'+d+' / '+prev.full.length+' · 本轮 '+msgs.length+' 条）');
+    else console.warn('[IB手机缓存诊断] ✗ 前缀提前变化（第 '+d+' 字符；上一轮最新消息起点 '+prev.lastStart+'；本轮 '+msgs.length+' 条 / 上轮 '+(prev.n||'?')+' 条）');
   }catch(e){}
 }
 
@@ -9533,7 +9534,8 @@ async function genReply(cfg,internalCtx){
     accT=r.t;accK=r.k;var _ru=r.u||null;
     if(!accT.trim())throw new Error((accK&&accK.trim())?'正文为空：思考内容占满了本次输出上限（可到 API → 全局设置 → 输出与续写 调大「单次输出上限」，或关闭该 AI 的思考链）':'返回为空');/* v130-p：把「返回为空」说清楚 */
     if(_fedH){try{_fedH.commit().catch(function(){})}catch(e9){}_fedH=null}_gqTaken=null;_pgTaken=null;
-    const _am0=await saveAi(cfg,accT,accK,aiEl,{myThread,myMsgs,sameConv,usage:_ru,truncated:_finTruncM(r.fin)});
+    const _ctxStat={histN:hist.length,histLim:_histLim,sysChars:String(sys||'').length};
+    const _am0=await saveAi(cfg,accT,accK,aiEl,{myThread,myMsgs,sameConv,usage:_ru,truncated:_finTruncM(r.fin),ctxStat:_ctxStat});
     try{await _mToolLoop(cfg,pa,sys,hist,accT,_am0,{myThread,myMsgs,sameConv,signal:myAc.signal})}catch(e){}/* v84-m r1：工具/数据类指令在同一轮内多次调用（任务 1） */
   }catch(err){
     try{if(_fedH){_fedH.restore();_fedH=null}}catch(e9){}try{if(_gqTaken&&_gqTaken.length){_gwFeedQ=_gqTaken.concat(_gwFeedQ);_gqTaken=null}}catch(e9){}try{if(_pgTaken&&!_presGap){_presGap=_pgTaken;_pgTaken=null}}catch(e9){}/* fix-m①：请求未送达→动态配图/调取结果/离开时长放回队首；文本结果因未标 fed 下次自动重传 */
@@ -9626,6 +9628,7 @@ async function saveAi(cfg,content,thinking,aiEl,ctx){/* v54-m ctx：后台完成
   if(th)am.threadId=th.id;
   if(thinking&&thinking.trim())am.thinking=thinking;
   if(ctx&&ctx.usage)am.usage=ctx.usage;/* v59-m t14/t18：本条 token 用量随消息入库，长按面板即可见 */
+  if(ctx&&ctx.ctxStat)am.ctxStat=ctx.ctxStat;/* cdiag：本轮进历史条数 / 上限 / system 字数 */
   if(ctx&&ctx.truncated)am.truncated=true;/* v65-m：自动续写轮数用尽仍被截断 → 挂"继续生成"药丸 */
   try{await dbPut('chatMessages',am)}catch(e){toast('回复保存失败')}
   const live=ctx?ctx.sameConv():true;
@@ -12999,7 +13002,7 @@ function _orientApply(){try{
   setTimeout(function(){try{if(window.IBNative&&window.IBNative.available){var _bg=$('pres-bg');var _row=_bg&&_bg.closest('.tog');if(_row)_row.style.display=''}}catch(e){}},1200);/* v116-p：壳内显露「后台 Presence（系统级）」开关（桥在文末激活，故延时探测；浏览器 / PWA 保持隐藏） */
 })();
 function _vidQNormM(v){v=String(v==null?'m':v);if(v==='384')return 'l';if(v==='768')return 'h';if(v==='512')return 'm';return (v==='l'||v==='h')?v:'m'}/* 画质档位兼容电脑端备份里的 384/512/768 写法 */
-var IB_VER='v310-p',IB_VER_DATE='2026-09-27';
+var IB_VER='v310-p-cdiag',IB_VER_DATE='2026-09-28';/* cdiag：镜像专用诊断补丁（探针条数+片段、消息上下文行）；提上游的 PR 不含这一处 */
 (function _appVerDraw(){var e=document.getElementById('app-ver');if(e)e.textContent='InternalBeyond Mobile '+IB_VER+'（'+IB_VER_DATE+'）'})();
 function _ibVeilHeal(){try{setTimeout(function(){try{var v=document.getElementById('lk-preveil');if(!v||v.classList.contains('off'))return;var lk=document.getElementById('lockscr');if(lk){_lkVeilOff();return}if(localStorage.getItem('ib_lockOn')==='1')return;_lkVeilOff()}catch(e){}},1600)}catch(e){}}/* v246-p：启动完成后仍盖幕的静默自愈 */
 function _lkVeilOff(){try{window._ibVeilOff=true;var v=document.getElementById('lk-preveil');if(v){v.classList.add('off');setTimeout(function(){try{v.remove()}catch(e){}},420)}}catch(e){}}/* fix-r4：预遮罩揭幕（任务 8） */
@@ -24961,7 +24964,7 @@ function parse(raw){var acts=[],guides=[];var text=String(raw||'');
 async function send(q){var cfg=cfgOf();S.hist.push({role:'user',text:q});addBubble('user',q);
   if(/^(你是谁|你是什么|你叫什么|你是啥|水水是谁|你的名字|whoareyou)$/i.test(q.replace(/[\s？?！!。.~～、,，]/g,''))){var wm={role:'assistant',text:WHO};S.hist.push(wm);addBubble('assistant',wm.text);persist();return}/* 唯一答案，本地直答、不走 API */
   if(/^图片(探针|诊断)[？?]?$/.test(q)){var il=(window._ibImgDiagLog||[]).slice(-6);var im={role:'assistant',text:il.length?('最近 '+il.length+' 次带图请求的去向：\n\n'+il.map(function(x){var t=new Date(x.at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});return '- '+(x.ok?'✓ ':'✗ ')+t+' · '+x.who+(x.model?'（'+x.model+'）':'')+'：'+(x.sent?('带 '+x.n+' 张图发出，'+(x.ok?'服务端接受（HTTP '+x.status+'）':'被拒（HTTP '+x.status+'）'+(x.err?'：'+x.err:''))):('去图重发（原带 '+x.n+' 张），'+(x.ok?'成功':'仍失败（HTTP '+x.status+'）')))}).join('\n')+'\n\n被拒＝这个 API / 中转 / 模型不收 image_url 或图太大，IB 已自动去图重发一次（所以 TA 只看到 [图N] 标记）；接受了但 TA 说看不到＝模型本身不识图或中转把图丢了，换识图型号或换中转。'):'还没有记录。让 TA 查看一条带图的动态、或直接发一张图给 TA 之后再来看。'};S.hist.push(im);addBubble('assistant',im.text);persist();return}
-  if(/^缓存(探针|诊断|命中)?[？?]?$/.test(q)){var lg=(window._ibCacheDiagLog||[]).slice(-6);var pm={role:'assistant',text:lg.length?('最近 '+lg.length+' 轮的前缀比对（对同一位 TA，每轮请求发出前与上一轮逐字比对）：\n\n'+lg.map(function(x){return '- '+(x.ok?'✓ ':'✗ ')+new Date(x.at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+' · '+x.who+'：'+(x.ok?'system 与历史前缀稳定（'+x.d+' / '+x.total+' 字符）':'第 '+x.d+' 字符起不一样（上一轮最新消息起点 '+x.last+'）')}).join('\n')+'\n\n✓ 这轮能命中上一轮的缓存；✗ system 或历史前缀变了，缓存重建一次。版本更新、改人设、拨任何协议开关、always 条目改动之后的第一轮出一个 ✗ 属正常，连着 ✗ 才是问题。'):'还没有记录。给任一位 TA 连发两条消息后再来看。'};S.hist.push(pm);addBubble('assistant',pm.text);persist();return}
+  if(/^缓存(探针|诊断|命中)?[？?]?$/.test(q)){var lg=(window._ibCacheDiagLog||[]).slice(-6);var pm={role:'assistant',text:lg.length?('最近 '+lg.length+' 轮的前缀比对（对同一位 TA，每轮请求发出前与上一轮逐字比对）：\n\n'+lg.map(function(x){return '- '+(x.ok?'✓ ':'✗ ')+new Date(x.at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+' · '+x.who+'：'+(x.ok?'system 与历史前缀稳定（'+x.d+' / '+x.total+' 字符 · '+(x.n||'?')+' 条）':'第 '+x.d+' 字符起不一样（上一轮最新消息起点 '+x.last+' · 本轮 '+(x.n||'?')+' 条 / 上轮 '+(x.prevN||'?')+' 条）'+((x.snipPrev||x.snipNow)?('\n  旧：'+String(x.snipPrev||'').replace(/\s+/g,' ').slice(0,48)+'\n  新：'+String(x.snipNow||'').replace(/\s+/g,' ').slice(0,48)):''))}).join('\n')+'\n\n✓ 这轮能命中上一轮的缓存；✗ system 或历史前缀变了，缓存重建一次。版本更新、改人设、拨任何协议开关、always 条目改动之后的第一轮出一个 ✗ 属正常，连着 ✗ 才是问题。'):'还没有记录。给任一位 TA 连发两条消息后再来看。'};S.hist.push(pm);addBubble('assistant',pm.text);persist();return}
   if(/^设置(清单|列表|表)[？?]?$/.test(q)){(async function(){try{if(typeof loadCALL==='function')await loadCALL()}catch(e){}try{if(typeof loadOUT==='function')await loadOUT()}catch(e){}
     var rs=registry(),gu=[],gg=[],gl=[],gp={},shown=0;rs.forEach(function(r){var lb=r.label||LABEL[r.path]||'';
       if(r.path.indexOf('api.')===0||r.path.indexOf('call.')===0||r.path.indexOf('perAi.')===0){var id=r.path.split('.')[1];(gp[id]=gp[id]||{n:0,nm:''});gp[id].n++;if(!gp[id].nm&&lb){var m9=/「([^」]+)」/.exec(lb);if(m9)gp[id].nm=m9[1]}return}
