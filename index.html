@@ -32243,11 +32243,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 /* ── 常量（票05 Q3/Q7；WRAP_OVERHEAD＝tails 包裹标记字符数基线值：_IB_TAIL_HEAD 65 字＋_IB_TAIL_USER 11 字；实际值由埋点 wrap() 在 :10774 包裹 if 前实测，本常量退为桩测基准——上游改标记文案时零漂移）── */
 var N_TURNS=6,U_CAP=500,HEAD_N=150,WRAP_OVERHEAD=76;
 /* ── 六组固定语义序＋副标（票04 §1/§5 Q5；跨轮可比为支柱，非按大小排序）── */
-var GROUPS=[["persona","人设与资料","TA 是谁、你是谁、这是个什么世界"],
-["rules","功能与规则","固定说明：工具用法与规则，每轮一样；关掉对应能力会变小"],
-["hist","本窗历史","原话窗口、滚动摘要、封存的前情提要"],/* 2026-10-17 改名（patch18）：窗口截断后统计的是当前窗口内发送量、非总聊天记录，原名误导 */
-["memory","记忆与档案","TA 主动记住的：一直记得的、置顶的、想起的、过门的"],
-["dynamic","动态资料","每轮现取：时间、日程、Blog、Beyond、信箱、音乐、离开时长、调取结果"],
+var GROUPS=[["persona","人设与资料","TA 是谁、你是谁、System Prompt 等"],
+["rules","功能与规则","工具用法与能力设定，只要不关能力，每次发的内容都一样"],
+["hist","前序历史","之前发过的原话、滚动摘要、封存的前情提要等"],/* 2026-10-17 两次改名（patch18→patch25）：对话历史→本窗历史→前序历史（用户终裁，副标同步重写） */
+["memory","记忆与档案","TA 主动记住的：一直记得的、置顶的、临时想起来的内容等"],
+["dynamic","动态资料","每轮现取：时间、日程、Blog、Beyond、信箱、音乐、离开时长、调取结果等"],
 ["other","其他","不好归到上面五组的部分，正常为空"]];
 /* ── 块 ID → 语义组（票04 §2 交付物②；报告层可改映射——改组名/归属不重打埋点）── */
 var GROUP_M={"dm.sys.persona":"persona","dm.sys.userctx":"persona","dm.sys.nopersona":"persona","dm.sys.sitenote":"persona","dm.sys2.persona":"persona","dm.sys.protocols":"rules","dm.sys.tools":"rules","dm.sys.am_instr":"rules","dm.hist.summary":"hist","dm.sys2.chap":"hist","dm.sys2.amcore":"memory","dm.sys2.cold":"memory","dm.tail.mem":"memory","dm.tail.amdyn":"memory","dm.tail.time":"dynamic","dm.tail.cal":"dynamic","dm.tail.music":"dynamic","dm.tail.posts":"dynamic","dm.tail.blogread":"dynamic","dm.tail.beyond":"dynamic","dm.tail.bxinbox":"dynamic","dm.tail.presence":"dynamic","dm.tail.gwfeed":"dynamic","dm.tail.app":"dynamic"};
@@ -32346,7 +32346,7 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
   }
   return {rows:rows,zeros:zeros};
 }
-/* ── 水水报告（Markdown 列表＝票06 锁稿主体＋2026-10-16 修订块；## 轮头＋--- 轮间＋怎么看＋想少发一点）── */
+/* ── 水水报告（Markdown 列表＝票06 锁稿主体＋2026-10-16 修订块；## 轮头＋--- 轮间＋怎么看〈组名含义／数据怎么看／想省点上下文〉）── */
   function reportM(snaps){
   var out=["最近 "+snaps.length+" 轮的上下文账本（每轮请求发出前、组包完成时顺手记下；列表数字均为估算，轮头「总」是 API 返回的真值）：","（列表格式：字数 / tok数 (占比%)）",""];
   for(var idx=0;idx<snaps.length;idx++){
@@ -32368,19 +32368,17 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
     if(gr.zeros.length)out.push("（为 0 的组："+gr.zeros.join("、")+"）");
     if(idx<snaps.length-1){out.push("");out.push("---");out.push("")}
   }
-  out.push("");out.push("怎么看");out.push("组名含义（六组按固定语义序）：");
+  out.push("");out.push("怎么看");out.push("组名含义（六组按固定语义排序，没写完的均以“等”指代）：");
   for(var q=0;q<GROUPS.length;q++)out.push("- "+GROUPS[q][1]+"："+GROUPS[q][2]+"。");
-  out.push("口径：");
-  out.push("- 每组的字数、占比都是估算，按固定语义序排列，跨轮同一组可直接比大小；占比按字算、不按 tok。");
-  out.push("- 图片只计帧数、不计字符。");
-  out.push("- 每轮开头「总」来自 API 返回的真值；列表里的数字都是估算——对不上时以轮头的「总」为准。");
-  out.push("- 账本「总」＝ API 返回的全部 prompt 量（未走缓存的输入＋缓存读＋缓存写）；括号内的「缓存」是缓存读，缓存写存而不显。");
-  out.push("- 记忆、日历、Beyond、信箱里的具体内容去对应页面看，账本只记「多大」。");
-  out.push("");out.push("想少发一点（方向，不写具体数值）");
-  out.push("- 本窗历史已全量发送时，调小上下文条数可减少发送量。");
-  out.push("- 关掉不用的能力，功能与规则会整块变小。");
+  out.push("数据怎么看：");
+  out.push("- 字数和占比都是按字符推算的，用来比对各组大小，不一定和面板绝对一致。");
+  out.push("- 在水水报告每轮开头的「总」是服务商返回的精确账单；列表里各组数字是本地估算的，有误差是正常的。");
+  out.push("- 图片只计帧数、不计字符；账本为了保护隐私和节省空间，只记录各组占用的体积大小，不显示具体内容，想看具体内容请去对应的页面。");
+  out.push("");out.push("想省点上下文，可以这么调：");
+  out.push("- 前序历史太长时，调小上下文条数最立竿见影。");
+  out.push("- 关掉不用的能力，功能与规则的占比会整块变小。");
   out.push("- 动态资料按当前场景注入，不需要时对应来源会自动不带。");
-  out.push("- 想提高缓存命中率、省重复发送的钱，去「缓存探针」——那是另一笔账。");
+  out.push("- 想省缓存的钱，去小助手水水用「缓存探针」查查为什么没命中。");
   return out.join("\n");
 }
 /* ── 长按面板（票07：折叠态文案＋行内展开 4 列表；HTML 由 Phase 2b 绑定）── */
@@ -32404,7 +32402,7 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
   var h="<div class=\"ctx-expand\" id=\"mi-ctx-expand\"><div class=\"mdr\"><table><thead><tr><th>组</th><th>字</th><th>tok</th><th>占比(%)</th></tr></thead><tbody>"+rows.join("")+"</tbody></table></div>";
   if(gr.zeros.length)h+="<div class=\"ctx-note\">（为 0 的组："+esc(gr.zeros.join("、"))+"）</div>";
   h+="<div class=\"ctx-note\">记忆、日历、Beyond、信箱里的具体内容去对应页面看，账本只记「多大」。</div>";
-  h+="<div class=\"ctx-note\">字/tok 均为约估算值。</div>";/* R3 需求1：列头去「(约)」，约/估算统一下沉表下 */
+  h+="<div class=\"ctx-note\">字/tok 均为约估算值。其中字数为包含标点符号的字符总数；tok因本地无法获取模型的真实分词库，按经验公式推算，绝对值可能与面板计费有差异，但不影响各组占比参考。</div>";/* R3 需求1 列头去「(约)」下沉表下；patch25 补足字/tok 口径说明（用户裁） */
   h+="<div class=\"ctx-note\">下一轮想省，可调小上下文条数；不用的能力关掉，功能与规则会整块变小。</div></div>";
   return h;
 }
