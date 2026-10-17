@@ -25250,13 +25250,13 @@ body.theme-infernal .anno-tb-drop{background:#172038}
 .ctx-expand{display:none;padding:8px 2px 4px}
 .ctx-expand.open{display:block}
 .ctx-note{font-size:.78rem;color:var(--tx3);padding:4px 2px;line-height:1.5}
-.ctx-expand table{width:100%;table-layout:fixed;margin:0 auto}
-.ctx-expand table th,.ctx-expand table td{text-align:center}
-.ctx-expand table th:nth-child(1),.ctx-expand table td:nth-child(1){width:32%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ctx-expand table th:nth-child(2),.ctx-expand table td:nth-child(2){width:23%}
-.ctx-expand table th:nth-child(3),.ctx-expand table td:nth-child(3){width:23%}
-.ctx-expand table th:nth-child(4),.ctx-expand table td:nth-child(4){width:22%}
-.ctx-expand table td:nth-child(2),.ctx-expand table td:nth-child(3),.ctx-expand table td:nth-child(4){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctx-expand table{width:100%!important;table-layout:fixed!important;display:table!important;margin:0!important;font-size:0.8em!important}/* patch23：破 .mdr table 的 display:block（:551）——块盒化是 fixed 布局失效的根因 */
+.ctx-expand table th,.ctx-expand table td{text-align:center!important;box-sizing:border-box!important;padding:5px 3px}/* patch23：border-box 让 26/28/26/20 含 padding（破 content-box 溢出）；padding 9px→3px 换单行空间 */
+.ctx-expand table th:nth-child(1),.ctx-expand table td:nth-child(1){width:26%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctx-expand table th:nth-child(2),.ctx-expand table td:nth-child(2){width:28%}
+.ctx-expand table th:nth-child(3),.ctx-expand table td:nth-child(3){width:26%}
+.ctx-expand table th:nth-child(4),.ctx-expand table td:nth-child(4){width:20%}
+.ctx-expand table td:nth-child(2),.ctx-expand table td:nth-child(3),.ctx-expand table td:nth-child(4){white-space:nowrap!important}/* patch23：删 overflow:hidden＋ellipsis——账本数据必须完整，宁可溢出不可截断 */
 .ctx-expand table td.ctx-pct{text-align:center;line-height:1.45}/* 上下文账本：面板行＋行内展开（票07 铁律①唯一例外）*/
 .mi-row{display:flex;justify-content:space-between;gap:14px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:0.8rem}
 .mi-row span{color:var(--tx3);flex:none}
