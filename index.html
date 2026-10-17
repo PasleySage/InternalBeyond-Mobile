@@ -8881,7 +8881,7 @@ function openMsgInfo(m,el){
   b.innerHTML='<div class="mi-head"><div class="mh-ava mi-ava" id="mi-ava"></div><div class="mi-who"><div class="mi-nm">'+esc(av.name||'')+'</div><div class="mi-rl">'+(m.role==='user'?'你发出的消息':'AI 的回复')+'</div></div></div>'
     +'<div class="mi-grid">'+rows.map(r=>'<div class="mi-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+'</div>'
     +'<div class="mi-acts" id="mi-acts"></div>';
-  if(m.ctxSnap){try{var _cg=b.querySelector('.mi-grid');if(_cg){_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.rowHtml(m.ctxSnap));var _cr0=document.getElementById('mi-ctx-row');if(_cr0)_cr0.addEventListener('click',function(){var _op=document.getElementById('mi-ctx-expand'),_rw=document.getElementById('mi-ctx-row'),_ar=_rw?_rw.querySelector('.ctx-arr'):null;if(_op){_op.classList.remove('open');_op.remove();if(_ar)_ar.classList.remove('on')}else{_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.tableHtml(m.ctxSnap));var _nw=document.getElementById('mi-ctx-expand');if(_nw)_nw.classList.add('open');if(_ar)_ar.classList.add('on')}})}}catch(e){}}/* 上下文账本：长按面板行（票07；DOM 存在性即开关态，面板重开天然重置折叠）*/
+  if(m.ctxSnap){try{var _cg=b.querySelector('.mi-grid');if(_cg){_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.rowHtml(m.ctxSnap));var _cr0=$('mi-ctx-row');if(_cr0)_cr0.addEventListener('click',function(){var _op=$('mi-ctx-expand'),_rw=$('mi-ctx-row'),_ar=_rw?_rw.querySelector('.ctx-arr'):null;if(_op){_op.classList.remove('open');_op.remove();if(_ar)_ar.classList.remove('on')}else{_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.tableHtml(m.ctxSnap));var _nw=$('mi-ctx-expand');if(_nw)_nw.classList.add('open');if(_ar)_ar.classList.add('on')}})}}catch(e){}}/* 上下文账本：长按面板行（票07；DOM 存在性即开关态，面板重开天然重置折叠）*/
   setAvaEl($('mi-ava'),av.src,av.name);
   const acts=$('mi-acts');
   const mkb=(t,fn,danger)=>{const x=document.createElement('button');x.className='mi-btn'+(danger?' danger':'');x.textContent=t;x.addEventListener('click',()=>{closeSheets();fn()});acts.appendChild(x)};
@@ -25257,7 +25257,7 @@ body.theme-infernal .anno-tb-drop{background:#172038}
 .ctx-expand table th:nth-child(3),.ctx-expand table td:nth-child(3){width:26%}
 .ctx-expand table th:nth-child(4),.ctx-expand table td:nth-child(4){width:20%}
 .ctx-expand table td:nth-child(2),.ctx-expand table td:nth-child(3),.ctx-expand table td:nth-child(4){white-space:nowrap!important}
-.ctx-expand table td .ctx-tw{white-space:normal}/* patch24：占比列尾注 span 允许折行——「· 常驻档案 0」≈84px 在 20% 列 nowrap 下一切手机宽度必然溢出；数字仍 nowrap 单行不截断 *//* patch23：删 overflow:hidden＋ellipsis——账本数据必须完整，宁可溢出不可截断 */
+.ctx-expand table td .ctx-znote{white-space:normal}/* patch24：占比列尾注 span 允许折行——「· 常驻档案 0」≈84px 在 20% 列 nowrap 下一切手机宽度必然溢出；数字仍 nowrap 单行不截断 *//* patch23：删 overflow:hidden＋ellipsis——账本数据必须完整，宁可溢出不可截断 */
 .ctx-expand table td.ctx-pct{text-align:center;line-height:1.45}/* 上下文账本：面板行＋行内展开（票07 铁律①唯一例外）*/
 .mi-row{display:flex;justify-content:space-between;gap:14px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:0.8rem}
 .mi-row span{color:var(--tx3);flex:none}
@@ -32267,7 +32267,7 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
   function lenP(t){try{return Array.from(t).length}catch(e){return 0}}
   function estTok(t){try{var f=window._blogTokenEstM;if(typeof f==="function"){var v=f(t);return(typeof v==="number"&&isFinite(v))?v:0}return 0}catch(e){return 0}}
   function esc(x){return String(x).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
-  function fmtN(n){return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g,",")}
+  function fmtN(n){return String(Math.max(0,Math.round(n||0))).replace(/\B(?=(\d{3})+(?!\d))/g,",")}/* patch26：负值钳制，对齐上游 amsum 同款 */
 /* ── 轮次与捕获（begin 返回轮次句柄，add 系列挂句柄——patch24 修 CRITICAL 并发串话：
    genReply 的 begin→snapshot 间有 40+ await，跨会话并发生成时模块级 cur 单例会被后一个 begin
    整体覆盖：前一轮 add 落进后一轮累积器、snapshot 捕获对方块（含 head 预览，跨 TA 内容落错
@@ -32334,7 +32334,7 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
 }
 /* ── 组行数据（三态过滤＋占比＋尾注；reportM/tableHtml 共享数据层、各自渲染层——patch21 提取，双渲染器输出逐字节不变）── */
   function groupRows(s){
-  var gs=agg(s),rows=[],zeros=[],_gt=0,i;
+  var gs=agg(s),rows=[],zeros=[],_gt=0,i,big="",bigc=-1,nz=0;
   for(i=0;i<GROUPS.length;i++)_gt+=gs[GROUPS[i][0]].len;/* 占比分母＝组 len 总和（块级口径，各组加起来≈100%；轮头不显总字数——R3 排版重构，字数看组行相加）*/
   for(i=0;i<GROUPS.length;i++){
     var G=gs[GROUPS[i][0]],gid=G.gid;
@@ -32342,16 +32342,16 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
       if(gid!=="other"&&!(s.quiet&&gid==="rules"))zeros.push(G.name);
       continue;
     }
+    if(G.len>0){nz++;if(G.len>bigc){bigc=G.len;big=G.name}}/* big/nz 随数据层一起出（patch26）：reportM 轮头与 rowHtml 折叠行共用，删两处重复计算 */
     rows.push({gid:gid,name:G.name,len:G.len,tok:G.tok,pct:_gt?Math.round(G.len/_gt*100):0,n:(gid==="hist"?(G.n||0):0),img:(gid==="hist"&&s.hist&&s.hist.img)?s.hist.img:0,missed:G.missed,znotes:G.znotes});
   }
-  return {rows:rows,zeros:zeros};
+  return {rows:rows,zeros:zeros,big:big,nz:nz};
 }
 /* ── 水水报告（Markdown 列表＝票06 锁稿主体＋2026-10-16 修订块；## 轮头＋--- 轮间＋怎么看〈组名含义／数据怎么看／想省点上下文〉）── */
   function reportM(snaps){
   var out=["最近 "+snaps.length+" 轮的上下文账本（每轮请求发出前、组包完成时顺手记下；列表数字均为估算，轮头「总」是 API 返回的真值）：","（列表格式：字数 / tok数 (占比%)）",""];
   for(var idx=0;idx<snaps.length;idx++){
-    var s=snaps[idx],gr=groupRows(s),rl=[],big="",bigc=-1;
-    for(var bi=0;bi<gr.rows.length;bi++){var B=gr.rows[bi];if(B.len>0&&B.len>bigc){bigc=B.len;big=B.name}}
+    var s=snaps[idx],gr=groupRows(s),rl=[],big=gr.big;
     for(var ri=0;ri<gr.rows.length;ri++){
       var R=gr.rows[ri];
       var line="- "+R.name+"："+fmtN(R.len)+" / "+fmtN(R.tok)+" ("+R.pct+"%)";
@@ -32383,9 +32383,8 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
 }
 /* ── 长按面板（票07：折叠态文案＋行内展开 4 列表；HTML 由 Phase 2b 绑定）── */
   function rowHtml(s){
-  var gs=agg(s),nz=0,big="",bigc=-1;
-  for(var i=0;i<GROUPS.length;i++){var G=gs[GROUPS[i][0]];if(G.len>0){nz++;if(G.len>bigc){bigc=G.len;big=G.name}}}
-  return "<div class=\"ctx-row\" id=\"mi-ctx-row\"><span class=\"ctx-lb\">上下文</span><b>"+nz+" 组"+(big?(" · 占比最高 "+esc(big)):"")+"</b><i class=\"ctx-arr\">›</i></div>";/* B 裁（2026-10-17 R2）：面板行不显体积——Token 行已交代输入量，账本估算与实测并排会造成认知割裂（真机：缓存命中时 2.5k vs 表格 128k）；只给结构：非零组数＋占比最高组，全零组省略子句 */
+  var gr=groupRows(s);
+  return "<div class=\"ctx-row\" id=\"mi-ctx-row\"><span class=\"ctx-lb\">上下文</span><b>"+gr.nz+" 组"+(gr.big?(" · 占比最高 "+esc(gr.big)):"")+"</b><i class=\"ctx-arr\">›</i></div>";/* B 裁（2026-10-17 R2）：面板行不显体积——Token 行已交代输入量，账本估算与实测并排会造成认知割裂（真机：缓存命中时 2.5k vs 表格 128k）；只给结构：非零组数＋占比最高组，全零组省略子句 */
 }
   function tableHtml(s){
   var gr=groupRows(s),rows=[];
@@ -32396,7 +32395,7 @@ var noteQ=null;/* registry 写串行链（noteSave 并发保护）*/
     var tail="";
     if(R.missed.length)tail=MISS_NOTE;
     for(var z=0;z<R.znotes.length;z++){var _zn=ZERO_NOTE[R.znotes[z]];if(_zn)tail+=(tail?" ":"")+_zn}/* patch24：多条尾注空格归一（与 reportM 一致）*/
-    if(tail)lines.push("<span class=\"ctx-tw\">"+esc(tail)+"</span>");/* 尾注随之各占一行（patch24：span 包裹允许折行防溢出；告别「87· 工具 0」挤挨）*/
+    if(tail)lines.push("<span class=\"ctx-znote\">"+esc(tail)+"</span>");/* 尾注随之各占一行（patch24：span 包裹允许折行防溢出；告别「87· 工具 0」挤挨）*/
     rows.push("<tr><td>"+esc(R.name)+"</td><td>"+fmtN(R.len)+"</td><td>"+fmtN(R.tok)+"</td><td class=\"ctx-pct\">"+lines.join("<br>")+"</td></tr>");
   }
   var h="<div class=\"ctx-expand\" id=\"mi-ctx-expand\"><div class=\"mdr\"><table><thead><tr><th>组</th><th>字</th><th>tok</th><th>占比(%)</th></tr></thead><tbody>"+rows.join("")+"</tbody></table></div>";
