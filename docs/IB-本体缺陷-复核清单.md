@@ -3,7 +3,7 @@
 **截至 2026-09-19** ｜ 范围：IB 应用本体（两端），不含工作空间流程问题 ｜ **本清单不外发**（对外文稿另行出稿待批）
 
 - 手机端 Internal Beyond Mobile：上游 `Sui-IB/InternalBeyond-Mobile` = `1e2725b0`（V2.4.4，应用内 `IB_VER = v262-p`），`index.html` 3,304,065 B，sha256 `c16aca6e…30511`；`ib-sw.js` 2,977 B，sha256 `e7dfc6bc…1a56`
-- 电脑端 Internal Beyond：上游 `Sui-IB/InternalBeyond` = `9ef2ed12`（V2.7.2），`Windows\InternalBeyond.html` 2,716,118 B，sha256 `c40bbe62…3f855`
+- 电脑端 Internal Beyond：上游 `Sui-IB/InternalBeyond` = `9ef2ed12`（V2.7.2），`D:\IB-Workspace-Desktop\InternalBeyond.html` 2,716,118 B，sha256 `c40bbe62…3f855`
 - 行号均为**上述提交**的行号。手机端快照按需可复现：`curl -sL https://raw.githubusercontent.com/Sui-IB/InternalBeyond-Mobile/1e2725b0/index.html`（校验 sha256 后再对行号）
 
 ---

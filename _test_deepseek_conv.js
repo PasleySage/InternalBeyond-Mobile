@@ -1,6 +1,9 @@
 /* deepseek_to_ib.js 离线自测：模拟 DeepSeek 导出的几种可能结构 */
 'use strict';
 const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const T = f => path.join(os.tmpdir(), f);
 const { execFileSync } = require('child_process');
 const NODE = process.execPath;
 const SCRIPT = __dirname + '/deepseek_to_ib.js';
@@ -32,7 +35,7 @@ const A = [
       { role: 'user', content: '第二条会话', timestamp: 1755000000000 }
   ]}
 ];
-fs.writeFileSync(__dirname + '/_t_a.json', JSON.stringify(A, null, 2));
+fs.writeFileSync(T('/_t_a.json'), JSON.stringify(A, null, 2));
 
 /* 结构 B：包一层 {conversations:[...]}，毫秒级，content 是数组 */
 const B = {
@@ -44,7 +47,7 @@ const B = {
     ]
   }]
 };
-fs.writeFileSync(__dirname + '/_t_b.json', JSON.stringify(B, null, 2));
+fs.writeFileSync(T('/_t_b.json'), JSON.stringify(B, null, 2));
 
 /* 结构 C：缺时间戳 + 乱序 */
 const C = [{
@@ -55,11 +58,11 @@ const C = [{
     { role: 'user', content: '没有时间字段' }
   ]
 }];
-fs.writeFileSync(__dirname + '/_t_c.json', JSON.stringify(C, null, 2));
+fs.writeFileSync(T('/_t_c.json'), JSON.stringify(C, null, 2));
 
 console.log('\n[1] --list 列出会话');
 {
-  const r = run([__dirname + '/_t_a.json', 'friend_1', '', '--list']);
+  const r = run([T('/_t_a.json'), 'friend_1', '', '--list']);
   ok(r.code === 0, 'list 正常退出', r.out.slice(-200));
   ok(/夜谈/.test(r.out) && /碎碎念/.test(r.out), '列出两个会话标题');
   ok(/2025-08-/.test(r.out) || /\d{4}-\d{2}-\d{2}/.test(r.out), '显示可读时间范围');
@@ -67,9 +70,9 @@ console.log('\n[1] --list 列出会话');
 
 console.log('\n[2] 结构 A 转换（秒级时间戳 + 跳过 system）');
 {
-  const out = __dirname + '/_t_a_out.json';
+  const out = T('/_t_a_out.json');
   if(fs.existsSync(out)) fs.unlinkSync(out);
-  const r = run([__dirname + '/_t_a.json', 'friend_1757500000000', out]);
+  const r = run([T('/_t_a.json'), 'friend_1757500000000', out]);
   ok(r.code === 0, '转换成功', r.out.slice(-300));
   const o = JSON.parse(fs.readFileSync(out, 'utf8'));
   ok(Array.isArray(o.chatMessages), '顶层是 chatMessages 数组');
@@ -87,8 +90,8 @@ console.log('\n[2] 结构 A 转换（秒级时间戳 + 跳过 system）');
 
 console.log('\n[3] 结构 B（嵌套 + content 数组 + 毫秒）');
 {
-  const out = __dirname + '/_t_b_out.json';
-  const r = run([__dirname + '/_t_b.json', 'friend_2', out, '--sendername=瑟琳']);
+  const out = T('/_t_b_out.json');
+  const r = run([T('/_t_b.json'), 'friend_2', out, '--sendername=瑟琳']);
   ok(r.code === 0, '转换成功', r.out.slice(-300));
   const o = JSON.parse(fs.readFileSync(out, 'utf8'));
   ok(o.chatMessages.length === 2, '两条都转出来', o.chatMessages.length);
@@ -100,8 +103,8 @@ console.log('\n[3] 结构 B（嵌套 + content 数组 + 毫秒）');
 
 console.log('\n[4] 结构 C（会话首条为 assistant + 缺时间戳 + 时间戳与原生顺序相反）');
 {
-  const out = __dirname + '/_t_c_out.json';
-  const r = run([__dirname + '/_t_c.json', 'friend_3', out]);
+  const out = T('/_t_c_out.json');
+  const r = run([T('/_t_c.json'), 'friend_3', out]);
   ok(r.code === 0, '转换成功', r.out.slice(-300));
   const o = JSON.parse(fs.readFileSync(out, 'utf8'));
   ok(o.chatMessages.length === 3, '三条都在', o.chatMessages.length);
@@ -122,10 +125,10 @@ console.log('\n[4b] 首条 user 被过滤 / 纯 assistant 会话（时间戳不�
     { role: 'assistant', content: '嗯，我在', create_time: 1757000005 },
     { role: 'user', content: '那就好', create_time: 1757000100 }
   ]}];
-  fs.writeFileSync(__dirname + '/_t_d.json', JSON.stringify(D, null, 2));
-  const out = __dirname + '/_t_d_out.json';
+  fs.writeFileSync(T('/_t_d.json'), JSON.stringify(D, null, 2));
+  const out = T('/_t_d_out.json');
   if(fs.existsSync(out)) fs.unlinkSync(out);
-  const r = run([__dirname + '/_t_d.json', 'friend_4', out]);
+  const r = run([T('/_t_d.json'), 'friend_4', out]);
   ok(r.code === 0, '转换成功', r.out.slice(-300));
   const o = JSON.parse(fs.readFileSync(out, 'utf8'));
   ok(o.chatMessages.length === 2, '空内容 user 被跳过，剩 2 条', o.chatMessages.length);
@@ -139,10 +142,10 @@ console.log('\n[4b] 首条 user 被过滤 / 纯 assistant 会话（时间戳不�
     { role: 'assistant', content: '你好呀', create_time: 1757000000 },
     { role: 'assistant', content: '今天过得怎么样' }
   ]}];
-  fs.writeFileSync(__dirname + '/_t_e.json', JSON.stringify(E, null, 2));
-  const out2 = __dirname + '/_t_e_out.json';
+  fs.writeFileSync(T('/_t_e.json'), JSON.stringify(E, null, 2));
+  const out2 = T('/_t_e_out.json');
   if(fs.existsSync(out2)) fs.unlinkSync(out2);
-  const r2 = run([__dirname + '/_t_e.json', 'friend_5', out2]);
+  const r2 = run([T('/_t_e.json'), 'friend_5', out2]);
   ok(r2.code === 0, '纯 assistant 会话也能转换', r2.out.slice(-300));
   const o2 = JSON.parse(fs.readFileSync(out2, 'utf8'));
   ok(o2.chatMessages.every(m => m.timestamp > 1e12), '纯 assistant 会话时间戳合法',
@@ -152,31 +155,31 @@ console.log('\n[4b] 首条 user 被过滤 / 纯 assistant 会话（时间戳不�
 
 console.log('\n[5] --pick 与 --mindate');
 {
-  const out = __dirname + '/_t_pick.json';
-  const r = run([__dirname + '/_t_a.json', 'friend_1', out, '--pick=1']);
+  const out = T('/_t_pick.json');
+  const r = run([T('/_t_a.json'), 'friend_1', out, '--pick=1']);
   ok(r.code === 0, 'pick=1 成功', r.out.slice(-200));
   const o = JSON.parse(fs.readFileSync(out, 'utf8'));
   ok(o.chatMessages.length === 3, '只转了第 1 个会话（3 条）', o.chatMessages.length);
-  const r2 = run([__dirname + '/_t_a.json', 'friend_1', __dirname + '/_t_md.json', '--mindate=2026-01-01']);
+  const r2 = run([T('/_t_a.json'), 'friend_1', T('/_t_md.json'), '--mindate=2026-01-01']);
   ok(r2.code === 0 || /一条消息都不剩/.test(r2.out), 'mindate 过滤后无残留（或明确报错）', r2.out.slice(-150));
 }
 
 console.log('\n[6] 错误处理');
 {
-  const r = run([__dirname + '/_nope.json', 'friend_1']);
+  const r = run([T('/_nope.json'), 'friend_1']);
   ok(r.code !== 0 && /读不到文件/.test(r.out), '文件不存在给出明确提示');
-  fs.writeFileSync(__dirname + '/_t_bad.json', '{not json');
-  const r2 = run([__dirname + '/_t_bad.json', 'friend_1']);
+  fs.writeFileSync(T('/_t_bad.json'), '{not json');
+  const r2 = run([T('/_t_bad.json'), 'friend_1']);
   ok(r2.code !== 0 && /不是有效的 JSON/.test(r2.out), '坏 JSON 给出明确提示');
-  fs.writeFileSync(__dirname + '/_t_empty.json', '{"foo":1}');
-  const r3 = run([__dirname + '/_t_empty.json', 'friend_1']);
+  fs.writeFileSync(T('/_t_empty.json'), '{"foo":1}');
+  const r3 = run([T('/_t_empty.json'), 'friend_1']);
   ok(r3.code !== 0, '无会话结构时报错退出', r3.out.slice(-150));
 }
 
 ['_t_a.json','_t_b.json','_t_c.json','_t_a_out.json','_t_b_out.json','_t_c_out.json',
  '_t_d.json','_t_d_out.json','_t_e.json','_t_e_out.json',
  '_t_pick.json','_t_md.json','_t_bad.json','_t_empty.json'].forEach(f => {
-  try{ fs.unlinkSync(__dirname + '/' + f); }catch(e){}
+  try{ fs.unlinkSync(T(f)); }catch(e){}
 });
 
 console.log('\n==============================');

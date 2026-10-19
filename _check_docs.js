@@ -160,4 +160,11 @@ if (mem.length) {
 }
 
 console.log('\n检查 ' + scanned + ' 个文件：' + (bad ? bad + ' 个不合格' : '全部通过') + (warned ? `，另有 ${warned} 条提示待人看` : ''));
+
+// 下限断言（S1.2）：默认跑法下扫描面塌缩 ⇒ 检查器定位坏了，不是文档变少。
+// 2026-10-19 事故：ROOT 指错一层，默认集塌到 4 个文件还报「全部通过」一整天。
+if (!args.length && scanned < 50) {
+  console.log('✗ 检查面塌缩：默认集只扫到 ' + scanned + ' 个文件（docs/＋.scratch/＋记忆文件理应远多于此）——先查 ROOT 定位（__dirname 上跳类 bug）。');
+  process.exit(1);
+}
 process.exit(bad ? 1 : 0);

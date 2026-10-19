@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const cp = require('child_process');
 const NODE = process.execPath;
@@ -20,7 +21,7 @@ for(let i = 0; i < 200; i++){
   });
 }
 const exportData = { conversations: [ { title: '测试会话', messages: conv } ] };
-const dir = path.join(__dirname, '_tmp_chunk_test');
+const dir = path.join(os.tmpdir(), '_tmp_chunk_test');
 fs.rmSync(dir, { recursive: true, force: true });
 fs.mkdirSync(dir, { recursive: true });
 const inFile = path.join(dir, 'export.json');

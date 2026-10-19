@@ -1,5 +1,6 @@
 /* IB聊天记录录入器 —— 离线逻辑自测（第二层：纯函数/数据流） */
 const path = require('path');
+const os = require('os');
 
 /* ---- 极简 DOM mock：让页面脚本能在 node 里跑起来 ---- */
 const elCache = new Map();
@@ -56,8 +57,8 @@ global.URL = URLMock;
 /* ---- 载入页面脚本 ---- */
 const html = require('fs').readFileSync(path.join(__dirname, 'tools', 'pages', 'IB聊天记录录入器.html'), 'utf8');
 const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-require('fs').writeFileSync(path.join(__dirname, '_tmp_script_0.js'), js);
-const M = require('./_tmp_script_0.js');
+require('fs').writeFileSync(path.join(os.tmpdir(), '_tmp_script_0.js'), js);
+const M = require(path.join(os.tmpdir(), '_tmp_script_0.js'));
 
 /* ---- 断言小工具 ---- */
 let pass = 0, fail = 0;

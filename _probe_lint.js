@@ -16,8 +16,12 @@
  *   ⑤ 引用悬空 —— 删了票 02 的 §7，§3/§4 里引用 D1–D4 的地方不知道；改了轮数口径，
  *      写「9 轮」的证据行不同步。**改了一处、忘了引用它的另一处**，五轮审查的根因。
  *      ⑤ 是跨文件的（要读目标文件的标题），单独一整节跑，扫整个 effort 目录。
+ *   ⑥ __dirname 上跳（2026-10-19 加）—— 根级脚本用 `__dirname/..` 定位，文件一移定位就漂，
+ *      且失效是静默的（退出码照样 0）。`_check_docs.js` 与本品各出过一次同款事故。
+ *   ⑦ 文档引用路径不存在（2026-10-19 加）—— 深清理后悬空引用 6 处、技能里死路径活一天，
+ *      全靠人肉 grep。反引号路径（含分隔符）在 .md 正文出现即检存在性。
  *
- * 五条都是确定性的：同样的输入必然给出同样的判定。所以它们属于**检查器**，不属于文档规约。
+ * 六条都是确定性的：同样的输入必然给出同样的判定。所以它们属于**检查器**，不属于文档规约。
  *
  * 用法：
  *   node _probe_lint.js                       # 默认集＝glob 全 effort .md（排除证据/临时文件）＋3 探针＋CONTEXT.md；另恒扫全 effort 跑引用检查
@@ -329,6 +333,132 @@ function checkLabelRefs(file, src, defsAll, out) {
   });
 }
 
+// ── ⑥ __dirname 禁上跳（根级脚本）────────────────────────────
+// 2026-10-19 事故：`_check_docs.js` 的 `ROOT = path.resolve(__dirname,'..')` 在目录提升后
+// 指向 `D:\`，默认检查面塌到 4 个文件还报「全部通过」一整天；`_probe_lint.js` 十月份
+// 出过同族 bug（ROOT 多一层，裸跑从来查不到文件）。根级脚本没有上行的理由——
+// 它一跳，定位就跟着文件位置漂移，而这类失效是静默的（退出码照样是 0）。
+// 检查面显式收窄为**根级 `_*.js`＋三个探针**：`.scratch` 里的一次性脚本住得深，
+// 上跳是合法定位方式，不判（宁漏毋滥）。
+const UP_RE = /__dirname\s*(?:,\s*['"]\.\.['"]|\+\s*['"]\/\.\.)/;
+function rootJsFiles() {
+  const out = [];
+  try {
+    fs.readdirSync(ROOT).forEach(n => { if (/^_.*\.js$/.test(n)) out.push(path.join(ROOT, n)); });
+  } catch (e) { /* 目录读不到就跳过 */ }
+  ['预览预算-1挂采集器.js', '预览预算-2出报告.js', '真实分布-3出分布表.js'].forEach(n => {
+    const p = path.join(LEDGER, n);
+    if (fs.existsSync(p)) out.push(p);
+  });
+  return out;
+}
+function checkDirnameUp(out) {
+  const files = rootJsFiles();
+  if (!files.length) return;
+  const hits = [];
+  files.forEach(p => {
+    fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+      if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;                   // 注释行不判（事故范例就写在注释里）
+      const m = line.match(UP_RE);
+      if (m) hits.push({ file: path.basename(p), line: i + 1, text: line.trim().slice(0, 80) });
+    });
+  });
+  if (hits.length) {
+    out.push(['FAIL', '__dirname 上跳（根级脚本禁位）', hits.length + ' 处']);
+    hits.slice(0, 8).forEach(h => out.push(['', '  ' + h.file + ' L' + h.line + ': ' + h.text]));
+    out.push(['', '  → 根级脚本定位只用 __dirname；确需上跳说明它不该住根上（_check_docs 2026-10-19 事故同款）。']);
+  }
+}
+
+// ── ⑦ 文档引用的路径必须存在 ─────────────────────────────────
+// 2026-10-19 深清理后悬空引用 6 处；更早，技能里 `D:\InternalBeyond\` 死路径活了一整天。
+// 反引号路径（含 `/` 或 `\`）出现在 .md 正文（跳过 ``` 围栏块）即检：
+//   · 相对路径按「md 所在目录 → 工作区根」两级解析，任一存在即放行（本仓两种写法都有）；
+//   · `D:\IB-Workspace-*` 绝对路径直接检（双工作区约定，见 AGENTS.md）；
+//   · 通配符／`{a,b}` 简写／`<占位符>`／命令行／URL／带删除标注的行一律不判（宁可漏报）。
+// 扫描面＝全工作区 .md，排除 .git／node_modules／.scratch（历史 effort）／.obsidian／
+// .workbuddy/memory（append-only 日志）；.workbuddy/skills 是活指令，纳入。
+const SKIP_DIRS_7 = new Set(['.git', 'node_modules', '.scratch', '.obsidian']);
+// 与上游逐字节同步的文件（`_sync_mirror.js`／`_win_sync.js` 的覆盖目标）不本地编辑，
+// 其内部路径以上游仓库布局为准 —— 桌面端 README 引用 `DLC/IB-Cinema.js`（上游仓库自身
+// 多一层 `DLC\`）即属此类。显式列出，不静默排除。
+const UPSTREAM_SYNCED_7 = new Set(['README.md']);
+const ANNOT_7 = /已删|删除|已移除|现已删除|已清|git 历史|深清理|已归档|已迁|不存在|拆分前/;
+// 双工作区约定（AGENTS.md）：本仓文档大量以相对路径引用另一工作区的资产
+// （`_patches\`、`docs\说明书-电脑端.md` 等）。相对路径三级解析：
+// md 所在目录 → 本工作区根 → 另一工作区根。
+const SIBLING = path.basename(ROOT) === 'IB-Workspace-Mobile' ? 'D:/IB-Workspace-Desktop' : 'D:/IB-Workspace-Mobile';
+function collectMd7(dir, out) {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return out; }
+  entries.forEach(e => {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      if (SKIP_DIRS_7.has(e.name)) return;
+      if (dir === ROOT && e.name === '.workbuddy') {                 // 只收 skills，不收 memory
+        collectMd7(path.join(p, 'skills'), out);
+        return;
+      }
+      collectMd7(p, out);
+    } else if (/\.md$/.test(e.name)) {
+      if (UPSTREAM_SYNCED_7.has(e.name)) return;                       // 上游同步件，路径以上游为准
+      out.push(p);
+    }
+  });
+  return out;
+}
+function checkPathRefs(out) {
+  const mds = collectMd7(ROOT, []);
+  if (!mds.length) return;
+  const WS = /^[a-z]:[\\/]ib-workspace-(mobile|desktop)/i;
+  const hits = [];
+  mds.forEach(p => {
+    const rel = path.relative(ROOT, p);
+    let inFence = false;
+    fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+      if (/^\s*```/.test(line)) { inFence = !inFence; return; }
+      if (inFence || ANNOT_7.test(line)) return;
+      const re = /`([^`]+)`/g;
+      let m;
+      while ((m = re.exec(line))) {
+        const tok = m[1].trim();
+        if (!/[\\/]/.test(tok)) continue;                             // 纯文件名不判（归属歧义，显式不收）
+        if (/^(https?:|file:)/i.test(tok)) continue;                  // URL
+        if (/[*{}<>]/.test(tok)) continue;                            // 通配符／简写／占位符
+        if (tok.indexOf('=') >= 0) continue;                          // 带参数
+        if (/\s/.test(tok)) continue;                                 // 带空格＝行文不是路径（如「入 6.5k / 出 1.2k」）
+        if (/^(node|git|gh|cd|bash|npm|python|curl|ls|cat|grep|find|cp|mv)\s/i.test(tok)) continue;  // 命令行
+        if (/^[~]/.test(tok)) continue;                               // home 相对（环境相关）
+        if (/^\//.test(tok)) continue;                                // POSIX 绝对路径（/usr/bin、/mingw64/bin，环境相关）
+        if (/^(Downloads|Desktop|Documents)[\\/]/i.test(tok)) continue;  // 用户 profile 目录（环境相关）
+        if (/^(vendor|safe-bin)[\\/]/i.test(tok)) continue;           // 宿主环境内部路径（app.asar 内，不在工作区）
+        if (/\.\.\.|…/.test(tok)) continue;                           // 省略路径／提交区间
+        // 形状收窄：要么是带扩展名的文件，要么以分隔符结尾的目录；且去掉尾部分隔符后
+        // 还必须含一个内部分隔符——这一刀切掉 `DLC/`／`_patches\`／`Android\` 这类裸目录名
+        // （它们是名字不是路径，从文档位置无法解析），也切掉 `\uXXXX` 与仓库 slug。
+        if (!(/[^/\\]\.[A-Za-z0-9]+$/.test(tok) || /[\\/]$/.test(tok))) continue;
+        if (!/[\\/]/.test(tok.replace(/[\\/]+$/, ''))) continue;
+        let ok = false;
+        if (/^[a-z]:[\\/]/i.test(tok)) {                              // 绝对路径：只检双工作区
+          if (WS.test(tok.replace(/\\/g, '/'))) ok = fs.existsSync(tok);
+          else ok = true;                                             // 环境相关路径不判
+        } else {
+          ok = fs.existsSync(path.resolve(path.dirname(p), tok)) ||
+               fs.existsSync(path.resolve(ROOT, tok)) ||
+               fs.existsSync(path.resolve(SIBLING, tok));
+        }
+        if (!ok) hits.push({ rel, line: i + 1, tok: tok.slice(0, 70) });
+      }
+    });
+  });
+  if (hits.length) {
+    out.push(['FAIL', '文档引用的路径不存在', hits.length + ' 处']);
+    hits.slice(0, 50).forEach(h => out.push(['', '  ' + h.rel + ' 第 ' + h.line + ' 行：`' + h.tok + '`']));
+    if (hits.length > 50) out.push(['', '  …还有 ' + (hits.length - 50) + ' 处未显示']);
+    out.push(['', '  → 确认是删除件就在该行加标注（如「（已删，git 历史可查）」）；是笔误就改对。']);
+  }
+}
+
 // ── 运行 ───────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2);
@@ -398,6 +528,39 @@ if (!EFFORT_MD.length) {
     out.forEach(r => console.log('  ' + r[0] + ' ' + r[1] + '（' + r[2] + '）'));
     totalFail += out.filter(r => r[0] === 'FAIL').length;
   }
+}
+
+// ⑥ __dirname 禁上跳（根级脚本；工作区级检查，与传入文件清单无关）
+console.log('--- __dirname 禁上跳（根级脚本）---');
+{
+  const out = [];
+  checkDirnameUp(out);
+  if (!out.length) {
+    console.log('✓ 根级脚本无 __dirname 上跳');
+  } else {
+    out.forEach(([lv, msg, extra]) => { if (lv) console.log('  ' + lv + ' ' + msg + (extra ? '（' + extra + '）' : '')); else console.log(msg); });
+    totalFail += out.filter(r => r[0] === 'FAIL').length;
+  }
+}
+
+// ⑦ 文档引用的路径必须存在（工作区级检查，与传入文件清单无关）
+console.log('--- 文档引用路径存在性 ---');
+{
+  const out = [];
+  checkPathRefs(out);
+  if (!out.length) {
+    console.log('✓ 正文反引号路径全部存在（或已带删除标注）');
+  } else {
+    out.forEach(([lv, msg, extra]) => { if (lv) console.log('  ' + lv + ' ' + msg + (extra ? '（' + extra + '）' : '')); else console.log(msg); });
+    totalFail += out.filter(r => r[0] === 'FAIL').length;
+  }
+}
+
+// 下限断言（S1.2）：默认跑法下 effort 还在、扫描面却塌缩 ⇒ 检查器定位坏了，不是文档变少。
+// 2026-10-19 事故：_check_docs.js 默认集塌到 4 个文件仍报「全部通过」一整天。
+if (!argv.length && fs.existsSync(LEDGER) && files.length < 10) {
+  console.log('✗ 检查面塌缩：默认集只扫到 ' + files.length + ' 个文件（effort 目录存在，理应远多于此）——先查检查器自己的定位（__dirname 上跳类 bug）。');
+  process.exit(1);
 }
 
 console.log('');
