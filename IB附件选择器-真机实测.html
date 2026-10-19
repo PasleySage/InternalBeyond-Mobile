@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>IB 附件选择器 · accept 真机实测</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; padding: 16px 14px 40px; background: #F6F5F2; color: #2C2C2A;
+         font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", sans-serif; font-size: 15px; line-height: 1.6; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 6px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 22px 0 8px; }
+  p { margin: 0 0 8px; }
+  .muted { color: #6B6A66; font-size: 13px; }
+  .card { background: #FFFFFF; border: 1px solid #E3E1DB; border-radius: 12px; padding: 12px 13px; margin: 0 0 12px; }
+  .case-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .case-title { font-weight: 600; font-size: 15px; }
+  .case-no { display: inline-block; min-width: 20px; height: 20px; line-height: 20px; text-align: center;
+             border-radius: 6px; background: #EDEBE5; color: #55534E; font-size: 12px; margin-right: 6px; }
+  .meta { color: #6B6A66; font-size: 12px; margin: 4px 0 6px; word-break: break-all; white-space: pre-line; }
+  .accept-val { display: none; background: #F4F3EF; border-radius: 8px; padding: 8px; margin: 6px 0;
+                font-size: 12px; color: #55534E; word-break: break-all; }
+  .accept-val.open { display: block; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; border-radius: 10px; border: 1px solid #D8D5CD; background: #FFFFFF; color: #2C2C2A;
+           padding: 11px 14px; min-height: 44px; cursor: pointer; }
+  button.primary { background: #2F6BD8; border-color: #2F6BD8; color: #FFFFFF; font-weight: 600; }
+  button.link { border: none; background: none; color: #2F6BD8; padding: 4px 0; min-height: 0; }
+  .picked { margin-top: 8px; font-size: 13px; color: #3B6D11; min-height: 20px; }
+  .picked.none { color: #6B6A66; }
+  .obs { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .obs label { display: flex; align-items: center; gap: 7px; font-size: 14px; min-height: 34px; }
+  .obs input { width: 20px; height: 20px; margin: 0; }
+  .obs-title { margin: 12px 0 2px; font-size: 13px; font-weight: 600; color: #55534E; }
+  .note { width: 100%; font: inherit; font-size: 13px; padding: 9px 10px; margin-top: 8px;
+          border: 1px solid #E3E1DB; border-radius: 9px; background: #FCFBF9; color: #2C2C2A; }
+  .hint { margin-top: 8px; font-size: 12px; color: #854F0B; background: #FAEEDA; border-radius: 8px; padding: 7px 9px; }
+  textarea { width: 100%; min-height: 190px; font-family: ui-monospace, Menlo, Consolas, monospace;
+             font-size: 12px; line-height: 1.5; border: 1px solid #E3E1DB; border-radius: 10px; padding: 10px; }
+  .bar { position: sticky; bottom: 0; background: linear-gradient(transparent, #F6F5F2 30%); padding: 12px 0 0; }
+  .bar .row { gap: 10px; }
+  code { background: #EDEBE5; border-radius: 4px; padding: 1px 4px; font-size: 12px; }
+  .timing { margin-top: 6px; font-size: 12px; color: #0C447C; background: #E6F1FB;
+            border-radius: 8px; padding: 6px 8px; word-break: break-all; }
+  .timing.none { color: #5F5E5A; background: #F1EFE8; }
+  .dl { display: inline-block; margin: 4px 6px 0 0; padding: 8px 12px; border: 1px solid #85B7EB;
+        background: #E6F1FB; color: #0C447C; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  .obs-note { color: #854F0B; font-size: 12px; font-weight: 400; }
+</style>
+</head>
+<body>
+<h1>IB 附件选择器 · accept 真机实测</h1>
+<p class="muted">用手机浏览器打开本页，逐个点开选择器，看出现了哪些入口、能不能选到文本文件。本页与 IB 应用数据无关，不写任何本地存储之外的东西。</p>
+
+<div class="card">
+  <div id="env" class="meta">环境读取中…</div>
+  <div id="restored" class="meta" style="display:none; color:#854F0B; background:#FAEEDA; border-radius:8px; padding:7px 9px"></div>
+  <p class="muted" style="margin:0">怎么用（记住有两层）：① 点某一例的「打开选择器」→ ② 先记<b>第一层</b>：弹出的窗口里出现了哪些条目（有的机型只有「相机」和「文件」）→ ③ 点「文件」进<b>第二层</b>，看进到的是文件列表还是照片网格 → ④ 试着选一个 <code>.md</code> 或 <code>.txt</code>，页面会显示选到的文件名与 MIME。两层的勾选项都在下面，后面还有一组「<b>列表里能看到哪几个测试文件</b>」——那一组<b>请你务必勾一下</b>，冷门扩展名能不能用就靠它。<b>若某一例勾了「没有弹窗，直接进列表」，它的第二层会自动置灰——那一层本来就不存在，不用填。</b></p>
+  <p class="muted" style="margin:8px 0 0"><b>关于耗时</b>：点「打开选择器」即开始计时，到你选完（或取消）为止。网页没有"弹窗出现"这个事件，所以「点→弹窗」是从三条旁证推出来的<b>近似值</b>——页面转后台 / 窗口失焦 / 主线程停顿，页面上会标出这次是靠哪一条判定的。若系统没让页面进入后台，就只给总耗时。</p>
+</div>
+
+<h2>第 0 步：先下载这几个测试文件</h2>
+<div class="card" id="dls">
+  <p class="muted" style="margin:0">点下面的链接把它们存到手机（一般落在「下载」目录；若打开成了网页，改用长按 → 下载链接）。存好后回到本页做对照：<b>同一个文件，在「现状」和「候选 B」两例里各试着选一次</b>，看它<b>出不出现</b>、<b>选不选得中</b>。</p>
+  <div style="margin-top:6px">
+    <a class="dl" href="probe.mermaid" download="probe.mermaid">probe.mermaid</a>
+    <a class="dl" href="probe.puml" download="probe.puml">probe.puml</a>
+    <a class="dl" href="probe.ts" download="probe.ts">probe.ts</a>
+    <a class="dl" href="probe.svg" download="probe.svg">probe.svg</a>
+    <a class="dl" href="probe.md" download="probe.md">probe.md（基准）</a>
+  </div>
+  <p class="muted" style="margin:8px 0 0">`.mermaid` / `.puml` / `.ts` / `.svg` 是这次要考的四项；<b>probe.md 是基准</b>——它两边都该选得到。如果连它都选不到，那说明是"下载的文件没被选择器看到"，不是过滤的问题，先解决这一层再往下看。</p>
+</div>
+
+<h2>对照用例</h2>
+<div id="cases"></div>
+
+<h2>绕开那一层：改用 showOpenFilePicker()</h2>
+<div class="card" id="fsa">
+  <div class="meta" id="fsa-env">检测中…</div>
+  <p class="muted" style="margin:0">两个按钮做的是<b>同一件事</b>（选一个文本文件），区别只在取文件的接口。<b>先点 A，再点 B</b>，各选一次。要看的只有一件事：<b>哪一个经过了那层"来源"弹窗</b>——不同浏览器叫法不一样（Edge 是「拍照 / 录像 / 照片和视频」，小米自带是「相机 / 文件」），所以下面把两套词都列了：<b>见什么勾什么，勾不上的写进备注</b>。</p>
+  <div class="row" style="margin-top:10px">
+    <button id="fsa-a">A · input[type=file]（现状）</button>
+    <button class="primary" id="fsa-b">B · showOpenFilePicker()</button>
+  </div>
+  <div class="picked none" id="fsa-a-out">A 还没试</div>
+  <div class="timing none" id="tm-fsa_a">耗时：还没测过</div>
+  <div class="picked none" id="fsa-b-out">B 还没试</div>
+  <div class="obs-title">A（现状：input）点开后</div>
+  <div class="obs" id="fsa-a-obs"></div>
+  <input class="note" type="text" data-fsa-memo="a" placeholder="A 的备注（可选）：例如弹窗写「相机」但点进去是录像">
+  <div class="obs-title">B（showOpenFilePicker）点开后</div>
+  <div class="obs" id="fsa-b-obs"></div>
+  <input class="note" type="text" data-fsa-memo="b" placeholder="B 的备注（可选）">
+  <div class="hint">本页必须走 https 才能点 B —— 手机浏览器只在安全上下文里提供 showOpenFilePicker，IB 线上正好是 https。</div>
+</div>
+
+<div class="bar">
+  <div class="row">
+    <button class="primary" id="copy">复制结果</button>
+    <button id="reset">清空全部记录</button>
+    <button class="link" id="toggle-all">展开/收起 accept 原文</button>
+  </div>
+</div>
+
+<h2>结果文本</h2>
+<textarea id="out" readonly spellcheck="false"></textarea>
+<p class="muted">复制后直接发回来即可（含 UA 与每条用例的观察）。</p>
+
+<script>
+'use strict';
+
+var ACCEPT_LIVE = '.txt,.text,.md,.markdown,.mdx,.rst,.adoc,.org,.tex,.bib,.js,.mjs,.cjs,.ts,.tsx,.jsx,.vue,.svelte,.astro,.json,.jsonc,.json5,.ndjson,.csv,.tsv,.psv,.xml,.xsd,.xsl,.html,.htm,.xhtml,.css,.scss,.sass,.less,.styl,.py,.pyi,.ipynb,.java,.kt,.kts,.scala,.groovy,.c,.h,.cpp,.hpp,.cc,.hh,.cxx,.m,.mm,.cs,.go,.rs,.rb,.erb,.php,.swift,.dart,.lua,.pl,.pm,.r,.jl,.hs,.ml,.ex,.exs,.erl,.clj,.f90,.f95,.for,.pas,.vb,.asm,.s,.v,.sv,.vhd,.sql,.psql,.graphql,.gql,.proto,.sh,.bash,.zsh,.fish,.bat,.cmd,.ps1,.psm1,.awk,.sed,.yaml,.yml,.log,.ini,.cfg,.conf,.config,.toml,.env,.properties,.plist,.reg,.gitignore,.gitattributes,.editorconfig,.dockerfile,.dockerignore,.makefile,.mk,.cmake,.gradle,.podspec,.lock,.srt,.vtt,.ass,.ssa,.lrc,.sub,.geojson,.kml,.gpx,.svg,.dot,.mermaid,.mmd,.puml,.diff,.patch,.eml,.vcf,.ics';
+
+var ACCEPT_NO_MEDIA = ACCEPT_LIVE.split(',').filter(function (x) {
+  return x !== '.svg' && x !== '.ts';
+}).join(',');
+
+var ACCEPT_NO_SVG = ACCEPT_LIVE.split(',').filter(function (x) { return x !== '.svg'; }).join(',');
+var ACCEPT_NO_TS = ACCEPT_LIVE.split(',').filter(function (x) { return x !== '.ts'; }).join(',');
+
+var CASES = [
+  { id: 'live', title: '现状：线上 140 个扩展名（原样）', accept: ACCEPT_LIVE,
+    hint: '预期：第一层弹窗里是「相机 / 文件」之类；重点看它有没有把文本文件挡在外面。' },
+  { id: 'nomed', title: '现状去掉 .svg 与 .ts（剩余 138 项）', accept: ACCEPT_NO_MEDIA,
+    hint: '关键对照：其余一字不改，只去掉这两个。若相机 / 录像入口消失，就坐实是它们招来的。' },
+  { id: 'nosvg', title: '现状只去掉 .svg（139 项）', accept: ACCEPT_NO_SVG,
+    hint: '单变量：只摘掉 .svg。若「拍照 / 相机」消失而录像还在，就说明相机是 .svg 带来的。' },
+  { id: 'nots', title: '现状只去掉 .ts（139 项）', accept: ACCEPT_NO_TS,
+    hint: '单变量：只摘掉 .ts。若「录像」消失而相机还在，就说明录像是 .ts 带来的。' },
+  { id: 'mime', title: '候选 A：只用 MIME 通配', accept: 'text/*,application/json,application/xml,application/javascript',
+    hint: '预期：第一层不弹窗、直接进文件列表（勾「没有弹窗，直接进列表」）。' },
+  { id: 'mix', title: '候选 B：MIME 通配 + 少量扩展名补齐（推荐）', accept: 'text/*,application/json,application/xml,application/x-yaml,application/javascript,.md,.markdown,.log,.csv,.json,.txt,.yml,.yaml,.toml,.ini,.cfg,.conf,.env,.srt,.vtt,.lrc,.mermaid,.puml,.patch,.diff',
+    hint: '预期：同候选 A 直接进列表；重点看 .md / .mermaid 能不能选。' },
+  { id: 'narrow', title: '候选 C：窄扩展名', accept: '.txt,.md,.json,.csv',
+    hint: '用来判断「扩展名清单本身」是否就会带出第一层弹窗。' },
+  { id: 'star', title: '对照：*/*', accept: '*/*',
+    hint: '预期：第一层弹窗条目最多——作为"最宽"的基准。' },
+  { id: 'none', title: '对照：不写 accept', accept: null,
+    hint: '预期：与 */* 接近，作为"什么都没限制"的基准。' }
+];
+
+var OBS = [
+  { group: '第一层：点开后先弹出的窗口里有哪些', items: [
+    { key: 'top_camera', label: '相机' },
+    { key: 'top_video', label: '录像' },
+    { key: 'top_files', label: '文件' },
+    { key: 'top_gallery', label: '照片和视频' },
+    { key: 'top_direct', label: '没有弹窗，直接进列表' }
+  ]},
+  { group: '第二层：选「文件」之后进到哪', items: [
+    { key: 'in_filelist', label: '系统文件列表' },
+    { key: 'in_grid', label: '照片/视频网格' },
+    { key: 'in_gallery', label: '相册（图库）' },
+    { key: 'in_notext', label: '看不到或选不了文本文件' }
+  ]}
+];
+var OBS_FLAT = OBS.reduce(function (a, g) { return a.concat(g.items); }, []);
+
+/* 第 0 步下载的那 5 个文件，列表里能看到/能选中哪几个 —— 勾选，不靠备注猜 */
+var OBS_FILES = [
+  { key: 'f_md', label: 'probe.md' },
+  { key: 'f_mermaid', label: 'probe.mermaid' },
+  { key: 'f_puml', label: 'probe.puml' },
+  { key: 'f_ts', label: 'probe.ts' },
+  { key: 'f_svg', label: 'probe.svg' }
+];
+
+var OBS_FILES_TITLE = '列表里能看到哪几个测试文件（务必翻到「下载」文件夹里看，别用「最近」——「最近」不显示冷门格式，会看成假的"选不到"）';
+
+var FSA_OBS = [
+  { key: 'none_layer', label: '没有那一层，直接进文件列表 / 文件管理' },
+  { key: 'sheet_camera', label: '弹窗里有「拍照 / 相机」' },
+  { key: 'sheet_video', label: '弹窗里有「录像」' },
+  { key: 'sheet_files', label: '弹窗里有「文件」' },
+  { key: 'sheet_gallery', label: '弹窗里有「照片和视频」' },
+  { key: 'broken', label: '按钮点不动 / 报错 / 没反应' }
+];
+
+var KEY = 'ib_accept_probe_v1';
+var INPUTS = {};
+var state = load();
+
+var OUT_BLANK = false;
+var BLANK_MSG = '(暂无记录。点某一例的「打开选择器」，或下方绕开方案里的 A / B，开始新一轮。)';
+var CLEARED_MSG = '(记录已清空。点某一例的「打开选择器」，或下方绕开方案里的 A / B，开始新一轮。)';
+
+function syncOut() { $('out').value = OUT_BLANK ? BLANK_MSG : buildSummary(); }
+
+function hasAnyRecord() {
+  var ids = CASES.map(function (c) { return c.id; }).concat(['fsa_a', 'fsa_b']);
+  return ids.some(function (id) {
+    var s = state[id];
+    if (!s) return false;
+    if (s.file || s.memo || s.layer1) return true;
+    return Object.keys(s.obs || {}).some(function (k) { return !!s.obs[k]; });
+  });
+}
+
+/* ── 弹窗耗时测量 ──────────────────────────────────────────────────────
+   网页没有"选择器出现"这个事件，只能用三条旁证逼近：
+   ① 页面转后台（visibilitychange → hidden）② 窗口失焦（blur / pagehide）
+   ③ 主线程停顿（心跳间隔 > 250ms）
+   测出来的是"近似值"，页面与汇总里都会标出它是靠哪一条判定的。       */
+var TX = { id: null, tap: 0, hide: 0, hideSrc: '', back: 0, backSrc: '', hbPrev: 0, hbLast: 0, timer: null };
+
+function nowMs() {
+  return (window.performance && window.performance.now) ? window.performance.now() : Date.now();
+}
+function fmtMs(ms) {
+  if (ms == null || isNaN(ms)) return '—';
+  return ms < 1000 ? (Math.round(ms) + 'ms') : ((ms / 1000).toFixed(2) + 's');
+}
+function timingStart(id) {
+  var t = nowMs();
+  if (TX.timer && typeof clearInterval === 'function') { clearInterval(TX.timer); TX.timer = null; }
+  TX = { id: id, tap: t, hide: 0, hideSrc: '', back: 0, backSrc: '', hbPrev: t, hbLast: t, timer: null };
+  slot(id).timing = null;
+  if (typeof setInterval === 'function') {
+    TX.timer = setInterval(function () {
+      var n = nowMs(), gap = n - TX.hbLast;
+      if (gap > 250) {
+        if (!TX.hide) { TX.hide = TX.hbPrev; TX.hideSrc = '主线程停顿'; }
+        else if (!TX.back) { TX.back = TX.hbLast; TX.backSrc = '主线程恢复'; }
+      }
+      TX.hbPrev = TX.hbLast; TX.hbLast = n;
+    }, 50);
+  }
+}
+function timingMark(src) { if (TX.id && !TX.hide) { TX.hide = nowMs(); TX.hideSrc = src; } }
+function timingBack(src) { if (TX.id && TX.hide && !TX.back) { TX.back = nowMs(); TX.backSrc = src; } }
+function timingEnd(id, how) {
+  if (!TX.id || TX.id !== id) return;
+  var t = nowMs();
+  if (TX.timer && typeof clearInterval === 'function') { clearInterval(TX.timer); TX.timer = null; }
+  slot(id).timing = {
+    src: TX.hideSrc || '', backSrc: TX.backSrc || '', how: how,
+    appear: TX.hide ? Math.round(TX.hide - TX.tap) : null,
+    dwell: (TX.hide && TX.back) ? Math.round(TX.back - TX.hide) : null,
+    back2cb: TX.back ? Math.round(t - TX.back) : null,
+    total: Math.round(t - TX.tap)
+  };
+  TX.id = null;
+  save(); refresh(id);
+}
+function timingText(id) {
+  var t = state[id] && state[id].timing;
+  if (!t) return '耗时：还没测过';
+  var s = '耗时：';
+  s += (t.appear == null) ? '点→弹窗 未测到' : ('点→弹窗 ' + fmtMs(t.appear) + '（' + (t.src || '?') + '）');
+  if (t.dwell != null) s += '　弹窗内 ' + fmtMs(t.dwell);
+  if (t.back2cb != null) s += '　回来→回调 ' + fmtMs(t.back2cb);
+  s += '　总计 ' + fmtMs(t.total) + '（' + (t.how === 'cancel' ? '取消' : '选到') + '）';
+  if (t.appear == null) s += '〔系统没让页面进入后台，只能给总耗时〕';
+  return s;
+}
+function timingPlain(id) {
+  var t = state[id] && state[id].timing;
+  if (!t) return '未测';
+  if (t.appear == null) return '总 ' + fmtMs(t.total) + '（弹窗时刻未测到）';
+  return '点→弹窗 ' + fmtMs(t.appear) + ' / 总 ' + fmtMs(t.total);
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') timingMark('页面转后台');
+  else timingBack('页面回前台');
+});
+if (typeof window.addEventListener === 'function') {
+  window.addEventListener('blur', function () { timingMark('窗口失焦'); });
+  window.addEventListener('focus', function () { timingBack('窗口回焦'); });
+  window.addEventListener('pagehide', function () { timingMark('pagehide'); });
+  window.addEventListener('pageshow', function () { timingBack('pageshow'); });
+}
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+  return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+function acceptMeta(v) {
+  if (v == null) return { chars: 0, items: 0, wildcards: 0, mimes: 0, text: '(无 accept 属性)' };
+  var parts = String(v).split(',').filter(function (x) { return x.trim(); });
+  var wild = parts.filter(function (x) { return x.indexOf('*') >= 0; });
+  var mimes = parts.filter(function (x) { return x.charAt(0) !== '.'; });
+  return { chars: String(v).length, items: parts.length, wildcards: wild.length, mimes: mimes.length,
+           text: String(v) };
+}
+
+function humanSize(n) {
+  if (!n && n !== 0) return '—';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(2) + ' MB';
+}
+
+function envLine() {
+  var ua = navigator.userAgent || '';
+  var pwa = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+            navigator.standalone === true;
+  var android = /Android\s+([\d.]+)/.exec(ua);
+  var chrome = /Chrome\/([\d.]+)/.exec(ua);
+  return 'Android ' + (android ? android[1] : '?') + '　Chrome ' + (chrome ? chrome[1] : '?') +
+         '　PWA ' + (pwa ? '是' : '否') + '　HTTPS ' + (location.protocol === 'https:' ? '是' : '否') +
+         '\nUA: ' + ua;
+}
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+}
+function save() {
+  try { state.__at = Date.now(); localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  OUT_BLANK = false;
+}
+
+function restoredNote() {
+  if (!hasAnyRecord()) return '';
+  var t = state.__at ? new Date(state.__at) : null;
+  var hm = t ? ('（上次保存 ' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2) +
+    ' ' + ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2) + '）') : '';
+  return '注意：本页把上一轮的记录存在浏览器本地，所以打开时还是上次那些勾选和结果' + hm +
+         '。要重开一轮，点上面的「清空全部记录」。';
+}
+function slot(id) {
+  if (!state[id]) state[id] = { obs: {}, file: '', fileType: '', fileSize: '', note: '', memo: '' };
+  var s = state[id];
+  if (s.memo === undefined) s.memo = '';
+  return s;
+}
+
+/* 「没有弹窗，直接进列表」是跨两层的陈述：勾了它，第二层就没有意义——
+   自动清掉并置灰，且汇总里写「不适用」，不让人手工写备注解释。 */
+var OBS_IN = ['in_filelist', 'in_grid', 'in_gallery', 'in_notext'];
+function applyDirect(id) {
+  var st = slot(id), direct = !!st.obs.top_direct;
+  OBS_IN.forEach(function (k) {
+    var el = document.querySelector('input[data-obs="' + id + '|' + k + '"]');
+    if (!el) return;
+    el.disabled = direct;
+    if (direct) { el.checked = false; delete st.obs[k]; }
+    var lab = el.parentNode;
+    if (lab && lab.style) lab.style.opacity = direct ? '.45' : '';
+  });
+  var t = document.getElementById('obsg-' + id + '-1');
+  if (t) t.textContent = OBS[1].group + (direct ? '（不适用：上面勾了「没有弹窗，直接进列表」）' : '');
+}
+
+function render() {
+  var host = $('cases');
+  host.innerHTML = '';
+  var note = restoredNote();
+  $('restored').textContent = note;
+  $('restored').style.display = note ? 'block' : 'none';
+  CASES.forEach(function (c, i) {
+    var meta = acceptMeta(c.accept);
+    var st = slot(c.id);
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div class="case-head"><div class="case-title"><span class="case-no">' + (i + 1) + '</span>' + esc(c.title) + '</div></div>' +
+      '<div class="meta">accept：' + (c.accept == null ? '未设置' :
+        (meta.chars + ' 字符 / ' + meta.items + ' 项 / 通配 ' + meta.wildcards + ' 个 / MIME ' + meta.mimes + ' 个')) + '</div>' +
+      '<div class="row"><button class="primary" data-open="' + c.id + '">打开选择器</button>' +
+      '<button class="link" data-toggle="' + c.id + '">看 accept 原文</button></div>' +
+      '<div class="accept-val" id="val-' + c.id + '">' + esc(meta.text) + '</div>' +
+      '<div class="picked' + (st.file ? '' : ' none') + '" id="pick-' + c.id + '">' +
+        (st.file ? ('选到：' + esc(st.file) + '　' + esc(st.fileSize) + '　MIME ' + esc(st.fileType || '(空)')) : '还没选文件') + '</div>' +
+      OBS.map(function (g, gi) {
+        var noUse = (gi === 1 && !!st.obs.top_direct);
+        return '<div class="obs-title" id="obsg-' + c.id + '-' + gi + '">' + esc(g.group) +
+          (noUse ? '<span class="obs-note">（不适用：上面勾了「没有弹窗，直接进列表」）</span>' : '') +
+          '</div><div class="obs">' + g.items.map(function (o) {
+          return '<label' + (noUse ? ' style="opacity:.45"' : '') + '><input type="checkbox" data-obs="' +
+                 c.id + '|' + o.key + '"' +
+                 (noUse ? ' disabled' : (st.obs[o.key] ? ' checked' : '')) + '>' + o.label + '</label>';
+        }).join('') + '</div>';
+      }).join('') +
+      '<div class="obs-title" id="obsg-' + c.id + '-2">' + esc(OBS_FILES_TITLE) + '</div><div class="obs">' +
+      OBS_FILES.map(function (o) {
+        return '<label><input type="checkbox" data-obs="' + c.id + '|' + o.key + '"' +
+               (st.obs[o.key] ? ' checked' : '') + '>' + o.label + '</label>';
+      }).join('') + '</div>' +
+      '<input class="note" type="text" data-layer1="' + c.id + '" placeholder="照抄：第一层弹窗上到底写了什么字（别归类，照抄，例如：相机 ｜ 文件）" value="' + esc(st.layer1 || '') + '">' +
+      '<input class="note" type="text" data-memo="' + c.id + '" placeholder="备注（可选）：例如先弹相机+文件，选文件后是照片网格" value="' + esc(st.memo) + '">' +
+      '<div class="timing' + (st.timing ? '' : ' none') + '" id="tm-' + c.id + '">' + esc(timingText(c.id)) + '</div>' +
+      '<div class="hint">' + esc(c.hint) + '</div>';
+    host.appendChild(card);
+    if (c.accept != null) mount(c);
+  });
+  $('env').textContent = envLine();
+  syncOut();
+}
+
+function mount(c) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.setAttribute('accept', c.accept);
+  input.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0';
+  document.body.appendChild(input);
+    input.addEventListener('change', function () {
+      var f = input.files && input.files[0];
+      var st = slot(c.id);
+      if (f) { st.file = f.name; st.fileSize = humanSize(f.size); st.fileType = f.type || ''; }
+      timingEnd(c.id, 'change');
+      input.value = '';
+      save(); refresh(c.id);
+    });
+    if ('oncancel' in input) {
+      input.addEventListener('cancel', function () {
+        slot(c.id).note = '已取消（未选文件）';
+        timingEnd(c.id, 'cancel');
+        save(); refresh(c.id);
+      });
+    }
+  INPUTS[c.id] = input;
+}
+
+function refresh(id) {
+  var st = slot(id);
+  var el = $('pick-' + id);
+  if (el) {
+    if (st.file) { el.className = 'picked'; el.textContent = '选到：' + st.file + '　' + st.fileSize + '　MIME ' + (st.fileType || '(空)'); }
+    else { el.className = 'picked none'; el.textContent = st.note || '还没选文件'; }
+  }
+  var tm = $('tm-' + id);
+  if (tm) { tm.className = 'timing' + (st.timing ? '' : ' none'); tm.textContent = timingText(id); }
+  syncOut();
+}
+
+function buildSummary() {
+  var lines = [];
+  lines.push('IB 附件选择器 · accept 真机实测');
+  lines.push(envLine());
+  lines.push('时间：' + new Date().toString());
+  lines.push('');
+  CASES.forEach(function (c, i) {
+    var st = slot(c.id);
+    var meta = acceptMeta(c.accept);
+    lines.push((i + 1) + ') ' + c.title);
+    lines.push('   accept: ' + (c.accept == null ? '未设置' :
+      (meta.chars + ' 字符 / ' + meta.items + ' 项 / 通配 ' + meta.wildcards + ' 个')));
+    OBS.forEach(function (g, gi) {
+      if (gi === 1 && st.obs.top_direct) { lines.push('   第二层进入: 不适用（没有弹窗，直接进列表）'); return; }
+      lines.push('   ' + (gi === 0 ? '第一层弹窗' : '第二层进入') + ': ' +
+        g.items.map(function (o) { return o.label + (st.obs[o.key] ? '✓' : '✗'); }).join('  '));
+    });
+    if (st.layer1) lines.push('   第一层原文: ' + st.layer1);
+    lines.push('   可见文件: ' + OBS_FILES.map(function (o) {
+      return o.label + (st.obs[o.key] ? '✓' : '✗'); }).join('  '));
+    if (st.memo) lines.push('   备注: ' + st.memo);
+    lines.push('   选到: ' + (st.file ? (st.file + '　' + st.fileSize + '　MIME ' + (st.fileType || '(空)')) : (st.note || '（未选）')));
+    lines.push('   耗时: ' + timingPlain(c.id));
+    lines.push('');
+  });
+
+  lines.push('— 绕开那一层：A vs B —');
+  lines.push('   ' + fsaEnv());
+  ['a', 'b'].forEach(function (k) {
+    var st = slot('fsa_' + k);
+    lines.push(k === 'a' ? 'A) input[type=file]（现状）' : 'B) showOpenFilePicker()');
+    lines.push('   ' + FSA_OBS.map(function (o) { return o.label + (st.obs[o.key] ? '✓' : '✗'); }).join('  '));
+    if (st.memo) lines.push('   备注: ' + st.memo);
+    lines.push('   选到: ' + (st.file ? (st.file + '　' + st.fileSize + '　MIME ' + (st.fileType || '(空)')) : (st.note || '（未选）')));
+    lines.push('   耗时: ' + timingPlain('fsa_' + k));
+  });
+  lines.push('');
+  return lines.join('\n');
+}
+
+$('cases').addEventListener('change', function (e) {
+  var t = e.target;
+  if (t && t.getAttribute && t.getAttribute('data-obs')) {
+    var p = t.getAttribute('data-obs').split('|');
+    slot(p[0]).obs[p[1]] = t.checked;
+    applyDirect(p[0]);
+    save(); syncOut();
+  }
+});
+
+$('cases').addEventListener('input', function (e) {
+  var t = e.target;
+  if (t && t.getAttribute && t.getAttribute('data-memo')) {
+    slot(t.getAttribute('data-memo')).memo = t.value;
+    save(); syncOut();
+  }
+  if (t && t.getAttribute && t.getAttribute('data-layer1')) {
+    slot(t.getAttribute('data-layer1')).layer1 = t.value;
+    save(); syncOut();
+  }
+});
+
+$('cases').addEventListener('click', function (e) {
+  var t = e.target.closest ? e.target.closest('[data-toggle]') : null;
+  if (t) {
+    var el = $('val-' + t.getAttribute('data-toggle'));
+    if (el) el.classList.toggle('open');
+    return;
+  }
+  var o = e.target.closest ? e.target.closest('[data-open]') : null;
+  if (o) {
+    var cid = o.getAttribute('data-open');
+    var inp = INPUTS[cid];
+    if (inp) { timingStart(cid); inp.click(); }
+  }
+});
+
+$('toggle-all').addEventListener('click', function () {
+  var any = false;
+  CASES.forEach(function (c) { var el = $('val-' + c.id); if (el && !el.classList.contains('open')) any = true; });
+  CASES.forEach(function (c) { var el = $('val-' + c.id); if (el) el.classList[any ? 'add' : 'remove']('open'); });
+});
+
+$('copy').addEventListener('click', function () {
+  syncOut();
+  var text = $('out').value;
+  var done = function () { $('copy').textContent = '已复制'; setTimeout(function () { $('copy').textContent = '复制结果'; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+  } else { fallbackCopy(text); done(); }
+});
+
+function fallbackCopy(text) {
+  var ta = $('out');
+  ta.removeAttribute('readonly');
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  ta.setAttribute('readonly', 'readonly');
+}
+
+$('reset').addEventListener('click', function () {
+  if (!hasAnyRecord() && OUT_BLANK) { return; }
+  if (!confirm('清空本页全部记录？\n\n会同时清掉上方的勾选与下方的结果文本。')) return;
+  state = {}; save();
+  TX.id = null;
+  if (TX.timer && typeof clearInterval === 'function') { clearInterval(TX.timer); TX.timer = null; }
+  OUT_BLANK = true; BLANK_MSG = CLEARED_MSG;
+  render(); mountFsa();
+});
+
+var FSA_A_INPUT = null;
+function fsaSupported() { return ('showOpenFilePicker' in window); }
+
+function fsaEnv() {
+  var ok = fsaSupported();
+  var c = /Chrome\/([\d.]+)/.exec(navigator.userAgent || '');
+  return 'showOpenFilePicker：' + (ok ? '本机可用' : '本机不可用') +
+         '　Chrome ' + (c ? c[1] : '?') +
+         '　安全上下文 ' + (window.isSecureContext ? '是' : '否') +
+         '（需要 Chrome 132+ 且 https）';
+}
+
+function mountFsa() {
+  $('fsa-env').textContent = fsaEnv();
+  ['a', 'b'].forEach(function (k) {
+    var host = $('fsa-' + k + '-obs');
+    host.innerHTML = FSA_OBS.map(function (o) {
+      var st = slot('fsa_' + k);
+      return '<label><input type="checkbox" data-fsa="' + k + '|' + o.key + '"' +
+             (st.obs[o.key] ? ' checked' : '') + '>' + o.label + '</label>';
+    }).join('');
+    var mi = document.querySelector('[data-fsa-memo="' + k + '"]');
+    if (mi) mi.value = slot('fsa_' + k).memo || '';
+    fsaRefresh(k);
+  });
+  if (!fsaSupported()) $('fsa-b-out').textContent = 'B 在本页不可用（看上方环境行）';
+}
+
+function fsaSet(k, f) {
+  var st = slot('fsa_' + k);
+  st.file = f.name; st.fileSize = humanSize(f.size); st.fileType = f.type || ''; st.note = '';
+  save(); fsaRefresh(k);
+}
+function fsaNote(k, msg) { slot('fsa_' + k).note = msg; save(); fsaRefresh(k); }
+
+function fsaRefresh(k) {
+  var st = slot('fsa_' + k), el = $('fsa-' + k + '-out');
+  if (!el) return;
+  if (st.file) {
+    el.className = 'picked';
+    el.textContent = '选到：' + st.file + '　' + st.fileSize + '　MIME ' + (st.fileType || '(空)');
+  } else {
+    el.className = 'picked none';
+    el.textContent = st.note || (k === 'a' ? 'A 还没试' : 'B 还没试');
+  }
+  var tm = $('tm-fsa_' + k);
+  if (tm) {
+    var tk = state['fsa_' + k] && state['fsa_' + k].timing;
+    tm.className = 'timing' + (tk ? '' : ' none');
+    tm.textContent = timingText('fsa_' + k);
+  }
+  syncOut();
+}
+
+function fsaInputA() {
+  if (!FSA_A_INPUT) {
+    FSA_A_INPUT = document.createElement('input');
+    FSA_A_INPUT.type = 'file';
+    FSA_A_INPUT.setAttribute('accept', ACCEPT_LIVE);
+    FSA_A_INPUT.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0';
+    document.body.appendChild(FSA_A_INPUT);
+    FSA_A_INPUT.addEventListener('change', function () {
+      var f = FSA_A_INPUT.files && FSA_A_INPUT.files[0];
+      if (f) fsaSet('a', f);
+      timingEnd('fsa_a', 'change');
+      FSA_A_INPUT.value = '';
+    });
+  }
+  return FSA_A_INPUT;
+}
+
+function fsaPickB() {
+  if (!fsaSupported()) { fsaNote('b', '本页不可用：' + fsaEnv()); return; }
+  window.showOpenFilePicker({
+    multiple: false,
+    types: [{
+      description: '文本类文件',
+      accept: { 'text/plain': ['.txt', '.text', '.md', '.markdown', '.log', '.csv', '.json',
+        '.yml', '.yaml', '.toml', '.ini', '.cfg', '.conf', '.env', '.srt', '.vtt', '.lrc',
+        '.mermaid', '.puml', '.patch', '.diff'] }
+    }]
+  }).then(function (hs) {
+    return hs[0].getFile();
+  }).then(function (f) {
+    fsaSet('b', f);
+  }, function (e) {
+    fsaNote('b', '没选成：' + (e && e.name ? e.name : '未知错误'));
+  });
+}
+
+$('fsa').addEventListener('change', function (e) {
+  var t = e.target;
+  if (t && t.getAttribute && t.getAttribute('data-fsa')) {
+    var p = t.getAttribute('data-fsa').split('|');
+    slot('fsa_' + p[0]).obs[p[1]] = t.checked;
+    save(); syncOut();
+  }
+});
+$('fsa').addEventListener('input', function (e) {
+  var t = e.target;
+  if (t && t.getAttribute && t.getAttribute('data-fsa-memo')) {
+    slot('fsa_' + t.getAttribute('data-fsa-memo')).memo = t.value;
+    save(); syncOut();
+  }
+});
+$('fsa-a').addEventListener('click', function () { timingStart('fsa_a'); fsaInputA().click(); });
+$('fsa-b').addEventListener('click', fsaPickB);
+
+OUT_BLANK = !hasAnyRecord();
+mountFsa();
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# 拆分方案 2026-10-19：本地 effort 与易变会话状态不入库
+node_modules/
+.scratch/
+.workbuddy/memory/
+.obsidian/
+*.bak
+Thumbs.db
+desktop.ini
+_tmp_*
+_tmp_*

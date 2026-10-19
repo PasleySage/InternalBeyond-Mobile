@@ -1,0 +1,45 @@
+BASE = dc7006db5d41aafcf961ebdefea62eedd7731a65
+HEAD = 497660b260f86e632f1784410115ce1e49c7ddd0
+HEAD msg = V2.4.3b:自制APP/编辑+新增char消息/自定义桌面图标/群聊自动聊天
+
+5：记忆检索更依赖标签命中
+6：群聊进表情包
+7：部分视觉bug修复
+8：颜文字/表情包界面优化
+9：bug修复
+HEAD author = Sui / 2026-09-17T11:50:57Z
+
+== diff 落盘 _ib_v243b.diff，87476 字符 ==
+
+== contents API：关键文件 blob 对照 ==
+  index.html    已变  3283121 → 3292940  2520436f → 7db3d8c7
+  ib-sw.js      未变  2977 → 2977  6f48fcbb → 6f48fcbb
+  README.md     未变  35503 → 35503  a484af00 → a484af00
+  manifest.json : 取不到
+  LICENSE       未变  4636 → 4636  3e26ed3f → 3e26ed3f
+
+== 上游 HEAD 根目录 ==
+  COPYRIGHT.md(2238)  LICENSE(4636)  README.md(35503)  apps(0)  ib-sw.js(2977)  icon-192.png(30691)  icon-512.png(122919)  index.html(3292940)  manifest.webmanifest(480)
+
+== BASE/HEAD index.html 常量对照 ==
+  IB_VER  BASE = v256-p / 2026-09-17   HEAD = v257-p / 2026-09-17
+  DB_VER  BASE = 15   HEAD = 15
+  cache   BASE = ib-cache-v2   HEAD = ib-cache-v2
+  长度      BASE = 2988936 chars   HEAD = 2997387 chars   Δ=8451
+  CRLF 行数  BASE = 24775   HEAD = 24820
+
+== 归档四项在上游 HEAD 的采纳状态 ==
+  未采纳  诊断面板 _ibGuard
+  未采纳  各步耗时埋点 _ibStepLog
+  未采纳  脱敏 _ibRedact
+  未采纳  VersionError 自愈 ib_verfix
+  SW 压缩响应完整性（ib-sw.js HEAD）: 未采纳
+
+== 电脑端 Sui-IB/InternalBeyond 现状 ==
+  head = 66725d2fef0693ff109792dd4afc4ffd46c83acd
+   66725d2f  2026-09-17T11:49:26Z  V2.7.1b:添加与修改char消息+记忆检索与手机端同步修改
+   497ca929  2026-09-17T06:58:07Z  V2.7.1:添加与修改char消息+记忆检索与手机端同步修改
+   e58572b5  2026-09-16T09:03:54Z  Add files via upload
+   596084c4  2026-09-16T09:02:43Z  Delete ib-sw.js
+   c1732516  2026-09-16T09:02:08Z  Add files via upload
+   847edbbf  2026-09-16T09:01:17Z  Add files via upload
