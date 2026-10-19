@@ -58,6 +58,9 @@ D:\IB-Workspace-Mobile\
 交付 / 提交前按序：
 
 ```bash
+# 以下各项已由 .githooks/pre-commit 在 commit 时自动执行（core.hooksPath=.githooks）；
+# 本块是手工口径——守栏外单独跑某一项、或排查某项失败时用。
+
 # 手机端回归（若本轮改了补丁/脚本）
 node _test_ib.js && node _test_ib_structure.js && node _test_ib_attach_probe.js
 node _test_deepseek_conv.js && node _test_deepseek_chunks.js
