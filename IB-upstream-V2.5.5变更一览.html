@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IB upstream 变更一览 · V2.5.4 → V2.5.5</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --border:#e3e6ea; --border-soft:#eef0f3;
+    --text:#1a1d21; --muted:#616b76; --faint:#8b949e;
+    --accent:#0b62d6; --accent-soft:#e8f0fd;
+    --new:#b26a00; --new-bg:#fff3e0; --new-border:#f2d5a8;
+    --done:#1a7f37; --done-bg:#e9f6ec; --done-border:#bfe3c8;
+    --overlap:#a1327a; --overlap-bg:#fdeef7; --overlap-border:#f0c7e2;
+    --mid:#3d5163; --mid-bg:#eef1f4; --mid-border:#dfe3e8;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:36px 20px 64px;
+    background:var(--bg); color:var(--text);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:26px}
+  h1{margin:0 0 8px; font-size:29px; letter-spacing:-.4px; font-weight:700}
+  .sub{margin:0; color:var(--muted); font-size:14px}
+  .sub a{color:var(--accent); text-decoration:none}
+  .sub a:hover{text-decoration:underline}
+  .sub b{color:var(--text)}
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 30px}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .stat .n{display:block; font-size:26px; font-weight:700; letter-spacing:-.5px; line-height:1.15}
+  .stat .l{display:block; margin-top:4px; font-size:12.5px; color:var(--muted)}
+  .stat.hl .n{color:var(--accent)}
+  .stat.ov .n{color:var(--overlap)}
+  .sec{background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .sec-head{display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border-soft); background:linear-gradient(180deg,#fcfcfd,#f8f9fb)}
+  .sec-head .ico{font-size:17px; line-height:1}
+  .sec-head .ttl{font-weight:650; font-size:15.5px; letter-spacing:-.1px}
+  .sec-head .cnt{margin-left:auto; font-size:12px; color:var(--muted); background:#eff1f4; border:1px solid var(--border); border-radius:20px; padding:2px 10px; font-variant-numeric:tabular-nums}
+  ul.items{list-style:none; margin:0; padding:0}
+  ul.items li{display:flex; align-items:flex-start; gap:14px; padding:13px 20px; border-bottom:1px solid var(--border-soft)}
+  ul.items li:last-child{border-bottom:none}
+  ul.items li:hover{background:#fafbfc}
+  .dot{flex:0 0 auto; width:6px; height:6px; border-radius:50%; margin-top:9px; background:#c3c9d1}
+  .dot.new{background:var(--new)}
+  .dot.ov{background:var(--overlap)}
+  .body{flex:1 1 auto; min-width:0}
+  .t{font-weight:600; font-size:14.5px; letter-spacing:-.1px}
+  .d{margin-top:3px; font-size:13.2px; color:var(--muted); line-height:1.55}
+  .d b{color:var(--text)}
+  .meta{flex:0 0 auto; display:flex; align-items:center; gap:7px; padding-top:2px; white-space:nowrap}
+  code{font-family:var(--mono); font-size:11.8px; color:#424a53; background:#f2f4f7; border:1px solid var(--border); border-radius:6px; padding:2px 7px}
+  .badge{font-size:11.5px; font-weight:600; border-radius:6px; padding:2px 8px; border:1px solid transparent}
+  .badge.new{color:var(--new); background:var(--new-bg); border-color:var(--new-border)}
+  .badge.done{color:var(--done); background:var(--done-bg); border-color:var(--done-border)}
+  .badge.ov{color:var(--overlap); background:var(--overlap-bg); border-color:var(--overlap-border)}
+  .badge.mid{color:var(--mid); background:var(--mid-bg); border-color:var(--mid-border)}
+  .alert{background:#f2fbf4; border:1px solid #c9e6d1; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .alert h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#1a7f37}
+  .alert p{margin:0 0 8px; font-size:13.4px; color:#3f5a46; line-height:1.6}
+  .alert p:last-child{margin-bottom:0}
+  .alert code{background:#e9f6ec; border-color:#c9e6d1}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px}
+  .chip{font-size:11.5px; font-weight:600; border-radius:999px; padding:3px 10px; background:#e9f6ec; border:1px solid #c9e6d1; color:#1a7f37}
+  .chip.warn{background:#fff3e0; border-color:#f2d5a8; color:#b26a00}
+  .plan{background:#f7faff; border:1px solid #d6e4f7; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .plan h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#0b62d6}
+  .plan ol{margin:0; padding-left:20px; font-size:13.4px; color:#3d5163; line-height:1.75}
+  .plan li{margin-bottom:5px}
+  .plan code{background:#eaf1fb; border-color:#d6e4f7}
+  footer{margin-top:26px; padding-top:16px; border-top:1px solid var(--border); color:var(--faint); font-size:12.3px; line-height:1.7}
+  @media (max-width:760px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    ul.items li{flex-wrap:wrap}
+    .meta{width:100%; padding-top:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>InternalBeyond Mobile upstream 变更一览</h1>
+    <p class="sub">
+      <a href="https://github.com/Sui-IB/InternalBeyond-Mobile" target="_blank" rel="noopener">github.com/Sui-IB/InternalBeyond-Mobile</a>
+      &nbsp;·&nbsp; 上游版本 <b>V2.5.4 → V2.5.5</b>（应用内 v301-p → <b>v302-p</b>）
+      &nbsp;·&nbsp; 提交区间 <b>2026-09-26</b>（<code>0650cf6e</code>，基线 <code>553e0af8</code>）
+      &nbsp;·&nbsp; 镜像 fork：<a href="https://github.com/PasleySage/InternalBeyond-Mobile" target="_blank" rel="noopener">PasleySage/InternalBeyond-Mobile</a>
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="n">1</span><span class="l">commits（区间全部）</span></div>
+    <div class="stat hl"><span class="n">1</span><span class="l">本次待同步到镜像</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">变更文件（index.html +148/−76）</span></div>
+    <div class="stat ov"><span class="n">0</span><span class="l">与我们的补丁重叠处</span></div>
+  </div>
+
+  <div class="alert">
+    <h3>合并提示：零重叠，直接跟上；本版主角是「通话配色重写」+ 视频下载兜底</h3>
+    <p>镜像已与上游同源（内容基线 V2.5.4 <code>553e0af8</code>），本轮只动 <code>index.html</code>（3,556,777 → 3,576,195 字节，+19 KB）。两件主线：<b>通话配色重写</b>（自定义颜色就是选的那个颜色本身——云层、光环、挂断钮、通话卡都由它派生，字色按深浅自动换；黑 / 灰不再被算成红棕）与<b>视频生成三处兜底</b>（海螺只给 Hailuo 系带时长参数、文档外时长 4xx 后重提、跨域下不来的改用服务商链接播放）。</p>
+    <p>与镜像上的历史补丁、归档项<b>零重叠</b>。归档四项（诊断面板 / 耗时埋点 / VersionError 自愈 / SW 完整性）本轮 diff <b>仍全 0 命中、未采纳</b>；<code>ib-sw.js</code> blob 与 <code>DB_VER</code> 均未变。<b>本轮提交说明未提 PasleySage</b>。</p>
+    <p>需要点明：提交标题写「支持视频生成」，但视频生成主体在 V2.5.4 已落地，本轮 diff 里视频侧是<b>修复与兜底</b>；真正的大头是通话配色整包重写（diff 关键词：通话 127 / 配色 29 / callTint 21）。另外 <code>onversionchange</code> 在新版仍存在，但是 v246-p 的「多窗口关库」，<b>不是</b>我们归档的 VersionError 自愈（同名不同物）。</p>
+    <div class="chips">
+      <span class="chip">与我们的补丁重叠 0 处</span>
+      <span class="chip">ib-sw.js 未变（6f48fcbb）</span>
+      <span class="chip">DB_VER 未变</span>
+      <span class="chip">归档四项仍未采纳</span>
+      <span class="chip warn">旧自定义通话色会迁一次 gz.call</span>
+      <span class="chip warn">跨域远程视频链接约一天过期、不进本机</span>
+    </div>
+  </div>
+
+  <div class="plan">
+    <h3>合并方案（推荐顺序）</h3>
+    <ol>
+      <li><b>快进同源</b>：镜像 <code>main</code> 从 <code>273ed5ce</code> 指到上游 <code>0650cf6e</code>（V2.5.5）。镜像无本地补丁，<b>无需解决冲突</b>；保留 <code>ib-ver.html</code> 探针页（镜像专属）。</li>
+      <li><b>不做本地层叠</b>：零重叠、归档项未触发；继续保持「功能上与上游完全同步」。</li>
+      <li><b>副作用</b>：<code>ib-sw.js</code> blob 未变 → SW 脚本不用重缓；<code>DB_VER</code> 未变 → 首启不走库升级；<code>index.html</code> +19 KB，首次打开需联网一次。应用内版本 <code>v301-p</code> → <code>v302-p</code>。旧的自定义通话色（<code>callTint</code> 里的 <code>#rrggbb</code>）会<b>迁进 <code>gz.call</code></b> 一次；远程视频记录不进本机、链接约一天过期。</li>
+      <li><b>复测清单</b>：通话设置 → 界面配色选「自定义」挑黑 / 灰 / 彩色，看云层 / 光环 / 挂断钮 / 通话卡是否就是那个颜色、字是否看得清；Visual 玻璃卡「通话页底色」改色后两边是否同一项；信封改色后封面 / 折线 / 封蜡 / 邮编格是否一起变；分区玻璃末尾四行改色后是否留在原位；海螺非 Hailuo 型号提交视频；故意下不来的链接是否改成播放；失败 toast 是否带原因。</li>
+      <li><b>保持警惕</b>：不要在镜像上两边各修一份；归档那四项日后要用，从 <code>Android\自用补丁-归档\</code> 取。</li>
+    </ol>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🎨</span>
+      <span class="ttl">通话配色重写（本版主角）</span>
+      <span class="cnt">6 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">自定义颜色＝选的那个颜色本身</div>
+          <div class="d">不再只取色调、深浅固定；底色、云层、光环、挂断钮与聊天里的通话卡都由所选颜色派生。字色按底色深浅自动换，明亮主题选黑也看得清。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>custom / css(S)</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">黑 / 灰 / 近黑不再算成红棕</div>
+          <div class="d">调深浅改走 RGB 向白 / 向黑混色，不再经 HSL——无色相颜色不会被算成红棕，近黑的底把雾气压淡。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>mixC / lum / hslL</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Visual「通话页底色」＝通话设置界面配色</div>
+          <div class="d">两边是同一项：<code>ui.gz.call</code> 与预设 <code>callTint</code> 打通，改哪边都一样；值栏选着预设时显示预设名。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>gz.call / _ibCallTintSet</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">旧自定义通话色自动迁移</div>
+          <div class="d">旧记录里 <code>callTint</code> 存着 <code>#rrggbb</code> 时，搬进 <code>gz.call</code>（<code>uiL</code> / <code>uiD</code> / <code>uiS</code> 各主题那份都搬），没搬过的一律不动。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>migrate()</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">按主题分开存 + 切主题当场换</div>
+          <div class="d">亮 / 暗两套各自保存；切主题时重跑通话配色；底色深浅与主题不同套时，把另一套字色与玻璃钮搬过去。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>applyTheme hook</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">取色器 LIVE 临时色 + 预览小屏真实色</div>
+          <div class="d">拖动中的颜色只进样式不落库，取消即恢复；预览小屏的挂断钮按这一套画真实色。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>LIVE / screen(S)</code></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">💌</span>
+      <span class="ttl">信封与邮票</span>
+      <span class="cnt">3 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">信封颜色管整只信封</div>
+          <div class="d">封面、折线、封蜡与邮编格都按所选颜色本身来，地址文字按深浅自动换黑 / 白；封蜡比封面深一档（深色信封则亮一档）。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>envColor / letter-envelope</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">邮票墨色连图案一起换</div>
+          <div class="d">「社交圈 / 记忆库 / 信箱」文字色现在连邮票上的字、暗色主题的绣球花与 Lettre du diable 图案一起换。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>stamp-hydrangea / stamp-diablo-art</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">分区玻璃末尾四行改色后留在原位</div>
+          <div class="d">滚动条 / 信封 / 抽屉图标 / 桌面图标那几行改完不再跳到卡末尾。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>xRow()</code></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🎬</span>
+      <span class="ttl">视频生成修复</span>
+      <span class="cnt">4 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">海螺只给 Hailuo 系带时长与清晰度</div>
+          <div class="d">MiniMax 提交时 <code>duration</code> / <code>resolution</code> 仅在型号名含 Hailuo 时带上（T2V-01 固定 6 秒）。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>AD.minimax</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">文档外时长：4xx 后按最近值重提</div>
+          <div class="d">你写的时长若不在文档列表里，先照发一次；接口 4xx 拒了才按文档里最近的值再提一次，并在卡片上写明。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>nearSec()</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">跨域下不来的改用服务商链接播放</div>
+          <div class="d">网页版常见服务商视频链接不放行浏览器跨域：下载失败<b>不再判失败</b>，聊天里直接用链接播放，可新窗口打开保存；存不进本机，链接约一天过期。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>finalizeRemote()</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">失败 toast 带上原因</div>
+          <div class="d">「视频生成失败」提示会带原因，测试的人不用点开卡片。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>finishFail()</code></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">📄</span>
+      <span class="ttl">版本与文档</span>
+      <span class="cnt">2 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">应用内版本号 → v302-p</div>
+          <div class="d"><code>v301-p</code> → <b>v302-p</b>，日期 2026-09-25 → 2026-09-26。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>IB_VER</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">GUIDE 与水水说明同步改口径</div>
+          <div class="d">界面配色写清「自定义＝颜色本身」；信封改色范围扩到整只信封；水水的调色说明补 <code>gz.call</code> 同一项、信封新范围。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>GUIDE / 水水</code></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🗂</span>
+      <span class="ttl">我们归档的补丁 · 上游状态（本轮复检 · 形态 B）</span>
+      <span class="cnt">5 项 · 均未采纳</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">启动看门狗 + 诊断面板</div>
+          <div class="d">上游仍无 <code>_ibGuard</code> 一类面向排查的界面层（0 命中）。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">启动各步耗时埋点 / 自动脱敏</div>
+          <div class="d">上游仍无 <code>_ibStepLog</code> / <code>_ibTimed</code> / <code>_ibRedact</code>（0 命中）。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">VersionError 自愈</div>
+          <div class="d">上游仍无 <code>ib_verfix</code>；新版里的 <code>onversionchange</code> 是 v246-p 多窗口关库，<b>同名不同物</b>。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">SW 的压缩响应完整性判断</div>
+          <div class="d">上游 <code>ib-sw.js</code> 本轮 blob 未变（<code>6f48fcbb</code>），仍是「<code>r.ok</code> 就写缓存」。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">fix-r6 / fix-r7（已留档）</div>
+          <div class="d">两套自用补丁已于 2026-09-25 随 V2.5.3 同步撤下并留档；本轮无回归、无新重叠。归档见 <code>自用补丁-归档\fix-r6-r7-留档.md</code>。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>归档</code></div>
+      </li>
+    </ul>
+  </section>
+  <footer>
+    数据来源：GitHub Compare API <code>553e0af8...0650cf6e</code>（1 commit / 1 file / +148 −76；<code>0650cf6e</code> +148 −76；index.html 3,556,777 → 3,576,195 字节，<code>ib-sw.js</code> 的 blob <code>6f48fcbb</code> 未变，<code>DB_VER=15</code> 未变）；
+    条目按提交说明与 <code>index.html</code> 的实际 diff 归类（提交说明很短、无累计编号清单；标题「支持视频生成」实为 V2.5.4 之后的修复与兜底）。镜像现状：<code>PasleySage/InternalBeyond-Mobile</code> <code>main=273ed5ce</code>，内容与上游 V2.5.4 一致（含 <code>ib-ver.html</code> 探针页）。
+    <br>图例：<span class="badge new">本次同步</span> 上游新增；<span class="badge ov">与我们重叠</span> 改在同一处（本轮 0）；<span class="badge mid">同向不同实现</span> 方向同、实现不同；<span class="badge mid">同名不同物</span> 撞名不是同一件事；<span class="badge done">建议保留</span> 上游未采纳、留本地归档。
+    <br>生成时间：2026-09-26 · 针对镜像 fork（PasleySage/InternalBeyond-Mobile，基线 V2.5.4 <code>553e0af8</code>，镜像已同源）
+  </footer>
+
+</div>
+</body>
+</html>

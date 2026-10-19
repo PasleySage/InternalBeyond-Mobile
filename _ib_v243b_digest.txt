@@ -1,0 +1,258 @@
+=== 提交完整信息 ===
+V2.4.3b:自制APP/编辑+新增char消息/自定义桌面图标/群聊自动聊天
+
+5：记忆检索更依赖标签命中
+6：群聊进表情包
+7：部分视觉bug修复
+8：颜文字/表情包界面优化
+9：bug修复
+=== end ===
+
+=== hunk 定位（new 文件行号）===
+@@ -1409,14 +1409,15 @@
+@@ -2143,7 +2144,7 @@ <h3>主题系统</h3>
+@@ -2236,8 +2237,8 @@ <h3>功能模块</h3>
+@@ -2892,10 +2893,11 @@ <h3>版权信息</h3>
+@@ -10394,12 +10396,12 @@ <h3>LISTEN TOGETHER</h3>
+@@ -10408,7 +10410,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -10419,7 +10421,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -10440,7 +10442,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -12780,7 +12782,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -16194,11 +16196,12 @@ <h3>LISTEN TOGETHER</h3>
+@@ -16211,11 +16214,13 @@ <h3>LISTEN TOGETHER</h3>
+@@ -17924,7 +17929,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -23716,7 +23721,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -23741,11 +23746,12 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24040,7 +24046,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24054,7 +24060,10 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24062,8 +24071,12 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24134,7 +24147,7 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24165,12 +24178,13 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24611,19 +24625,22 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24631,26 +24648,32 @@ <h3>LISTEN TOGETHER</h3>
+@@ -24670,39 +24693,61 @@ <h3>LISTEN TOGETHER</h3>
+
+共 22 个 hunk
+
+=== 仅变更行（- 旧 / + 新，截断 900 字符）===
+
+---  ---
+[+] .dk-pic{position:absolute;right:0;top:0;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.92);color:var(--acc);border:1px solid rgba(120,160,220,0.45);box-shadow:0 2px 8px rgba(60,100,160,0.18);z-index:6;cursor:pointer;display:none;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}.dk-pic svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}/* v257-p：编辑态右上角「换图」小键（与「−」同款） */
+[-] body.theme-infernal .dk-x{background:rgba(40,56,86,0.94);color:#cfe0f8;border-color:rgba(160,196,240,0.35)}/* v156-p：#7 「−」改主题色淡款 */
+[+] body.theme-infernal .dk-x,body.theme-infernal .dk-pic{background:rgba(40,56,86,0.94);color:#cfe0f8;border-color:rgba(160,196,240,0.35)}/* v156-p：#7 「−」改主题色淡款 */
+[-] body.dk-edit .dk-x{display:block}
+[+] body.dk-edit .dk-x{display:block}body.dk-edit .dk-pic{display:flex}
+
+--- <h3>主题系统</h3> ---
+[-]         <p><strong>桌面分区</strong>：为桌面图标与挂件卡更换液态玻璃 / 磨砂 / 墨玻璃材质；「Custom Icons — 自定义图标」卡给 Desk 每个图标（含自制 APP）换一张图（相册选图、居中裁方压到 96px，可明暗分开、可逐个还原或全部还原，随备份往返）；为音乐、便笺、日程挂件换尺寸（整行 / 半宽 / 小方块）；可加开独立时钟挂件与 Token 仪表盘挂件（仪表环 / 七日柱 / 极简三款式，与 Data 页共用同一份用量台账与单价表），切换英雄区款式（iOS 居中款撤掉玻璃底板，时刻直接落在壁纸上），并控制锁屏时刻的自适应取色；英雄区卡下面独立一张「Meet — 相遇卡」卡管 Desk 上的相遇卡挂件：显示开关、款式（iOS 原生＝无底板，挂件材质也不套；玻璃卡＝英雄区同款底板）与相伴对象（不选＝InternalBeyond 本站，按设置里的站点纪念日、没设则按全体最早相遇日计）；「Bind — 更多绑定」卡可再调导航抽屉与聊天输入条的不透明度、卡片描边强度与站点背景模糊，全部回默认即零改动；Deco 卡负责「桌面布局」（分页桌面 / 经典滚动）切换与装饰小组件的添加管理。</p><!-- v127-p 任务4：补分区新住户 -->
+[+]         <p><strong>桌面分区</strong>：为桌面图标与挂件卡更换液态玻璃 / 磨砂 / 墨玻璃材质；「Custom Icons — 自定义图标」卡给 Desk 每个图标（含自制 APP）换一张图（相册选图、居中裁方压到 180px，可明暗分开、可逐个还原或全部还原，随备份往返；列表默认收起，更快的路是 Desk 长按进入编辑态后点图标右上角的小图片键就地换图 / 还原）；为音乐、便笺、日程挂件换尺寸（整行 / 半宽 / 小方块）；可加开独立时钟挂件与 Token 仪表盘挂件（仪表环 / 七日柱 / 极简三款式，与 Data 页共用同一份用量台账与单价表），切换英雄区款式（iOS 居中款撤掉玻璃底板，时刻直接落在壁纸上），并控制锁屏时刻的自适应取色；英雄区卡下面独立一张「Meet — 相遇卡」卡管 Desk 上的相遇卡挂件：显示开关、款式（iOS 原生＝无底板，挂件材质也不套；玻璃卡＝英雄区同款底板）与相伴对象（不选＝InternalBeyond 本站，按设置里的站点纪念日、没设则按全体最早相遇日计）；「Bind — 更多绑定」卡可再调导航抽屉与聊天输入条的不透明度、卡片描边强度与站点背景模糊，全部回默认即零改动；Deco 卡负责「桌面布局」（分页桌面 / 经典滚动）切换与装饰小组件的添加管理。</p><!-- v127-p 任务4：补分区新住户 -->
+
+--- <h3>功能模块</h3> ---
+[-]           <p><strong>颜文字</strong>：输入条「+」右侧的笑脸键弹出「发送颜文字 / 发送表情包」。颜文字抽屉分开心 / 生气 / 伤心 / 惊讶 / 无语 / Kiss / 经典 / 双人款八组，每行三枚、四行之后可滚动，点一枚就插到光标处、抽屉随即收起回到输入框；底部输入框加上箭头可把你自己的颜文字加进当前分组，长按自定义的那枚可删除。颜文字与表情包这两个小抽屉不模糊底下的聊天。自定义颜文字随备份走，只在手机端用。</p>
+[-]           <p><strong>表情包</strong>：API 页 → 全局设置 → 进阶指令下的「表情包」卡（默认关）。点卡右上角的笑脸角标或「管理表情包」进设置页：可以存多套预设，每套最多 10 枚，上传后写名字、描述（可不填）、用法才能保存——TA 只看这几句决定什么时候发。开着时当前预设注入给 TA，TA 发出来的是图片本身，与聊天里的图片一样显示；切换预设或增删表情包后，下一条消息重建一次提示缓存。你自己也能发：输入条笑脸键 →「发送表情包」，点一枚落到输入条上方，可以只发它，也可以写完文字一起发；抽屉顶部可以切换预设，任意一套都能发；TA 收到的不是图片，是一句「（表情包「名字」：描述｜用法：…）」，不受开关影响——所以能一起玩梗、对暗号。表情包存在本机、随备份往返。</p><!-- v246-p -->
+[+]           <p><strong>颜文字 / 表情包面板</strong>：输入条「+」右侧的笑脸键在输入条上方展开一块面板（键盘开着也能开，不模糊底下的聊天），顶行切换「颜文字 / 表情包」，再点笑脸或 ✕ 收起。颜文字分开心 / 生气 / 伤心 / 惊讶 / 无语 / Kiss / 经典 / 双人款八组共 134 枚预设，每行三枚、四行之后可滚动，点一枚就插到光标处、面板随即收起回到输入框；底部输入框加上箭头可把你自己的颜文字加进当前分组，长按自定义的那枚可删除。自定义颜文字随备份走，只在手机端用。</p>
+[+]           <p><strong>表情包</strong>：API 页 → 全局设置 → 进阶指令下的「表情包」卡（默认关）。点卡右上角的笑脸角标或「管理表情包」进设置页：可以存多套预设，每套最多 10 枚，上传后写名字、描述（可不填）、用法才能保存——TA 只看这几句决定什么时候发。开着时当前预设注入给 TA，TA 发出来的是图片本身，与聊天里的图片一样显示；切换预设或增删表情包后，下一条消息重建一次提示缓存。你自己也能发：笑脸键面板切到「表情包」，点一枚落到输入条上方，可以只发它，也可以写完文字一起发；面板顶部可以切换预设，任意一套都能发；TA 收到的不是图片，是一句「（表情包「名字」：描述｜用法：…）」，不受开关影响——所以能一起玩梗、对暗号。表情包存在本机、随备份往返。</p><!-- v246-p -->
+
+--- <h3>版权信息</h3> ---
+[-]         <div id="vz-ski-list"><div class="hint" style="margin:8px 0 0">Desk 还没铺好，先回 Desk 看一眼再来。</div></div>
+[+]         <div class="tog"><div class="tog-m"><div class="tog-t">逐个换图</div><div class="tog-s" id="vz-ski-n">还没换过</div></div><button class="btn" id="vz-ski-tg" type="button" style="padding:7px 12px;font-size:0.72rem;flex:none">展开列表</button></div>
+[+]         <div id="vz-ski-list" hidden><div class="hint" style="margin:8px 0 0">Desk 还没铺好，先回 Desk 看一眼再来。</div></div>
+[-]         <p class="hint" style="margin:10px 0 0">给 Desk 每个图标（含自制 APP）换一张图：从相册挑图，居中裁方、压到 96px；「还原」回到原图标（自制 APP 会回到它自带的图）。图标随备份往返；美化包的「还原默认配色」不动它们。</p>
+[+]         <p class="hint" style="margin:10px 0 0">给 Desk 每个图标（含自制 APP）换一张图：从相册挑图，居中裁方、压到 180px；「还原」回到原图标（自制 APP 会回到它自带的图）。更快的路：Desk 长按进入编辑态，点图标右上角的小图片键。图标随备份往返；美化包的「还原默认配色」不动它们。</p>
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]    +'<div class="f-group me-add"><label>From</label><div class="me-chips" id="me-role"><span class="chip on" data-r="assistant">TA</span><span class="chip" data-r="user">Me</span></div></div>'
+[-]    +'<div class="f-group me-add" id="me-who-g"><label>Member</label><div class="sel"><select id="me-who"></select></div></div>'
+[-]    +'<div class="f-group me-add"><label>Time <span class="lb-note" id="me-day"></span></label><div style="display:flex;gap:8px"><div class="sel" style="flex:1"><select id="me-hh">'+hh+'</select></div><div class="sel" style="flex:1"><select id="me-mm">'+mm+'</select></div></div></div>'
+[-]    +'<div class="f-group"><label>Content</label><textarea id="me-ta" rows="5" placeholder="Type the message…"></textarea></div>'
+[+]    +'<div class="f-group me-add"><label>发送者</label><div class="me-chips" id="me-role"><span class="chip on" data-r="assistant">TA</span><span class="chip" data-r="user">我</span></div></div>'
+[+]    +'<div class="f-group me-add" id="me-who-g"><label>成员</label><div class="sel"><select id="me-who"></select></div></div>'
+[+]    +'<div class="f-group me-add"><label>时间 <span class="lb-note" id="me-day"></span></label><div style="display:flex;gap:8px"><div class="sel" style="flex:1"><select id="me-hh">'+hh+'</select></div><div class="sel" style="flex:1"><select id="me-mm">'+mm+'</select></div></div></div>'
+[+]    +'<div class="f-group"><label>内容</label><textarea id="me-ta" rows="5" placeholder="输入消息…"></textarea></div>'
+[-]    +'<div class="sheet-btns"><button class="btn" id="me-cancel" type="button">Cancel</button><button class="btn primary" id="me-save" type="button">Save</button></div>';
+[+]    +'<div class="sheet-btns"><button class="btn" id="me-cancel" type="button">取消</button><button class="btn primary" id="me-save" type="button">保存</button></div>';/* v257-p：除标题外全部中文 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]   $('me-title').textContent='Edit Message';$('me-ta').value=String(m.content||'');$('me-hint').textContent='Only the text changes; time, cards and attachments stay. The next reply rebuilds the prompt cache once.';
+[+]   $('me-title').textContent='Edit Message';$('me-ta').value=String(m.content||'');$('me-hint').textContent='只改文字；时间、卡片与附件不变。下一条回复重建一次提示缓存。';
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]   $('me-hint').textContent=anchor?'Inserted right after the selected message. The next reply rebuilds the prompt cache once.':'Appended at the end of this conversation.';
+[+]   $('me-hint').textContent=anchor?'插在选中那条之后（多选时插在最靠下那条之后）。下一条回复重建一次提示缓存。':'接在这段对话的最后。';
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-] $('sel-add').addEventListener('click',()=>{if(_selIds.size>1){toast('添加消息只能选一条作为位置');return}const anchor=_selIds.size?_msgs.find(x=>_selIds.has(x.id)):(_msgs[_msgs.length-1]||null);_msgAddOpen(anchor||null)});
+[+] $('sel-add').addEventListener('click',()=>{const sel=_msgs.filter(x=>_selIds.has(x.id));const anchor=sel.length?sel[sel.length-1]:(_msgs[_msgs.length-1]||null);_msgAddOpen(anchor||null)});/* v257-p：多选时锚点取最靠下那条 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-] var IB_VER='v256-p',IB_VER_DATE='2026-09-17';
+[+] var IB_VER='v257-p',IB_VER_DATE='2026-09-17';
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]     _dkEls().forEach(function(el){if(!el.querySelector(':scope>.dk-x')){var x=document.createElement('i');x.className='dk-x';x.setAttribute('role','button');x.setAttribute('aria-label','隐藏');el.appendChild(x)}});
+[+]     _dkEls().forEach(function(el){if(!el.querySelector(':scope>.dk-x')){var x=document.createElement('i');x.className='dk-x';x.setAttribute('role','button');x.setAttribute('aria-label','隐藏');el.appendChild(x)}
+[+]       if(el.querySelector('.sb-ic')&&!el.querySelector(':scope>.dk-pic')){var pc=document.createElement('i');pc.className='dk-pic';pc.setAttribute('role','button');pc.setAttribute('aria-label','换图');pc.innerHTML='<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17.5l4.5-4.5 3.5 3.5 3-3 4 4"/></svg>';el.appendChild(pc)}/* v257-p：图标类条目右上角「换图」小键 */});
+[-]     Array.prototype.forEach.call(document.querySelectorAll('#sec-profile-cal .sb-desk>[data-dk]>.dk-x'),function(x){try{x.remove()}catch(e){}});if(doneBtn)doneBtn.hidden=true;}
+[+]     Array.prototype.forEach.call(document.querySelectorAll('#sec-profile-cal .sb-desk>[data-dk]>.dk-x,#sec-profile-cal .sb-desk>[data-dk]>.dk-pic'),function(x){try{x.remove()}catch(e){}});if(doneBtn)doneBtn.hidden=true;}
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]     var r=it.getBoundingClientRect();if(e.clientX-r.left<34&&e.clientY-r.top<34)_dkHide(it);
+[+]     if(e.target.closest('.dk-pic')){try{if(window._ibDkIconMenu)window._ibDkIconMenu(it.dataset.dk)}catch(x1){}return}/* v257-p：右上角小图片键 → 换图 / 还原 */
+[+]     var r=it.getBoundingClientRect();if(e.clientX-r.left<34&&e.clientY-r.top<34){_dkHide(it);return}
+[+]     if(it.querySelector(':scope>.dk-pic')&&r.right-e.clientX<34&&e.clientY-r.top<34){try{if(window._ibDkIconMenu)window._ibDkIconMenu(it.dataset.dk)}catch(x2){}}
+[-]     if(editOn&&e.target.closest('.dk-x'))return;/* v154-p：#2 「−」上不起拖 */
+[+]     if(editOn&&e.target.closest('.dk-x,.dk-pic'))return;/* v154-p：#2 「−」上不起拖；v257-p：「换图」键同 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-] #sheet-msgedit .me-chips{display:flex;gap:8px}#sheet-msgedit textarea{min-height:112px;font-size:0.94rem}#sheet-msgedit.edit .me-add{display:none}#sheet-scrim.kao-lite{background:rgba(18,20,24,0.08);backdrop-filter:none!important;-webkit-backdrop-filter:none!important}/* v255-p：修改 / 添加消息 sheet；颜文字 / 表情包小抽屉不模糊底下的聊天 */
+[+] #sheet-msgedit .me-chips{display:flex;gap:8px}#sheet-msgedit textarea{min-height:112px;font-size:0.94rem}#sheet-msgedit.edit .me-add{display:none}/* v255-p：修改 / 添加消息 sheet；颜文字 / 表情包小抽屉不模糊底下的聊天 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]     +'#ib-bl-ov .blx-tt{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ib-bl-ov .blx-tt small{display:block;font-weight:400;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;opacity:.55}'
+[+]     +'#ib-bl-ov .blx-tt{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ib-bl-ov .blx-tt small{display:block;font-weight:400;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;opacity:.55}#ib-bl-ov .blx-tt .blx-t1{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#ib-bl-ov .blx-tt .mq{text-overflow:clip}'/* v257-p：超宽标题跑马灯 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]   ov.innerHTML='<div class="blx-hd"><div class="blx-tt">Bubble Lab · 水水的气泡实验室<small>Sui\'s Lab · Bubble schemes</small></div><button class="blx-pen" id="bl-pen" type="button">执笔 · —</button><div class="sw2" id="bl-on"></div><button class="blx-clr" id="bl-clear" type="button">清空</button><button class="blx-x" id="bl-close" type="button">✕</button></div>'
+[+]   ov.innerHTML='<div class="blx-hd"><div class="blx-tt"><span class="blx-t1">Bubble Lab · 水水的气泡实验室</span><small>Sui\'s Lab · Bubble schemes</small></div><button class="blx-pen" id="bl-pen" type="button">执笔 · —</button><div class="sw2" id="bl-on"></div><button class="blx-clr" id="bl-clear" type="button">清空</button><button class="blx-x" id="bl-close" type="button">✕</button></div>'
+[+]   setTimeout(function(){try{if(window._ibMarqM){window._ibMarqM(ov.querySelector('.blx-tt .blx-t1'),22);window._ibMarqM(ov.querySelector('.blx-tt small'),20)}}catch(e){}},80);/* v257-p：顶栏标题超宽时跑马灯（等执笔药丸落定再量） */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-] function skinIcons(){var ic=Object.assign({},appIcons(),((ICONS||{})[ICONS&&ICONS.split?theme():'light'])||{});var els=[];try{els=(typeof _dkEls==='function')?_dkEls():[]}catch(e){}els.forEach(function(el){var k=el.dataset.dk,box=el.querySelector('.sb-ic');if(!box)return;if(ic[k]){box.style.backgroundImage='url("'+ic[k]+'")';box.classList.add('sk-img')}else if(box.classList.contains('sk-img')){box.style.backgroundImage='';box.classList.remove('sk-img')}})}window._ibSkinIcons=skinIcons;function appIcons(){var o={};(LIST||[]).forEach(function(a){if(a.icon)o['app:x:'+a.id]=a.icon});return o}/* 手机端：APP 自带的 // icon: 图，用户换的图标压过它 */
+[+] function skinIcons(){var ic=Object.assign({},appIcons(),((ICONS||{})[ICONS&&ICONS.split?theme():'light'])||{});var els=[];try{els=(typeof _dkEls==='function')?_dkEls():[]}catch(e){}els.forEach(function(el){var k=el.dataset.dk,box=el.querySelector('.sb-ic');if(!box)return;var bs=box.style;if(ic[k]){bs.setProperty('background-image','url("'+ic[k]+'")','important');bs.setProperty('background-size','cover','important');bs.setProperty('background-position','center','important');bs.setProperty('background-repeat','no-repeat','important');box.classList.add('sk-img')}else if(box.classList.contains('sk-img')){['background-image','background-size','background-position','background-repeat'].forEach(function(pp){bs.removeProperty(pp)});box.classList.remove('sk-img')}})}window._ibSkinIcons=skinIcons;function appIcons(){var o={};(LIST||[]).forEach(function(a){if(a.icon)o['app:x:'+a.id]=a.icon});retur
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]   var all=document.getElementById('vz-ski-all');if(all)all.style.display=Object.keys(ic).length?'':'none';
+[+]   var n=Object.keys(ic).length,all=document.getElementById('vz-ski-all');if(all)all.style.display=n?'':'none';
+[+]   var sum=document.getElementById('vz-ski-n');if(sum)sum.textContent=n?('已换 '+n+' 枚'+(ICONS.split?'（'+(cur==='dark'?'暗色':'明亮')+'这一套）':'')):'还没换过';
+[+]   var tg=document.getElementById('vz-ski-tg');if(tg)tg.textContent=list.hidden?'展开列表':'收起列表';
+[+]   if(list.hidden)return;/* v257-p：列表默认收起，只画摘要行 */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[+]   var tg=document.getElementById('vz-ski-tg');if(tg)tg.addEventListener('click',function(){list.hidden=!list.hidden;vzIconsPaint()});/* v257-p：展开 / 收起列表 */
+[-] function skinIconProc(f){return new Promise(function(res,rej){var rd=new FileReader();rd.onerror=function(){rej(new Error('read'))};rd.onload=function(){var im=new Image();im.onload=function(){try{var W=im.naturalWidth||1,H=im.naturalHeight||1,m=Math.min(W,H),cv=document.createElement('canvas');cv.width=96;cv.height=96;cv.getContext('2d').drawImage(im,(W-m)/2,(H-m)/2,m,m,0,0,96,96);var out=cv.toDataURL('image/png');if(out.length>200000)out=cv.toDataURL('image/jpeg',0.86);res(out)}catch(e){rej(e)}};im.onerror=function(){rej(new Error('decode'))};im.src=String(rd.result||'')};rd.readAsDataURL(f)})}/* 居中裁方、压到 96px */
+[+] function skinIconProc(f){return new Promise(function(res,rej){var rd=new FileReader();rd.onerror=function(){rej(new Error('read'))};rd.onload=function(){var im=new Image();im.onload=function(){try{var W=im.naturalWidth||1,H=im.naturalHeight||1,m=Math.min(W,H),cv=document.createElement('canvas');cv.width=180;cv.height=180;cv.getContext('2d').drawImage(im,(W-m)/2,(H-m)/2,m,m,0,0,180,180);var out=cv.toDataURL('image/png');if(out.length>160000)out=cv.toDataURL('image/jpeg',0.9);res(out)}catch(e){rej(e)}};im.onerror=function(){rej(new Error('decode'))};im.src=String(rd.result||'')};rd.readAsDataURL(f)})}/* 居中裁方、压到 180px（Desk 图标 57px × 3 倍屏；PNG 超 160KB 转 JPEG） */
+[+] window._ibDkIconMenu=function(k){k=String(k||'');if(!k)return;var has=false;try{var cur=(ICONS&&ICONS.split)?theme():'light';has=!!(ICONS&&ICONS[cur]&&ICONS[cur][k])}catch(e){}var nm=k;try{var tEl=document.querySelector('#sec-profile-cal .sb-desk>[data-dk="'+k.replace(/"/g,'')+'"] .sb-t');nm=(typeof DK_NAMES!=='undefined'&&DK_NAMES[k])||(tEl&&tEl.textContent)||k}catch(e){}
+[+]   var items=[{label:'换图',fn:function(){var file=document.getElementById('vz-ski-file');if(!file){toast('图片选择器不可用');return}file.onchange=async function(){var f=file.files&&file.files[0];file.value='';if(!f)return;try{var du=await skinIconProc(f);await skinIconWrite(k,du);vzIconsPaint();toast('已换图：'+nm)}catch(e){toast('图片读取失败')}};file.click()}}];
+[+]   if(has)items.push({label:'还原',fn:async function(){await skinIconWrite(k,null);vzIconsPaint();toast('已还原：'+nm)}});try{actionSheet(items)}catch(e){}};/* v257-p：Desk 编辑态右上角小图片键 → 换图 / 还原（复用卡里的 #vz-ski-file） */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-] var CSS="#ib-sx-ov{position:fixed;inset:0;z-index:4600;display:flex;flex-direction:column;background:linear-gradient(180deg,#f3f7fd 0%,#e9effa 62%,#e4ebf7 100%);color:#1d2c44}body.theme-infernal #ib-sx-ov{background:linear-gradient(180deg,#141a2e,#0f1526);color:#dfe8f8}#ib-sx-ov .blx-hd{flex:none;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat,0px)) 16px 10px;border-bottom:1px solid rgba(90,120,170,0.18);background:rgba(255,255,255,0.72)}body.theme-infernal #ib-sx-ov .blx-hd{background:rgba(20,28,48,0.9);border-color:rgba(165,188,230,0.16)}body.ib-reduce #ib-sx-ov .blx-hd{background:#eef3fb}body.ib-reduce.theme-infernal #ib-sx-ov .blx-hd{background:#1b2740}#ib-sx-ov .blx-tt{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ib-sx-ov .blx-tt small{display:block;font-weight:400;font-size:.68rem;letter-spac
+[+] var CSS="#ib-sx-ov{position:fixed;inset:0;z-index:4600;display:flex;flex-direction:column;background:linear-gradient(180deg,#f3f7fd 0%,#e9effa 62%,#e4ebf7 100%);color:#1d2c44}body.theme-infernal #ib-sx-ov{background:linear-gradient(180deg,#141a2e,#0f1526);color:#dfe8f8}#ib-sx-ov .blx-hd{flex:none;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat,0px)) 16px 10px;border-bottom:1px solid rgba(90,120,170,0.18);background:rgba(255,255,255,0.72)}body.theme-infernal #ib-sx-ov .blx-hd{background:rgba(20,28,48,0.9);border-color:rgba(165,188,230,0.16)}body.ib-reduce #ib-sx-ov .blx-hd{background:#eef3fb}body.ib-reduce.theme-infernal #ib-sx-ov .blx-hd{background:#1b2740}#ib-sx-ov .blx-tt{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ib-sx-ov .blx-tt small{display:block;font-weight:400;font-size:.68rem;letter-spac
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]   ov.innerHTML='<div class="blx-hd"><div class="blx-tt">自制 APP · 水水的工作室<small>Sui\'s Studio · Homemade apps</small></div><button class="blx-pen" id="sx-pen" type="button">执笔 · —</button><button class="blx-clr" id="sx-clear" type="button">清空</button><button class="blx-x" id="sx-close" type="button">✕</button></div>'
+[+]   ov.innerHTML='<div class="blx-hd"><div class="blx-tt"><span class="blx-t1">自制 APP · 水水的工作室</span><small>Sui\'s Studio · Homemade apps</small></div><button class="blx-pen" id="sx-pen" type="button">执笔 · —</button><button class="blx-clr" id="sx-clear" type="button">清空</button><button class="blx-x" id="sx-close" type="button">✕</button></div>'
+[+]   setTimeout(function(){try{if(window._ibMarqM){window._ibMarqM(ov.querySelector('.blx-tt .blx-t1'),22);window._ibMarqM(ov.querySelector('.blx-tt small'),20)}}catch(e){}},80);/* v257-p：顶栏标题超宽时跑马灯（等执笔药丸落定再量） */
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[+] <script id="ib-marq-pack">
+[+] window._ibMarqM=function(el,speed){try{if(!el)return;var txt=(el._mqT!=null)?el._mqT:el.textContent;txt=String(txt||'');el._mqT=txt;el.classList.remove('mq');el.style.removeProperty('--mqw');el.style.removeProperty('--mqd');el.textContent=txt;if(!txt||document.body.classList.contains('ib-reduce'))return;var w=el.scrollWidth,cw=el.clientWidth;if(!cw||w-cw<=2)return;var gap=28,esc1=function(t){return t.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};el.innerHTML='<span class="mq-tr"><span>'+esc1(txt)+'</span><span aria-hidden="true">'+esc1(txt)+'</span></span>';el.style.setProperty('--mqw',(w+gap)+'px');el.style.setProperty('--mqd',Math.max(6,Math.round((w+gap)/(speed||22)))+'s');el.classList.add('mq')}catch(e){}};
+[+] </script>
+[-] var PAW='<circle cx="12" cy="12" r="8.6"/><path d="M8.5 14.1c.8 1.3 2 2 3.5 2s2.7-.7 3.5-2"/><path d="M9.3 9.9h.01M14.7 9.9h.01"/>';/* v246-p：输入条与设置卡角标同用笑脸 *//* v246-p：输入条用重画的猫爪（圆润肉垫 + 四颗圆趾）；设置卡角标仍是笑脸 *//* v246-p：简约笑脸（圆 + 弧 + 两点） */
+[+] var PAW='<circle cx="12" cy="12" r="8.6"/><path d="M8.5 14.1c.8 1.3 2 2 3.5 2s2.7-.7 3.5-2"/><path d="M9.3 9.9h.01M14.7 9.9h.01"/>';/* 输入条与设置卡角标同用简约笑脸（圆 + 弧 + 两点） */
+[-]  '开心':['(＾▽＾)','(´∀｀)','(*^▽^*)','ヽ(・∀・)ﾉ','(｡･ω･｡)','(●´ω｀●)','(≧∇≦)/','٩(◕‿◕)۶','(o^▽^o)','ヾ(＾∇＾)'],
+[-]  '生气':['(╬ಠ益ಠ)','(#`皿´)','ヽ(`Д´)ﾉ','(ノ｀Д´)ノ彡┻━┻','(＃￣皿￣)','(╯°□°)╯︵ ┻━┻','(；￣Д￣)','ヽ(#`Д´)ﾉ'],
+[-]  '伤心':['(T_T)','(；ω；)','(ಥ_ಥ)','(╥﹏╥)','(´；ω；`)','( ; _ ; )','(｡•︿•｡)','(T▽T)','｡ﾟ(ﾟ´ω`ﾟ)ﾟ｡'],
+[-]  '惊讶':['(⊙_⊙)','Σ(°△°|||)','(°o°)','(⊙o⊙)','Σ(ﾟДﾟ)','(O_O)','(´⊙ω⊙`)','(｡ﾟДﾟ)'],
+[-]  '无语':['(¬_¬)','(￣▽￣)','( ´_ゝ`)','(￣_￣)','┐(´～｀)┌','(・_・;)','(＝_＝)','¯\\_(ツ)_/¯'],
+[-]  'Kiss':['(´ε｀ )','(*^3^)','(´3｀)','( ˘ ³˘)♥','(っ˘з(˘⌣˘ )','(*´з`)','( ˘ ε ˘ )','(´っ˘з(˘⌣˘ )'],
+[-]  '经典':['(・ω・)','(・∀・)','(´・ω・`)','(｀・ω・´)','(・ω<)','(o´ω`o)','(´-ω-`)','(￣ω￣)','(・ε・)','ヾ(・ω・)'],
+[-]  '双人款':['(づ｡◕‿‿◕｡)づ','(っ´ω`)っ','⊂(・ω・*⊂)','(ﾉ´ω`)ﾉ','(づ￣ ³￣)づ','(ノ・∀・)ノ','(´ω｀)人(´ω｀)','(´・ω・)(・ω・`)','ヽ(´▽`)人(´▽`)ノ','(*・ω・)ノ']
+[+]  "开心":["ᕙ( •̀ ᗜ •́ )ᕗ", "ヾ(＾∇＾)", "^>⸝⸝⸝⸝<^੭", "˶ᵒ ᵕ ˂˶", "(˃ ⌑ ˂ഃ )", "(*^▽^*)", "ʚ˶˃ ᵕ ˂˶ɞ", "(≧∇≦)/", "૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა", "◍˃ᵕ˂◍", "=ᗜꇴᗜ=", "໒꒰ྀི ˶> ˕ <˶꒱ྀི১", "(o^▽^o)", "ヽ(・∀・)ﾉ", "(＾▽＾)", "૮꒰˶ᵔ ᵕ ᵔ˶꒱ა", "꒰՞> · <՞꒱", "⸝⸝(⸝⸝>ᵕ<⸝⸝)⸝⸝♡", "٩(◕‿◕)۶", "๑'ꇴ'๑"],
+[+]  "生气":["(ꐦ ^-^)", "◺ ̫ ◿ꐦ", "-᷅ ⤙ -᷄", "(╯°□°)╯︵ ┻━┻", "(ノ｀Д´)ノ彡┻━┻", "(•̀ロ•́)", "(；￣Д￣)", "(＃￣皿￣)", "(#`皿´)", "૮₍ꐦ -᷅ ⤙ -᷄ ₎ა", "ヽ(`Д´)ﾉ", "(╬ಠ益ಠ)", "(。-`ω-)！", "(๑•̀ㅁ•́๑)"],
+[+]  "伤心":["꒦ິ^꒦ິ", "՞╥⩊╥՞", "•᷄⌓•᷅", "(｡•︿•｡)", "(´；ω；`)", "(ಥ_ಥ)", "(；ω；)", "૮(◞ ‸ ◟ )ა", "૮₍˶Ó﹏Ò ⑅₎ა", "ŏ̥ㅁŏ̥", "(T_T)", "( •ʚ•̥ )", "(っ꒪ཀ꒪)っ", "｡ﾟ(ﾟ´ω`ﾟ)ﾟ｡", "(╥﹏╥)", "꒰⑅ᐢ. ̯.ᐢ꒱", "૮꒰⸝⸝›̥̥̥ ·̭ ‹̥̥̥⸝⸝꒱১", "っω<｡"],
+[+]  "惊讶":["(°o°)", "(O_O)", "°ﾛ°", "(´⊙ω⊙`)", "(⊙o⊙)", "(｡ﾟДﾟ)", "⌯'⊙'⌯", "⦕(>ロ<)⦖", "( ˙ε . )？", "^⎚˕⎚^", "˙º˙", "Σ(ﾟДﾟ)", "ᗒᗣᗕ", "Σ(°△°|||)", "(⊙_⊙)", "ටᆼට"],
+[+]  "无语":["┐(´～｀)┌", "(・_・;)", "(- ₃ -)", "(￣_￣)", "૮․ ․ ྀིა", "(๑˙ー˙๑)", "¯\\_(ツ)_/¯", "╸▵╺", "⦁֊⦁", "(っ. -｡)", "(＝_＝)", "( ´_ゝ`)", "ᴗ.ᴗᶻ", "˶ｰ`֊´ｰ", "(￣▽￣)", "ᶻz ₍^_ ̫ _^₎", "⁃ ⌓ ⁃", "(¬_¬)"],
+[+]  "Kiss":["૮꒰ ˶• ༝ •˶꒱ა ♡", "(*´з`)", "(˵>ㅿ<˵)♡", "(っ˘з(˘⌣˘ )", "( ˘ ³˘)♥", "꒒ ০ ⌵ ୧ ♡", "₍ᐢ..ᐢ₎♡", "♪～(´ε｀　)", "(´3｀)", "՞⩌⌯⩌՞", "( ˘ ε ˘ )", "˃͈ દ ˂͈", "(´ε｀ )", "(*￣3￣)╭♡", "˘³˘", "(*^3^)"],
+[+]  "经典":["(・ω・)", ":P", "QAQ", "₍ᐢ. ̫ .ᐢ₎", "^_^", "QwQ", "=_=", "XD", "૮₍ ´ ꒳ `₎ა", "^^", "orz", "T_T", "OvO", "(´・ω・`)", ":D", ">_<"],
+[+]  "双人款":["( ◜◡¯)(¯◡◝ )", "( ˶◝◡ ◜|◝◡ ◜˶ )", "૮₍ ˃ ⤙ ˂ ₎ა", "(ﾉ´ω`)ﾉ", "⸜₍๑•⌔•๑₎⸝", "(´・ω・)(・ω・`)", "(ノ・∀・)ノ", "(ᐡ⦁⩊⦁⸝⸝ᐡ )₊୭", "ヽ(´▽`)人(´▽`)ノ", "∠( ᐛ 」∠)", "(づ￣ ³￣)づ", "(づ｡◕‿‿◕｡)づ", "(´ω｀)人(´ω｀)", "(*・ω・)ノ", "(っ´ω`)っ", "⊂(・ω・*⊂)"]
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[-]  '#sh-kao,#sh-stk{max-height:52vh;padding:12px 14px calc(12px + var(--sab))}'
+[-] +'.kao-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}'
+[-] +'.kao-tt{font-weight:600;font-size:0.86rem;letter-spacing:0.04em;color:var(--tx)}.kao-tt i{font-style:normal;font-family:var(--disp);font-weight:300;font-size:0.66rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--tx3);margin-left:8px}'
+[-] +'.kao-x{width:28px;height:28px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,0.4);color:var(--tx2);font-size:0.8rem;line-height:1;cursor:pointer}'
+[-] +'.kao-tabs{display:flex;gap:6px;overflow-x:auto;flex:none;padding-bottom:8px;scrollbar-width:none}.kao-tabs::-webkit-scrollbar{display:none}'
+[-] +'.kao-tab{flex:none;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.32);font-size:0.76rem;color:var(--tx2);cursor:pointer;font-family:inherit}'
+[+]  '#kao-panel{display:none;flex:none;flex-direction:column;box-sizing:border-box;margin:0 10px 2px;padding:8px 10px 10px;border-radius:18px;max-height:min(300px,42vh);overflow:hidden}'
+[+] +'#kao-panel.open{display:flex}#conv.sel-mode #kao-panel{display:none!important}#kao-panel [hidden]{display:none!important}'
+[+] +'body.ib-reduce #kao-panel{-webkit-backdrop-filter:none;backdrop-filter:none}'
+[+] +'.kp-hd{display:flex;align-items:center;gap:8px;flex:none;margin-bottom:6px}'
+[+] +'.kp-seg{display:inline-flex;flex:none;padding:2px;border-radius:999px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.32)}'
+[+] +'.kp-seg button{border:0;background:none;padding:4px 12px;border-radius:999px;font-size:0.78rem;line-height:1.4;color:var(--tx2);font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}'
+[+] +'.kp-seg button.on{background:var(--acc);color:#fff}'
+[+] +'.kp-cap{margin-left:auto;font-style:normal;font-family:var(--disp);font-weight:300;font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}'
+[+] +'.kp-x{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,0.4);color:var(--tx2);font-size:0.74rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;-webkit-tap-highlight-color:transparent}'
+[+] +'.kao-tabs{display:flex;gap:6px;overflow-x:auto;flex:none;padding-bottom:7px;scrollbar-width:none}.kao-tabs::-webkit-scrollbar{display:none}'
+[+] +'.kao-tab{flex:none;padding:4px 11px;border-radius:999px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.32);font-size:0.74rem;color:var(--tx2);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}'
+[-] +'.kao-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:38px;gap:7px;max-height:173px;overflow-y:auto;padding:2px 0 6px;align-content:start;-webkit-overflow-scrolling:touch}'
+[-] +'.kao-it{position:relative;height:38px;padding:0 6px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.42);font-size:0.88rem;line-height:1.3;text-align:center;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}'
+[+] +'.kao-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:38px;gap:7px;flex:1 1 auto;min-height:0;max-height:173px;overflow-y:auto;padding:2px 0 4px;align-content:start;-webkit-overflow-scrolling:touch}'
+[+] +'.kao-it{position:relative;height:38px;padding:0 6px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.42);font-size:0.88rem;line-height:1.3;text-align:center;color:var(--tx);white-space:nowrap;overflow:hidden;cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}'
+[-] +'.kao-add{flex:none;display:flex;gap:8px;align-items:center;margin-top:8px}'
+[+] +'.kao-add{flex:none;display:flex;gap:8px;align-items:center;margin-top:6px}'
+[-] +'.stk-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-height:232px;overflow-y:auto;padding:2px 0 6px;align-content:start;-webkit-overflow-scrolling:touch}.stk-pk{aspect-ratio:1;border-radius:12px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.42);display:flex;align-items:center;justify-content:center;padding:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}.stk-pk img{max-width:100%;max-height:100%;object-fit:contain}body.theme-infernal .stk-pk{background:rgba(255,255,255,0.06)}'
+[+] +'.stk-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;flex:1 1 auto;min-height:0;max-height:150px;overflow-y:auto;padding:2px 0 4px;align-content:start;-webkit-overflow-scrolling:touch}.stk-pk{aspect-ratio:1;border-radius:12px;border:1px solid var(--glass-line);background:rgba(255,255,255,0.42);display:flex;align-items:center;justify-content:center;padding:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}.stk-pk img{max-width:100%;max-height:100%;object-fit:contain;display:block}'
+[+] +'#cv-kao.on{color:#fff;background:var(--acc);border-color:var(--acc)}'
+[-] +'.sb-ic.sk-img{background-size:cover;background-position:center;background-repeat:no-repeat}.sb-ic.sk-img svg{display:none}'
+[-] +'.kao-empty{grid-column:1/-1;padding:18px 6px;text-align:center;font-size:0.76rem;color:var(--tx3)}'
+[-] +'body.theme-infernal .kao-it,body.theme-infernal .kao-tab,body.theme-infernal .kao-add input,body.theme-infernal .kao-x{background:rgba(255,255,255,0.06)}'
+[-] +'body.theme-infernal .kao-tab.on{background:var(--acc);color:#fff}'
+[+] +'.sb-ic.sk-img{background-size:cover;background-position:center;background-repeat:no-repeat}.sb-ic.sk-img svg{display:none}body .sb-ic.sk-img::after{content:none!important}'
+[+] +'.kao-empty{grid-column:1/-1;padding:18px 6px;text-align:center;font-size:0.76rem;color:var(--tx3);line-height:1.6}'
+[+] +'body.theme-infernal .kao-it,body.theme-infernal .kao-tab,body.theme-infernal .kao-add input,body.theme-infernal .kp-x,body.theme-infernal .kp-seg,body.theme-infernal .stk-pk{background:rgba(255,255,255,0.06)}'
+[+] +'body.theme-infernal .kao-tab.on,body.theme-infernal .kp-seg button.on{background:var(--acc);color:#fff}'
+
+--- <h3>LISTEN TOGETHER</h3> ---
+[+] /* ── 面板（颜文字 / 表情包共用一块，挂在输入条上方） ── */
+[+] var kp={mode:'kao',open:false};
+[+] function kpEl(){var p=$$('kao-panel');if(p)return p;p=document.createElement('div');p.id='kao-panel';p.className='glass';
+[+]   p.innerHTML='<div class="kp-hd"><div class="kp-seg" id="kp-seg"><button type="button" data-m="kao" class="on">颜文字</button><button type="button" data-m="stk">表情包</button></div><i class="kp-cap" id="kp-cap">Kaomoji</i><button class="kp-x" type="button" aria-label="收起">✕</button></div>'
+[+]    +'<div class="kao-tabs" id="kao-tabs"></div><div class="kao-grid" id="kao-grid"></div><div class="kao-add" id="kao-addrow"><input id="kao-in" placeholder="粘贴或输入颜文字，加进当前分组" maxlength="40" autocomplete="off"><button type="button" id="kao-put" class="ask-send" aria-label="加入"><svg viewBox="0 0 24 24"><path d="M4 12h13M13 6l6 6-6 6"/></svg></button></div>'
+[+]    +'<div class="kao-tabs" id="stk-pk-tabs" hidden></div><div class="stk-pick" id="stk-pick" hidden></div>';
+[+]   var strip=$$('cv-attach-strip'),conv=$$('conv');
+[+]   if(strip&&strip.parentNode)strip.parentNode.insertBefore(p,strip);else if(conv)conv.appendChild(p);else document.body.appendChild(p);
+[+]   p.addEventListener('pointerdown',function(e){if(e.target&&e.target.closest&&e.target.closest('input,textarea'))return;e.preventDefault()});/* 不抢输入框焦点：键盘开着时点面板不收键盘 */
+[+]   p.querySelector('.kp-x').addEventListener('click',function(){kpClose()});
+[+]   $$('kp-seg').addEventListener('click',function(e){var b=e.target.closest('button[data-m]');if(!b)return;kpMode(b.dataset.m)});
+[+]   $$('kao-put').addEventListener('click',async function(){var v=String($$('kao-in').value||'').trim();if(!v)return;var c=kao.cat;kao.mine[c]=kao.mine[c]||[];if(kao.mine[c].indexOf(v)>=0||(KAO[c]||[]).indexOf(v)>=0){T('已经有这一枚了');return}kao.mine[c].push(v);$$('kao-in').value='';await kaoSave();kaoPaint();T('已加入「'+c+'」')});
+[+]   $$('kao-in').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$$('kao-put').click()}});
+[+]   return p}
+[+] function kpMode(m){kp.mode=(m==='stk')?'stk':'kao';var p=kpEl();p.querySelectorAll('#kp-seg button').forEach(function(b){b.classList.toggle('on',b.dataset.m===kp.mode)});$$('kp-cap').textContent=kp.mode==='stk'?'Stickers':'Kaomoji';
+[+]   ['kao-tabs','kao-grid','kao-addrow'].forEach(function(id){$$(id).hidden=kp.mode!=='kao'});['stk-pk-tabs','stk-pick'].forEach(function(id){$$(id).hidden=kp.mode!=='stk'});
+[+]   if(kp.mode==='stk')sLoad().then(function(){stkPickPaint()});else kaoLoad().then(function(){kaoPaint()});
+[+]   try{localStorage.setItem('ib_kp_mode',kp.mode)}catch(e){}}
+[+] function kpOpen(m){var p=kpEl();if(m)kp.mode=(m==='stk')?'stk':'kao';var box=$$('cv-msgs'),atB=box?(box.scrollHeight-box.scrollTop-box.clientHeight<140):false;
+[+]   if(!p.classList.contains('open')){p.classList.add('open');kp.open=true;var b=$$('cv-kao');if(b)b.classList.add('on')}
+[+]   kpMode(kp.mode);if(atB&&box)requestAnimationFrame(function(){box.scrollTop=box.scrollHeight})}
+[+] function kpClose(){var p=$$('kao-panel');kp.open=false;var b=$$('cv-kao');if(b)b.classList.remove('on');if(p)p.classList.remove('open')}
+[+] function kpToggle(){if(kp.open)kpClose();else kpOpen()}
+[+] window._ibKaoPanel={open:kpOpen,close:kpClose,toggle:kpToggle,mode:kpMode};
+[-] function kaoSheet(){var sh=$$('sh-kao');if(sh)return sh;sh=document.createElement('div');sh.className='sheet';sh.id='sh-kao';
+[-]   sh.innerHTML='<div class="kao-hd"><span class="kao-tt">颜文字<i>Kaomoji</i></span><button class="kao-x" type="button" aria-label="关闭">✕</button></div><div class="kao-tabs" id="kao-tabs"></div><div class="kao-grid" id="kao-grid"></div><div class="kao-add"><input id="kao-in" placeholder="粘贴或输入颜文字，加进当前分组" maxlength="40" autocomplete="off"><button type="button" id="kao-put" class="ask-send" aria-label="加入"><svg viewBox="0 0 24 24"><path d="M4 12h13M13 6l6 6-6 6"/></svg></button></div>';
+[-]   document.body.appendChild(sh);
+[-]   sh.querySelector('.kao-x').addEventListener('click',function(){closeSheets()});
+[-]   $$('kao-put').addEventListener('click',async function(){var v=String($$('kao-in').value||'').trim();if(!v)return;var c=kao.cat;kao.mine[c]=kao.mine[c]||[];if(kao.mine[c].indexOf(v)>=0||(KAO[c]||[]).indexOf(v)>=0){T('已经有这一枚了');return}kao.mine[c].push(v);$$('kao-in').value='';await kaoSave();kaoPaint();T('已加入「'+c+'」')});
+[-]   return sh}
+[+] function fitKao(grid){try{if(!grid||!grid.offsetParent)return;var sizes=['0.88rem','0.8rem','0.72rem','0.64rem'];grid.querySelectorAll('.kao-it').forEach(function(d){var sp=d.firstChild;if(!sp)return;for(var i=0;i<sizes.length;i++){d.style.fontSize=sizes[i];if(sp.scrollWidth<=sp.clientWidth+1)break}})}catch(e){}}/* 超宽的颜文字逐档缩字，缩到最小仍放不下才省略 */
+[-]     d.addEventListener('click',function(){if(held){held=false;return}kaoIns(t);closeSheets();try{var ta=$$('cv-ta');if(ta)ta.focus()}catch(e){}});/* v255-p：点一枚即插入并收起抽屉、回到输入框 */
+[+]     d.addEventListener('click',function(){if(held){held=false;return}kaoIns(t);kpClose();try{var ta=$$('cv-ta');if(ta)ta.focus()}catch(e){}});/* 点一枚即插入并收起面板、回到输入框 */
+[-]   if(!mine.length&&!base.length)grid.innerHTML='<div class="kao-empty">这一组还是空的，在下面加一枚。</div>'}
+[-] function noBlur(id){try{var sc=$$('sheet-scrim'),sh=$$(id);if(!sc||!sh)return;sc.classList.add('kao-lite');if(!sh._kmo){sh._kmo=new MutationObserver(function(){if(!sh.classList.contains('open'))sc.classList.remove('kao-lite')});sh._kmo.observe(sh,{attributes:true,attributeFilter:['class']})}}catch(e){}}/* v255-p：这两个小抽屉快点快出，不模糊底下的聊天（其它 sheet 照旧）；抽屉一收起就把遮罩改回默认 */
+[-] async function kaoOpen(){await kaoLoad();kaoSheet();kaoPaint();openSheet('sh-kao');noBlur('sh-kao')}
+[-] function kaoBtn(){var plus=$$('cv-plus');if(!plus||$$('cv-kao'))return;var b=document.createElement('button');b.className='cv-mini';b.id='cv-kao';b.type='button';b.setAttribute('aria-label','颜文字与表情包');b.innerHTML='<svg viewBox="0 0 24 24">'+PAW+'</svg>';plus.insertAdjacentElement('afterend',b);b.addEventListener('click',function(e){e.preventDefault();actionSheet([{label:'发送颜文字',fn:function(){kaoOpen()}},{label:'发送表情包',fn:function(){stkPickOpen()}}])})}/* v246-p：与「+」同款动作单 */
+[-] function stkPickSheet(){var sh=$$('sh-stk');if(sh)return sh;sh=document.createElement('div');sh.className='sheet';sh.id='sh-stk';sh.innerHTML='<div class="kao-hd"><span class="kao-tt">表情包<i>Stickers</i></span><button class="kao-x" type="button" aria-label="关闭">✕</button></div><div class="kao-tabs" id="stk-pk-tabs"></div><div class="stk-pick" id="stk-pick"></div>';document.body.appendChild(sh);sh.querySelector('.kao-x').addEventListener('click',function(){closeSheets()});return sh}
+[+]   if(!mine.length&&!base.length)grid.innerHTML='<div class="kao-empty">这一组还是空的，在下面加一枚。</div>';
+[+]   requestAnimationFrame(function(){fitKao(grid)})}
+[+] function kaoBtn(){var plus=$$('cv-plus');if(!plus||$$('cv-kao'))return;var b=document.createElement('button');b.className='cv-mini';b.id='cv-kao';b.type='button';b.setAttribute('aria-label','颜文字与表情包');b.innerHTML='<svg viewBox="0 0 24 24">'+PAW+'</svg>';plus.insertAdjacentElement('afterend',b);
+[+]   b.addEventListener('pointerdown',function(e){e.preventDefault()});/* 键盘开着时点它不收键盘 */
+[+]   b.addEventListener('click',function(e){e.preventDefault();kpToggle()});
+[+]   try{kp.mode=localStorage.getItem('ib_kp_mode')==='stk'?'stk':'kao'}catch(e){}
+[+]   var conv=$$('conv');if(conv&&!conv._kpmo){try{conv._kpmo=new MutationObserver(function(){if(!conv.classList.contains('open')||conv.classList.contains('sel-mode'))kpClose()});conv._kpmo.observe(conv,{attributes:true,attributeFilter:['class']})}catch(e){}}/* 会话关闭 / 进入选择模式即收起 */
+[+]   var oc=window.openConv;if(typeof oc==='function'&&!oc._kp){var w=function(){kpClose();return oc.apply(this,arguments)};w._kp=1;window.openConv=w}/* 切换会话即收起（函数声明可被 window 属性覆盖） */}
+[+] /* ── 表情包选发 ── */
+[-]     c.addEventListener('click',function(){imgGet(it.id).then(function(u){if(!u){T('这枚表情包的图片已不在本机');return}window._ibPendStk={id:it.id,name:it.name,desc:String(it.desc||''),use:String(it.use||''),dataUrl:u};try{drawAttach()}catch(e){}closeSheets();try{var ta=$$('cv-ta');if(ta)ta.focus()}catch(e){}})});grid.appendChild(c)})}
+[-] async function stkPickOpen(){await sLoad();stkPickSheet();stkPickPaint();openSheet('sh-stk');noBlur('sh-stk')}/* v246-p：抽屉顶部预设页签（照颜文字抽屉），任意一套都能发，不受开关与当前预设限制 */
+[+]     c.addEventListener('click',function(){imgGet(it.id).then(function(u){if(!u){T('这枚表情包的图片已不在本机');return}window._ibPendStk={id:it.id,name:it.name,desc:String(it.desc||''),use:String(it.use||''),dataUrl:u};try{drawAttach()}catch(e){}kpClose();try{var ta=$$('cv-ta');if(ta)ta.focus()}catch(e){}})});grid.appendChild(c)})}/* 顶部预设页签：任意一套都能发，不受开关与当前预设限制 */
+
+=== 合计 +110 / -65 ===

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IB机 · 聊天记录录入器</title>
+<style>
+/* ============================================================
+   IB机 · 聊天记录录入器
+   设计 token 取自 InternalBeyond-Mobile「Internal」亮色主题：
+   玻璃面板 rgba(255,255,255,.72) / 冷蓝描边 rgba(140,170,220,.32)
+   主色 #2a6bb0 / 柔和投影 0 10px 36px rgba(90,120,170,.14)
+   字体与 IB 同源（Noto Sans SC 正文 + 衬线标题），不引任何外部资源
+   ============================================================ */
+:root{
+  --acc:#2a6bb0; --acc-2:#4a8ac8; --acc-soft:rgba(42,107,176,.10);
+  --warm:#b98d5e; --warm-soft:rgba(185,141,94,.12);
+  --glass:rgba(255,255,255,.72); --glass-strong:rgba(255,255,255,.88);
+  --line:rgba(140,170,220,.32); --line-soft:rgba(165,188,230,.22);
+  --shadow:0 10px 36px rgba(90,120,170,.14); --shadow-sm:0 4px 14px rgba(90,120,170,.10);
+  --ink:#22303f; --ink-2:#5c6f85; --ink-3:#93a3b5;
+  --danger:#c96a6a; --ok:#4e8f6a;
+  --r:18px; --r-sm:12px;
+  --font:"Noto Sans SC","PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-title:"Noto Serif SC","Songti SC","SimSun",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font); color:var(--ink); font-size:14px; line-height:1.6;
+  min-height:100vh; padding:0 0 96px;
+  background:
+    radial-gradient(1200px 600px at 12% -8%, rgba(185,141,94,.16), transparent 60%),
+    radial-gradient(1000px 700px at 92% 6%, rgba(42,107,176,.14), transparent 62%),
+    linear-gradient(165deg,#f8f5f0 0%,#eff3f9 48%,#e7eef8 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:960px;margin:0 auto;padding:26px 18px 0}
+
+/* ---------- 页头 ---------- */
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+h1{font-family:var(--font-title);font-size:23px;font-weight:600;letter-spacing:.5px;margin:0;color:var(--ink)}
+h1 small{display:block;font-family:var(--font);font-size:12px;font-weight:400;letter-spacing:0;color:var(--ink-3);margin-top:5px}
+.stats{display:flex;gap:8px}
+.stat{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--line-soft);border-radius:var(--r-sm);
+  padding:7px 12px;box-shadow:var(--shadow-sm);text-align:center;min-width:64px}
+.stat b{display:block;font-size:16px;font-weight:600;color:var(--acc)}
+.stat span{font-size:11px;color:var(--ink-3)}
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:var(--glass); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.72); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:18px 20px; margin-bottom:16px;
+}
+.card h2{font-family:var(--font-title);font-size:15px;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:9px}
+.card h2 .idx{width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;font-family:var(--font);
+  font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.card p.hint{margin:2px 0 14px;font-size:12px;color:var(--ink-3);line-height:1.7}
+.card p.hint code{background:var(--acc-soft);color:var(--acc);padding:1px 5px;border-radius:5px;font-size:11px}
+
+/* ---------- 表单 ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1.2fr 1fr auto;gap:12px;align-items:end}
+label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:5px;font-weight:500}
+label .req{color:var(--danger);margin-left:3px}
+input[type=text],input[type=number],input[type=datetime-local],select,textarea{
+  width:100%;font-family:var(--font);font-size:13px;color:var(--ink);
+  background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:9px 11px;outline:none;transition:border-color .18s,box-shadow .18s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--acc-2);box-shadow:0 0 0 3px var(--acc-soft)}
+textarea{resize:vertical;line-height:1.7}
+select{cursor:pointer}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;
+  border-radius:var(--r-sm);padding:9px 16px;border:1px solid var(--line);
+  background:rgba(255,255,255,.7);color:var(--ink-2);transition:all .18s;white-space:nowrap;
+}
+.btn:hover{background:#fff;color:var(--ink);border-color:var(--acc-2)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 6px 18px rgba(42,107,176,.26)}
+.btn.primary:hover{background:var(--acc-2);color:#fff}
+.btn.warm{background:var(--warm);border-color:var(--warm);color:#fff;box-shadow:0 6px 18px rgba(185,141,94,.24)}
+.btn.warm:hover{background:#c99a6a;color:#fff}
+.btn.ghost{background:transparent;border-color:var(--line-soft)}
+.btn.danger{color:var(--danger);border-color:rgba(201,106,106,.4)}
+.btn.danger:hover{background:rgba(201,106,106,.08);border-color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:10px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ---------- 录入区 ---------- */
+#compose{min-height:88px}
+.compose-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);cursor:pointer;user-select:none}
+.chk input{width:auto;margin:0;accent-color:var(--acc)}
+.kbd{font-family:"Consolas","Courier New",monospace;font-size:11px;background:rgba(255,255,255,.8);
+  border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--ink-2)}
+
+/* ---------- 角色识别结果 ---------- */
+.roles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.role-chip{border:1px solid var(--line);background:rgba(255,255,255,.8);border-radius:999px;
+  padding:5px 13px;font-size:12px;cursor:pointer;color:var(--ink-2);transition:all .16s}
+.role-chip:hover{border-color:var(--acc-2);color:var(--acc)}
+.role-chip.on{background:var(--acc-soft);border-color:var(--acc-2);color:var(--acc);font-weight:500}
+
+/* ---------- 消息列表 ---------- */
+.list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:12px;flex-wrap:wrap}
+.list-head .t{font-family:var(--font-title);font-size:15px;font-weight:600}
+.empty{text-align:center;color:var(--ink-3);font-size:13px;padding:34px 10px;border:1px dashed var(--line);
+  border-radius:var(--r-sm);background:rgba(255,255,255,.4)}
+#list{display:flex;flex-direction:column;gap:10px}
+.row{
+  display:grid;grid-template-columns:44px 1fr 128px;gap:10px;align-items:start;
+  background:rgba(255,255,255,.62);border:1px solid var(--line-soft);border-radius:var(--r-sm);
+  padding:11px 12px;content-visibility:auto;contain-intrinsic-size:auto 120px;transition:border-color .16s,box-shadow .16s;
+}
+.row:hover{border-color:var(--line);box-shadow:var(--shadow-sm)}
+.row.me{border-left:3px solid var(--acc)}
+.row.ta{border-left:3px solid var(--warm)}
+.row .no{font-size:11px;color:var(--ink-3);text-align:center;padding-top:3px;font-family:"Consolas",monospace}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:1px 7px;margin-bottom:5px}
+.tag.me{background:var(--acc-soft);color:var(--acc)}
+.tag.ta{background:var(--warm-soft);color:var(--warm)}
+.row .mid{min-width:0}
+.row textarea{font-size:13px;min-height:52px;background:rgba(255,255,255,.9)}
+.row .side{display:flex;flex-direction:column;gap:6px}
+.row .side input{font-size:11px;padding:6px 8px;width:150px}
+.row .acts{display:flex;gap:4px}
+.icon{width:26px;height:26px;border-radius:8px;border:1px solid var(--line-soft);background:rgba(255,255,255,.8);
+  cursor:pointer;font-size:12px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;transition:all .16s}
+.icon:hover{border-color:var(--acc-2);color:var(--acc);background:#fff}
+.icon.del:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ---------- 底部操作条 ---------- */
+.footbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;padding:12px 18px;
+  background:rgba(255,255,255,.78);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--line-soft);box-shadow:0 -8px 30px rgba(90,120,170,.10);
+}
+.footbar .inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.save-state{font-size:12px;color:var(--ink-3);margin-right:auto;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.dot.saving{background:var(--warm)}
+
+/* ---------- 提示 ---------- */
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(14px);z-index:60;
+  background:rgba(34,48,63,.92);color:#fff;font-size:13px;padding:9px 18px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:all .26s;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:80vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.warn{font-size:12px;color:var(--danger);margin-top:8px;display:none}
+.warn.on{display:block}
+.note{font-size:12px;color:var(--ink-3);background:rgba(255,255,255,.5);border:1px solid var(--line-soft);
+  border-radius:10px;padding:9px 12px;margin-top:12px;line-height:1.75}
+.note b{color:var(--ink-2)}
+@media (max-width:720px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .row{grid-template-columns:36px 1fr;grid-template-areas:"no mid" "no side"}
+  .row .no{grid-area:no}.row .mid{grid-area:mid}.row .side{grid-area:side;flex-direction:row;align-items:center}
+  h1{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>IB机 · 聊天记录录入器
+      <small>一条条填，填完导出 —— 导出的 JSON 可直接在 InternalBeyond-Mobile 的「数据」页导入</small>
+    </h1>
+    <div class="stats">
+      <div class="stat"><b id="st-total">0</b><span>总条数</span></div>
+      <div class="stat"><b id="st-me">0</b><span>我说</span></div>
+      <div class="stat"><b id="st-ta">0</b><span>TA说</span></div>
+    </div>
+  </header>
+
+  <!-- ① 角色绑定 -->
+  <section class="card">
+    <h2><span class="idx">1</span>绑定角色</h2>
+    <p class="hint">
+      消息必须挂在 IB机 里<b>已存在的角色</b>名下，否则导进去看不见。角色的 id 形如 <code>friend_1757500000000</code>。
+      不知道 id 就点右边的按钮：选一份 IB机 导出的备份，自动把角色列出来。
+    </p>
+    <div class="grid2">
+      <div>
+        <label>角色 ID（friendId）<span class="req">*</span></label>
+        <input type="text" id="friendId" placeholder="friend_1757500000000" autocomplete="off">
+      </div>
+      <div>
+        <label>角色名字（只用于导出时给 TA 的消息署名，可留空）</label>
+        <input type="text" id="friendName" placeholder="例如：瑟琳" autocomplete="off">
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn ghost sm" id="btn-pick-backup">从 IB机备份里识别角色</button>
+      <input type="file" id="file-backup" accept=".json,application/json" hidden>
+    </div>
+    <div class="roles" id="roles"></div>
+    <div class="warn" id="warn-friend">角色 ID 看起来不像 IB机 的角色 id（通常以 friend_ 开头）。若确实是从应用里复制的原始 id，可忽略此提示。</div>
+  </section>
+
+  <!-- ② 频道 -->
+  <section class="card">
+    <h2><span class="idx">2</span>选频道（可不建）</h2>
+    <p class="hint">IB机 每个角色默认有一个主频道；只有你用了「话题频道」才需要在这里建。不建的话，所有消息都进主频道。</p>
+    <div class="grid3">
+      <div>
+        <label>新消息进入哪个频道</label>
+        <select id="cur-thread"></select>
+      </div>
+      <div>
+        <label>新建频道名</label>
+        <input type="text" id="new-thread" placeholder="例如：日常 / 深夜" autocomplete="off">
+      </div>
+      <div>
+        <button class="btn sm" id="btn-add-thread">＋ 建频道</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 录入 -->
+  <section class="card">
+    <h2><span class="idx">3</span>录入对话</h2>
+    <p class="hint">
+      填完一条点下面按钮入库。想快点：<span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> 记成「我说」，
+      <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">Enter</span> 记成「TA说」。
+    </p>
+    <textarea id="compose" placeholder="把这一条的内容贴/打在这里…"></textarea>
+    <div class="compose-foot">
+      <label class="chk"><input type="checkbox" id="split-lines"> 多行文本按行拆成多条（每行一条）</label>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-add-me">添加 · 我说</button>
+        <button class="btn warm" id="btn-add-ta">添加 · TA说</button>
+      </div>
+    </div>
+    <div class="grid3" style="margin-top:14px">
+      <div>
+        <label>时间基准（第一条消息的时间，<b>可留空</b>）</label>
+        <input type="text" id="base-time" inputmode="numeric" placeholder="留空即可：自动按顺序编时间" autocomplete="off">
+        <p class="hint">不知道当时几点？<b>留空就行</b>——会按你的录入顺序自动生成递增时间，导入 IB 后顺序正确即可，时间戳本身可以是编的。想指定就填 2026-09-10 20:00（也认 2026/9/10 20:00、9月10日 20:00）。</p>
+      </div>
+      <div>
+        <label>自动间隔（秒）</label>
+        <input type="number" id="interval" min="1" step="1" value="60">
+      </div>
+      <div>
+        <button class="btn sm" id="btn-now">用当前时间</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 列表 -->
+  <section class="card">
+    <div class="list-head">
+      <div class="t">已录入的对话</div>
+      <div class="btn-row">
+        <label class="chk" style="margin-right:6px"><input type="checkbox" id="cascade-time" checked> 改时间时后面自动顺延</label>
+        <button class="btn ghost sm" id="btn-reseq">按当前顺序重排时间</button>
+      </div>
+    </div>
+    <p class="hint" style="margin:0 0 10px">
+      对话里提到了具体日期？直接在右边时间框里改那一条（如 <code>2026-08-15 21:30</code>），
+      勾着上面这个开关的话，后面的消息会自动往后排，不用一条条改。
+    </p>
+    <div id="list"></div>
+    <div class="warn" id="warn-time">检测到时间没有按顺序递增，IB机 里会按时间排序，建议点上面的「按当前顺序重排时间」。</div>
+  </section>
+
+  <div class="note">
+    <b>用法小结：</b>绑定角色 → 一条条录入 → 底部「导出 JSON」→ 把这个文件放进手机/电脑的 IB机，
+    进「数据」页点「导入」，选择这个文件，勾选 <b>chatMessages</b>（用了频道的话还有 chatThreads）即可。
+    导入是「同 id 覆盖、其余不动」，不会清掉你原有数据。<br>
+    <b>进度会自动存在这个浏览器里</b>，关掉页面也不丢；想换个浏览器继续，就用底部的「继续编辑」把手上的 JSON 读回来。
+  </div>
+
+</div>
+
+<!-- 底部操作条 -->
+<div class="footbar"><div class="inner">
+  <div class="save-state"><span class="dot" id="dot"></span><span id="save-text">进度已存在本机浏览器</span></div>
+  <button class="btn sm" id="btn-resume">继续编辑（读回 JSON）</button>
+  <input type="file" id="file-resume" accept=".json,application/json" hidden>
+  <button class="btn sm danger" id="btn-clear">清空</button>
+  <button class="btn primary" id="btn-export">导出 JSON</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   状态
+   ============================================================ */
+const LS_KEY = 'ib_chat_editor_v1';
+const MAIN_THREAD = '';           // 主频道的 threadId 就是空串（IB机 如此）
+var state = {
+  friendId: '',
+  friendName: '',
+  threads: [],                    // [{id,name,created}]
+  curThread: MAIN_THREAD,         // 当前录入落到哪个频道
+  msgs: [],                       // [{id,role,content,timestamp,threadId}]
+  base: null,                     // 时间基准（ms）
+  interval: 60,                   // 秒
+  splitLines: false,
+  cascadeTime: true               // 改某条时间后，后面的消息自动顺延
+};
+
+/* ---------- 工具 ---------- */
+const $ = id => document.getElementById(id);
+function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+
+/** 时间戳 → 「2026-09-10 20:00」这类纯文本（不依赖 datetime-local 控件，任何浏览器都显示得出） */
+function tsToLocal(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+       + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+/**
+ * 宽松解析时间文本 → 时间戳。认这些写法（空格/T 均可，分隔符 - / . 年 月 日 都行）：
+ *   2026-09-10 20:00 | 2026-09-10T20:00 | 2026/9/10 20:00 | 2026.9.10 20:00
+ *   2026年9月10日 20:00 | 2026-09-10（缺时间按 12:00）| 20:00（缺日期按今天）
+ */
+function localToTs(s){
+  const raw = String(s == null ? '' : s).trim();
+  if(!raw) return 0;
+  const m = raw.match(/(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})(?:\s*日)?(?:[\sT]+(\d{1,2})\s*[:：时]\s*(\d{1,2}))?/);
+  if(m){
+    const hh = m[4] == null ? 12 : +m[4];
+    const mi = m[5] == null ? 0 : +m[5];
+    if(hh > 23 || mi > 59) return 0;
+    return new Date(+m[1], +m[2] - 1, +m[3], hh, mi, 0, 0).getTime();
+  }
+  // 只给了时间，日期取今天
+  const t = raw.match(/^(\d{1,2})\s*[:：时]\s*(\d{1,2})/);
+  if(t){
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), +t[1], +t[2], 0, 0).getTime();
+  }
+  return 0;
+}
+/** 生成 IB机 风格的消息 id，并保证全局唯一 */
+function mkMsgId(ts, role, used){
+  const base = 'msg_' + ts + '_' + (role === 'user' ? 'u' : 'a');
+  let id = base, i = 1;
+  const set = used || new Set(state.msgs.map(m => m.id));
+  while(set.has(id)){ id = base + '_' + (i++); }
+  return id;
+}
+/** 角色 id 兜底清理 */
+function normalizeFriendId(v){
+  let s = String(v == null ? '' : v).trim();
+  s = s.replace(/^["'`]+|["'`]+$/g, '');
+  return s;
+}
+/** 下一条消息该用的时间：上一条 + 间隔（没有上一条就用基准时间） */
+function nextTimestamp(){
+  const step = Math.max(1, (+state.interval || 60)) * 1000;
+  if(state.msgs.length){
+    return (+state.msgs[state.msgs.length - 1].timestamp || 0) + step;
+  }
+  return (+state.base || Date.now());
+}
+
+/* ============================================================
+   数据操作（纯逻辑，便于离线自测）
+   ============================================================ */
+/** 追加一条消息，返回新消息对象；内容为空则不追加（返回 null） */
+function addMsg(role, text, opts){
+  const o = opts || {};
+  const content = String(text == null ? '' : text).replace(/\r\n/g, '\n').replace(/\s+$/, '');
+  if(!content.trim()) return null;
+  const ts = o.timestamp != null ? +o.timestamp : nextTimestamp();
+  const msg = {
+    id: mkMsgId(ts, role),
+    role: role === 'assistant' ? 'assistant' : 'user',
+    content: content,
+    timestamp: ts,
+    threadId: o.threadId !== undefined ? o.threadId : state.curThread
+  };
+  state.msgs.push(msg);
+  return msg;
+}
+/** 删除一条 */
+function delMsg(index){
+  if(index < 0 || index >= state.msgs.length) return false;
+  state.msgs.splice(index, 1);
+  return true;
+}
+/** 上下移动（dir = -1 上移 / 1 下移） */
+function moveMsg(index, dir){
+  const j = index + dir;
+  if(index < 0 || index >= state.msgs.length || j < 0 || j >= state.msgs.length) return false;
+  const tmp = state.msgs[index];
+  state.msgs[index] = state.msgs[j];
+  state.msgs[j] = tmp;
+  return true;
+}
+/** 复制一条（插到原位置后面，时间顺延） */
+function dupMsg(index){
+  if(index < 0 || index >= state.msgs.length) return null;
+  const src = state.msgs[index];
+  const next = state.msgs[index + 1];
+  let ts = (+src.timestamp || 0) + 1;
+  if(next && +next.timestamp <= ts) ts = Math.max(ts, +next.timestamp - 1);
+  const copy = Object.assign({}, src, { id: mkMsgId(ts, src.role), timestamp: ts });
+  state.msgs.splice(index + 1, 0, copy);
+  return copy;
+}
+/** 改正文 */
+function setMsgText(index, text){
+  if(index < 0 || index >= state.msgs.length) return false;
+  state.msgs[index].content = String(text == null ? '' : text).replace(/\r\n/g, '\n');
+  return true;
+}
+/** 改时间 */
+function setMsgTime(index, ts){
+  if(index < 0 || index >= state.msgs.length || !ts) return false;
+  state.msgs[index].timestamp = +ts;
+  return true;
+}
+/** 把每条消息的时间按当前顺序重排为「基准 + i×间隔」 */
+function resequence(){
+  const step = Math.max(1, (+state.interval || 60)) * 1000;
+  const base = +state.base || (state.msgs.length ? +state.msgs[0].timestamp : Date.now());
+  state.msgs.forEach((m, i) => { m.timestamp = base + i * step; });
+  return state.msgs.length;
+}
+/** 时间是否严格递增 */
+function isTimeAscending(){
+  for(let i = 1; i < state.msgs.length; i++){
+    if(+state.msgs[i].timestamp < +state.msgs[i - 1].timestamp) return false;
+  }
+  return true;
+}
+/** 从第 index 条之后，把时间按间隔顺延（用于改了某条真实时间后，后面自动跟上） */
+function cascadeFrom(index){
+  const step = Math.max(1, (+state.interval || 60)) * 1000;
+  let n = 0;
+  for(let i = index + 1; i < state.msgs.length; i++){
+    const prev = +state.msgs[i - 1].timestamp || 0;
+    state.msgs[i].timestamp = prev + step;
+    n++;
+  }
+  return n;
+}
+/** 导出对象的唯一 id 检查 */
+function idsUnique(){
+  const s = new Set(state.msgs.map(m => m.id));
+  return s.size === state.msgs.length;
+}
+/**
+ * 生成可导入 IB机 的备份对象
+ * 结构：顶层 = store 名 → 记录数组（IB机 只认这种）
+ */
+function buildExport(){
+  const fid = normalizeFriendId(state.friendId);
+  const out = {};
+  if(state.threads.length){
+    out.chatThreads = state.threads.map(t => ({
+      id: t.id,
+      friendId: fid,
+      name: t.name,
+      memoryEnabled: !!t.memoryEnabled,
+      created: +t.created || Date.now()
+    }));
+  }
+  out.chatMessages = state.msgs.map(m => {
+    const rec = {
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      friendId: fid,
+      timestamp: +m.timestamp
+    };
+    if(m.threadId) rec.threadId = m.threadId;
+    if(m.role === 'assistant' && state.friendName.trim()) rec.senderName = state.friendName.trim();
+    return rec;
+  });
+  return out;
+}
+/** 校验，返回问题字符串数组 */
+function validate(){
+  const errs = [];
+  if(!normalizeFriendId(state.friendId)) errs.push('还没有绑定角色 ID（friendId）');
+  if(state.threads.length && !normalizeFriendId(state.friendId)) errs.push('建了频道，但频道也要挂在角色下');
+  if(!state.msgs.length) errs.push('还没有录入任何消息');
+  if(state.msgs.length && !idsUnique()) errs.push('存在重复的消息 id，请重开一次页面让工具重新编号');
+  const empty = state.msgs.findIndex(m => !String(m.content).trim());
+  if(empty >= 0) errs.push('第 ' + (empty + 1) + ' 条是空的');
+  return errs;
+}
+/** 从 IB机 备份里读角色列表 */
+function parseRoles(data){
+  const list = [];
+  if(data && Array.isArray(data.apiConfigs)){
+    data.apiConfigs.forEach(c => {
+      if(!c || typeof c !== 'object' || !c.id) return;
+      if(c._group) return;                       // 群组不算单个角色
+      list.push({ id: String(c.id), name: String(c.name || c.title || c.nickname || '未命名') });
+    });
+  }
+  return list;
+}
+/** 从（本工具导出的）JSON 恢复状态 */
+function restoreFrom(data){
+  if(!data || typeof data !== 'object') return false;
+  if(!Array.isArray(data.chatMessages)) return false;
+  const msgs = data.chatMessages.filter(m => m && typeof m === 'object').map((m, i) => ({
+    id: String(m.id || ('msg_restore_' + i + '_' + Math.random().toString(36).slice(2, 6))),
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: String(m.content == null ? '' : m.content),
+    timestamp: +m.timestamp || Date.now(),
+    threadId: m.threadId ? String(m.threadId) : ''
+  }));
+  const threads = Array.isArray(data.chatThreads) ? data.chatThreads.filter(t => t && t.id).map(t => ({
+    id: String(t.id),
+    name: String(t.name || '未命名频道'),
+    memoryEnabled: !!t.memoryEnabled,
+    created: +t.created || Date.now()
+  })) : [];
+  state.msgs = msgs;
+  state.threads = threads;
+  state.curThread = MAIN_THREAD;
+  if(msgs.length) state.base = +msgs[0].timestamp;
+  if(data.chatMessages.length && data.chatMessages[0].friendId) state.friendId = String(data.chatMessages[0].friendId);
+  const withSender = data.chatMessages.find(m => m && m.senderName);
+  if(withSender) state.friendName = String(withSender.senderName);
+  return true;
+}
+
+/* ============================================================
+   存取
+   ============================================================ */
+let saveTimer = null;
+function saveNow(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    $('dot').className = 'dot';
+    $('save-text').textContent = '进度已保存 · ' + new Date().toLocaleTimeString('zh-CN');
+  }catch(e){
+    $('dot').className = 'dot saving';
+    $('save-text').textContent = '本机存储不可用，请及时导出 JSON';
+  }
+}
+function saveSoon(){
+  $('dot').className = 'dot saving';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 400);
+}
+function loadSaved(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data || typeof data !== 'object') return false;
+    state = Object.assign(state, data);
+    if(!Array.isArray(state.msgs)) state.msgs = [];
+    if(!Array.isArray(state.threads)) state.threads = [];
+    if(state.interval == null) state.interval = 60;
+    return true;
+  }catch(e){ return false; }
+}
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('on'), 2000);
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function renderStats(){
+  const me = state.msgs.filter(m => m.role === 'user').length;
+  $('st-total').textContent = state.msgs.length;
+  $('st-me').textContent = me;
+  $('st-ta').textContent = state.msgs.length - me;
+}
+function autoGrow(el){
+  el.style.height = 'auto';
+  el.style.height = Math.max(52, el.scrollHeight) + 'px';
+}
+function renderList(){
+  const box = $('list');
+  if(!state.msgs.length){
+    box.innerHTML = '<div class="empty">还没有消息。在上面输入第一条吧。</div>';
+    $('warn-time').classList.remove('on');
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  state.msgs.forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'row ' + (m.role === 'user' ? 'me' : 'ta');
+    row.setAttribute('data-i', String(i));
+
+    const no = document.createElement('div');
+    no.className = 'no';
+    no.textContent = '#' + (i + 1);
+
+    const mid = document.createElement('div');
+    mid.className = 'mid';
+    const tag = document.createElement('span');
+    tag.className = 'tag ' + (m.role === 'user' ? 'me' : 'ta');
+    tag.textContent = m.role === 'user' ? '我' : 'TA';
+    const ta = document.createElement('textarea');
+    ta.value = m.content;
+    ta.rows = 2;
+    ta.addEventListener('input', () => { setMsgText(i, ta.value); autoGrow(ta); renderStats(); saveSoon(); });
+    mid.appendChild(tag);
+    mid.appendChild(ta);
+
+    const side = document.createElement('div');
+    side.className = 'side';
+    const tm = document.createElement('input');
+    tm.type = 'text';
+    tm.inputMode = 'numeric';
+    tm.placeholder = '2026-09-10 20:00';
+    tm.title = '手填时间，如 2026-09-10 20:00';
+    tm.value = tsToLocal(m.timestamp);
+    tm.addEventListener('change', () => {
+      const ts = localToTs(tm.value);
+      if(!ts){ toast('时间读不懂，格式参考 2026-08-15 21:30'); tm.value = tsToLocal(m.timestamp); return; }
+      setMsgTime(i, ts);
+      const moved = (state.cascadeTime !== false) ? cascadeFrom(i) : 0;
+      saveSoon(); checkTimeOrder();
+      if(moved) renderList();
+      if(moved) toast('已改时间，后面 ' + moved + ' 条一起顺延');
+    });
+    const acts = document.createElement('div');
+    acts.className = 'acts';
+    const mk = (txt, title, cls, fn) => {
+      const b = document.createElement('button');
+      b.className = 'icon ' + (cls || '');
+      b.textContent = txt; b.title = title;
+      b.addEventListener('click', fn);
+      return b;
+    };
+    acts.appendChild(mk('↑', '上移', '', () => { if(moveMsg(i, -1)){ saveSoon(); renderAll(); } }));
+    acts.appendChild(mk('↓', '下移', '', () => { if(moveMsg(i, 1)){ saveSoon(); renderAll(); } }));
+    acts.appendChild(mk('⧉', '复制一条', '', () => { if(dupMsg(i)){ saveSoon(); renderAll(); toast('已复制到下一行'); } }));
+    acts.appendChild(mk('✕', '删除', 'del', () => {
+      if(delMsg(i)){ saveSoon(); renderAll(); toast('已删除'); }
+    }));
+    side.appendChild(tm);
+    side.appendChild(acts);
+
+    row.appendChild(no);
+    row.appendChild(mid);
+    row.appendChild(side);
+    frag.appendChild(row);
+  });
+  box.innerHTML = '';
+  box.appendChild(frag);
+  box.querySelectorAll('textarea').forEach(autoGrow);
+  checkTimeOrder();
+}
+function checkTimeOrder(){
+  const bad = state.msgs.length > 1 && !isTimeAscending();
+  $('warn-time').classList.toggle('on', bad);
+}
+function renderThreads(){
+  const sel = $('cur-thread');
+  sel.innerHTML = '';
+  const main = document.createElement('option');
+  main.value = MAIN_THREAD; main.textContent = '主频道（默认）';
+  sel.appendChild(main);
+  state.threads.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  sel.value = state.curThread;
+}
+function renderRoles(roles){
+  const box = $('roles');
+  box.innerHTML = '';
+  if(!roles.length) return;
+  roles.forEach(r => {
+    const c = document.createElement('button');
+    c.className = 'role-chip' + (normalizeFriendId(state.friendId) === r.id ? ' on' : '');
+    c.textContent = r.name + ' · ' + r.id;
+    c.addEventListener('click', () => {
+      state.friendId = r.id;
+      $('friendId').value = r.id;
+      if(!$('friendName').value.trim()){ state.friendName = r.name; $('friendName').value = r.name; }
+      saveSoon(); checkFriendId(); renderRoles(roles);
+      toast('已绑定角色：' + r.name);
+    });
+    box.appendChild(c);
+  });
+}
+function checkFriendId(){
+  const v = normalizeFriendId($('friendId').value);
+  const bad = v && !/^friend_/.test(v);
+  $('warn-friend').classList.toggle('on', !!bad);
+}
+function renderAll(){
+  renderStats();
+  renderList();
+  renderThreads();
+}
+function renderInputs(){
+  $('friendId').value = state.friendId || '';
+  $('friendName').value = state.friendName || '';
+  $('interval').value = state.interval || 60;
+  // base 留空是合法的（表示「我不知道真实时间，自动编」），所以不回填当前时间
+  $('base-time').value = state.base ? tsToLocal(state.base) : '';
+  $('split-lines').checked = !!state.splitLines;
+  $('cascade-time').checked = state.cascadeTime !== false;
+}
+
+/* ============================================================
+   事件
+   ============================================================ */
+function commitCompose(role){
+  const box = $('compose');
+  const raw = box.value;
+  if(!raw.trim()){ toast('先写点内容'); box.focus(); return; }
+  let n = 0;
+  if(state.splitLines){
+    raw.split(/\r?\n/).forEach(line => { if(addMsg(role, line)) n++; });
+  }else{
+    if(addMsg(role, raw)) n = 1;
+  }
+  if(!n){ toast('内容为空'); return; }
+  Box_clear(box);
+  saveSoon(); renderStats(); renderList();
+  toast(n > 1 ? ('已录入 ' + n + ' 条') : '已录入');
+}
+function Box_clear(box){ box.value = ''; box.focus(); }
+
+$('btn-add-me').addEventListener('click', () => commitCompose('user'));
+$('btn-add-ta').addEventListener('click', () => commitCompose('assistant'));
+$('compose').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+    e.preventDefault();
+    commitCompose(e.shiftKey ? 'assistant' : 'user');
+  }
+});
+$('split-lines').addEventListener('change', e => { state.splitLines = e.target.checked; saveSoon(); });
+$('cascade-time').addEventListener('change', e => { state.cascadeTime = e.target.checked; saveSoon(); });
+
+$('friendId').addEventListener('input', e => { state.friendId = normalizeFriendId(e.target.value); saveSoon(); checkFriendId(); });
+$('friendName').addEventListener('input', e => { state.friendName = e.target.value; saveSoon(); });
+$('interval').addEventListener('change', e => { state.interval = Math.max(1, +e.target.value || 60); e.target.value = state.interval; saveSoon(); });
+$('base-time').addEventListener('change', e => {
+  const ts = localToTs(e.target.value);
+  if(!e.target.value.trim()){
+    state.base = null;                       // 留空 = 全自动模式
+    const n = resequence();                  // 已有消息则按当前顺序重排一遍
+    saveSoon(); renderList();
+    toast(n ? ('已切为自动时间，' + n + ' 条已按顺序重排') : '已切为自动时间，按顺序自动编号');
+    return;
+  }
+  if(!ts){ toast('时间读不懂，格式参考 2026-09-10 20:00'); $('base-time').value = tsToLocal(state.base || Date.now()); return; }
+  state.base = ts; $('base-time').value = tsToLocal(ts); saveSoon(); toast('时间基准已更新');
+});
+$('btn-now').addEventListener('click', () => {
+  state.base = Date.now(); $('base-time').value = tsToLocal(state.base); saveSoon(); toast('时间基准已设为现在');
+});
+
+$('cur-thread').addEventListener('change', e => { state.curThread = e.target.value; saveSoon(); });
+$('btn-add-thread').addEventListener('click', () => {
+  const name = $('new-thread').value.trim();
+  if(!name){ toast('先写频道名'); return; }
+  const t = { id: 'thread_' + Date.now(), name: name, memoryEnabled: false, created: Date.now() };
+  state.threads.push(t);
+  state.curThread = t.id;
+  $('new-thread').value = '';
+  saveSoon(); renderThreads(); toast('已建频道「' + name + '」');
+});
+$('btn-reseq').addEventListener('click', () => {
+  if(!state.msgs.length){ toast('还没有消息'); return; }
+  const n = resequence();
+  saveSoon(); renderList();
+  toast('已按顺序重排 ' + n + ' 条的时间');
+});
+
+$('btn-pick-backup').addEventListener('click', () => $('file-backup').click());
+$('file-backup').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  try{
+    const data = JSON.parse(String(await f.text()).replace(/^\ufeff/, ''));
+    const roles = parseRoles(data);
+    if(!roles.length){ toast('这份备份里没有读到角色（apiConfigs）'); return; }
+    renderRoles(roles);
+    toast('识别到 ' + roles.length + ' 个角色，点一下即可绑定');
+  }catch(err){ toast('不是有效的 JSON 文件'); }
+});
+
+$('btn-resume').addEventListener('click', () => $('file-resume').click());
+$('file-resume').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  try{
+    const data = JSON.parse(String(await f.text()).replace(/^\ufeff/, ''));
+    if(!restoreFrom(data)){ toast('这个文件里没有 chatMessages，读不回来'); return; }
+    renderInputs(); renderAll(); saveSoon();
+    toast('已读回 ' + state.msgs.length + ' 条，继续填吧');
+  }catch(err){ toast('不是有效的 JSON 文件'); }
+});
+
+$('btn-clear').addEventListener('click', () => {
+  if(!state.msgs.length && !state.threads.length){ toast('本来就是空的'); return; }
+  if(!confirm('确定清空当前所有已录入内容？（角色绑定与设置保留）')) return;
+  state.msgs = []; state.threads = []; state.curThread = MAIN_THREAD;
+  saveSoon(); renderAll(); toast('已清空');
+});
+
+$('btn-export').addEventListener('click', () => {
+  const errs = validate();
+  if(errs.length){ toast(errs[0]); alert('还不能导出：\n· ' + errs.join('\n· ')); return; }
+  const obj = buildExport();
+  const d = new Date();
+  const stamp = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes());
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ib-chat-' + stamp + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('已导出 ' + obj.chatMessages.length + ' 条');
+});
+
+/* ============================================================
+   启动
+   ============================================================ */
+(function init(){
+  const had = loadSaved();
+  // 不再强制填 base：留空是合法状态，表示「时间未知，自动按录入顺序编」
+  renderInputs();
+  renderAll();
+  checkFriendId();
+  if(had && state.msgs.length) toast('已恢复上次录入的 ' + state.msgs.length + ' 条');
+})();
+
+/* 暴露给离线自测脚本（浏览器里 module 未定义，不会执行） */
+if(typeof module !== 'undefined' && module.exports){
+  module.exports = { state, buildExport, parseRoles, validate, addMsg, delMsg, moveMsg, dupMsg,
+    setMsgText, setMsgTime, resequence, isTimeAscending, idsUnique, mkMsgId, normalizeFriendId,
+    tsToLocal, localToTs, nextTimestamp, restoreFrom, commitCompose, cascadeFrom };
+}
+</script>
+</body>
+</html>

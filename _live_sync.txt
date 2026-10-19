@@ -1,0 +1,58 @@
+== 同步复核证据 · V3.1.0（2026-10-11）==
+
+⚠️ 本文件由人工用 bash 侧命令重写，未走 `_check_sync.js`。
+原因：该脚本用 `execSync` 调 `gh` / `curl`，本机在 sandbox 内一律
+`spawnSync C:\Windows\system32\cmd.exe EBUSY` ⇒ 所有子进程失败、脚本
+把 ERR 写进了本文件（跑完即为全 ERR，已覆写）。**下次跑它之前先确认
+这个坑是否还在；若还在，照下面各项用 bash 侧命令手工取证。**
+
+同步动作脚本：`Android\_sync_mirror.js`（本轮新写，沿用「同步提交」模式；
+镜像 main 恒与上游差 1 个自建 commit ⇒ 不能 PATCH ref 快进）
+
+== 构建状态 ==
+Pages  status=built   commit=d59e3e90（镜像 main）
+
+== 镜像 main 与上游对照 ==
+fork main  = d59e3e90c86c63cb090fe3a407204212ab10b8e0（同步提交）
+上游 main  = 9ae7034a6c78df0c99924f7b285fbb93fabedc89
+fork tree  = b0b785e783ffea05871fc1fea4364184ecb327e4
+上游 tree  = c5b218b50bbfa7cf267cc8589078ba8fa21cdb04
+父提交     = 18e795e4324a2c3272e653c41e2c96356b3120b3（= 上轮同步点）
+⚠️ 两行 sha 不同是**正常的**：镜像 main 是自己的同步提交（树＝上游＋ib-ver.html）。
+   权威口径 = 下面的树比对，不是 ref 相等。
+⚠️ `compare 上游...main` 会显示 `diverged / ahead 19 / behind 24` —— **这是假象**，
+   别当成分叉信号：镜像 main 的祖先里含更早的上游提交，而上游后来没删历史。
+   判同源只认树比对 + blob 全等。
+
+== 树比对（Git Trees recursive=1，truncated=false）==
+上游 15 个 blob / 镜像 16 个 ⇒ 逐 path 比对仅 1 处差异：
+  多出  ib-ver.html  6745b2b3（镜像专属探针页，上游没有）
+  其余 15 个（含 index.html / README.md / banner 两枚 / ib-sw.js / apps 三枚 /
+        LICENSE / COPYRIGHT.md / icon 两枚 / manifest.webmanifest）**blob 全等**
+结论：PASS。index.html blob 两端同为 7ac4e15b（V3.1.0 新版）。
+
+== 线上文件 vs 上游原文（sha256，各 4,886,185 B）==
+index.html：14e4fb8d196f2b18d715cda0dd7bfe1c3f9bcffc06416fad90cc3935d6278d38  ✓ 逐字节一致
+ib-sw.js  ：e7dfc6bc89f726c566d31bbc3974008200db33c172f929ead3dc6f09a4011a56（blob 6f48fcbb 未变）
+
+== 线上应用内常量 ==
+IB_VER  = 'v350-p'  IB_VER_DATE = '2026-10-10'（上游值）
+DB_VER  = 16（**未变** ⇒ 本轮不走库升级）
+V3.1.0 标志全部在位：_cvJumpDayM 4 / cv-hday 8 / cv-hbar 9 / _chapProgUiM 5 /
+          _lnExportM 2 / cvBgBlur 15 / topicOf 1 / _amAkaM 2 / _ibStewardApiM 8 /
+          updateIndex 1 / probes 12 / _MEM_SRC_MAX_M 8
+
+== 自用 / 归档痕迹为 0 ==
+ctxStat 0 / snipPrev 0 / _histSrcTag 0 / _ibHistSrcInfo 0 / v310-p-cdiag 0 /
+__ibVeilOff 0 / _ibStepLog 0 / _ibRedact 0 / presence.waitOn 0 / waitFrom 0
+⇒ 镜像仍是**纯上游同源**，归档五项未叠回（本轮上游也未采纳）。
+
+== 我们自己的文件应已消失 ==
+probe.html         HTTP=404
+panel-preview.html HTTP=404
+
+== 归档 tag ==
+archive/ib-selfpatch-v310p-cdiag = 2c063430（2026-09-29 补打，留档 cdiag 三提交）
+archive/ib-selfpatch-v246p       = 03e25faa
+
+（每轮同步覆盖重写）

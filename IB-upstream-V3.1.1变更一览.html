@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IB upstream 变更一览 · V3.1.0 → V3.1.1（账本 rebase 决策）</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --border:#e3e6ea; --border-soft:#eef0f3;
+    --text:#1a1d21; --muted:#616b76; --faint:#8b949e;
+    --accent:#0b62d6; --accent-soft:#e8f0fd;
+    --new:#b26a00; --new-bg:#fff3e0; --new-border:#f2d5a8;
+    --done:#1a7f37; --done-bg:#e9f6ec; --done-border:#bfe3c8;
+    --overlap:#a1327a; --overlap-bg:#fdeef7; --overlap-border:#f0c7e2;
+    --mid:#3d5163; --mid-bg:#eef1f4; --mid-border:#dfe3e8;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:36px 20px 64px;
+    background:var(--bg); color:var(--text);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:26px}
+  h1{margin:0 0 8px; font-size:29px; letter-spacing:-.4px; font-weight:700}
+  .sub{margin:0; color:var(--muted); font-size:14px}
+  .sub a{color:var(--accent); text-decoration:none}
+  .sub a:hover{text-decoration:underline}
+  .sub b{color:var(--text)}
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 30px}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .stat .n{display:block; font-size:26px; font-weight:700; letter-spacing:-.5px; line-height:1.15}
+  .stat .l{display:block; margin-top:4px; font-size:12.5px; color:var(--muted)}
+  .stat.hl .n{color:var(--accent)}
+  .stat.ov .n{color:var(--overlap)}
+  .sec{background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .sec-head{display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border-soft); background:linear-gradient(180deg,#fcfcfd,#f8f9fb)}
+  .sec-head .ico{font-size:17px; line-height:1}
+  .sec-head .ttl{font-weight:650; font-size:15.5px; letter-spacing:-.1px}
+  .sec-head .cnt{margin-left:auto; font-size:12px; color:var(--muted); background:#eff1f4; border:1px solid var(--border); border-radius:20px; padding:2px 10px; font-variant-numeric:tabular-nums}
+  ul.items{list-style:none; margin:0; padding:0}
+  ul.items li{display:flex; align-items:flex-start; gap:14px; padding:13px 20px; border-bottom:1px solid var(--border-soft)}
+  ul.items li:last-child{border-bottom:none}
+  ul.items li:hover{background:#fafbfc}
+  .dot{flex:0 0 auto; width:6px; height:6px; border-radius:50%; margin-top:9px; background:#c3c9d1}
+  .dot.new{background:var(--new)}
+  .dot.ov{background:var(--overlap)}
+  .dot.done{background:var(--done)}
+  .body{flex:1 1 auto; min-width:0}
+  .t{font-weight:600; font-size:14.5px; letter-spacing:-.1px}
+  .d{margin-top:3px; font-size:13.2px; color:var(--muted); line-height:1.55}
+  .d b{color:var(--text)}
+  .meta{flex:0 0 auto; display:flex; align-items:center; gap:7px; padding-top:2px; white-space:nowrap}
+  code{font-family:var(--mono); font-size:11.8px; color:#424a53; background:#f2f4f7; border:1px solid var(--border); border-radius:6px; padding:2px 7px}
+  .badge{font-size:11.5px; font-weight:600; border-radius:6px; padding:2px 8px; border:1px solid transparent}
+  .badge.new{color:var(--new); background:var(--new-bg); border-color:var(--new-border)}
+  .badge.done{color:var(--done); background:var(--done-bg); border-color:var(--done-border)}
+  .badge.ov{color:var(--overlap); background:var(--overlap-bg); border-color:var(--overlap-border)}
+  .badge.mid{color:var(--mid); background:var(--mid-bg); border-color:var(--mid-border)}
+  .alert{background:#f2fbf4; border:1px solid #c9e6d1; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .alert h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#1a7f37}
+  .alert p{margin:0 0 8px; font-size:13.4px; color:#3f5a46; line-height:1.6}
+  .alert p:last-child{margin-bottom:0}
+  .alert code{background:#e9f6ec; border-color:#c9e6d1}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px}
+  .chip{font-size:11.5px; font-weight:600; border-radius:999px; padding:3px 10px; background:#e9f6ec; border:1px solid #c9e6d1; color:#1a7f37}
+  .chip.warn{background:#fff3e0; border-color:#f2d5a8; color:#b26a00}
+  .plan{background:#f7faff; border:1px solid #d6e4f7; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .plan h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#0b62d6}
+  .plan ol{margin:0; padding-left:20px; font-size:13.4px; color:#3d5163; line-height:1.75}
+  .plan li{margin-bottom:5px}
+  .plan code{background:#eaf1fb; border-color:#d6e4f7}
+  footer{margin-top:26px; padding-top:16px; border-top:1px solid var(--border); color:var(--faint); font-size:12.3px; line-height:1.7}
+  @media (max-width:760px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    ul.items li{flex-wrap:wrap}
+    .meta{width:100%; padding-top:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>InternalBeyond Mobile upstream 变更一览</h1>
+    <p class="sub">
+      <a href="https://github.com/Sui-IB/InternalBeyond-Mobile" target="_blank" rel="noopener">github.com/Sui-IB/InternalBeyond-Mobile</a>
+      &nbsp;·&nbsp; 上游版本 <b>V3.1.0 → V3.1.1</b>（应用内 v350-p → <b>v351-p</b>）
+      &nbsp;·&nbsp; 提交区间 <b>2026-10-11 → 2026-10-18</b>（<code>9ae7034a</code> → <code>7b425c6</code>，3 个提交）
+      &nbsp;·&nbsp; 本一览用途：<b>账本补丁（PR #15）rebase 决策</b> · 形态 A（补丁未合入）
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="n">3</span><span class="l">commits（区间全部，无 merge；前两枚只动 README）</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">变更文件（权威口径＝Git Trees recursive，truncated=false）</span></div>
+    <div class="stat"><span class="n">+157 −87</span><span class="l">index.html（21 hunk，4,886,185 → 4,899,525 B）</span></div>
+    <div class="stat ov"><span class="n">0</span><span class="l">与账本补丁的重叠处（13 hunk 锚点全唯一 · watch 符号零重叠）</span></div>
+  </div>
+
+  <div class="alert">
+    <h3>合并提示：一次语音识别升级，与账本补丁零重叠 —— rebase 按唯一锚点逐 hunk 重放即可</h3>
+    <p>区间 3 个提交里只有末枚 <code>7b425c6</code>（提交说明「V3.1.1：语音条BUG修复+语音通话识别升级」）动了应用代码：<code>index.html</code> <b>+157 −87</b>、21 个 hunk，全部集中在<b>语音转写与语气分析</b>（新增 <code>vtTranscribeX</code> 三返回值、<code>_vtRichParseM</code> 解析器、约 75 行本地声学事件检测、「语气声音与情绪」开关），外加群聊／记忆接线与说明书。前两枚（<code>42c53c9</code>／<code>f8a3e14</code>）只动 README（致谢＋排版），与应用代码无关。</p>
+    <p><b>重叠判定（形态 A · 补丁未合入）：本轮 0 处。</b>账本 PR #15 的 <b>13 个 hunk 在 v351-p 上锚点全部唯一命中</b>、9 个被改行（<code>-</code> 行）原样在位各 1 处 ⇒ <b>同处改动 0</b>；8 个语音 watch 符号（<code>voice.transcript</code>／<code>callASR</code>／<code>vtTranscribeX</code>／<code>_uQTextM</code>／<code>_voiceApiLine</code>／<code>_vtRichParseM</code>／<code>_vmToneNatural</code>／<code>_vmEmoCatM</code>）与任一 hunk 锚点<b>零重叠</b>（最近距离 27 行）⇒ <b>功能重叠 0</b>。上游也未做任何账本类功能：<code>上下文账本</code>／<code>上下文日志</code>／<code>_ctxLedgerM</code>／<code>ctxSnap</code> 在 v351-p <b>全 0 命中</b>。</p>
+    <p>唯一「贴身」之处：H1 插入点（<code>openMsgInfo</code> 内 ≈8887 行）<b>往下 27 行起</b>是上游新增的 <code>voice.transcript</code> 渲染块（8913–8985）——同在 <code>openMsgInfo</code> 但不同行，<b>不冲突</b>，重放时留意别把行号看串。行号漂移：H1 <b>+2</b> → H2–H7 <b>+29</b> → H8 <b>+32</b> → H9 <b>+79</b> → H10–H13 <b>+71~+73</b>（上游新代码主要落在 8885–10718 与 14079–25297 两段，正是埋点密集区，但锚点唯一故仍可机械化重放）。</p>
+    <p>口径：<code>DB_VER</code> <b>16 未变</b> ⇒ 无库升级；<code>ib-sw.js</code> blob <code>6f48fcbb</code> <b>未变</b> ⇒ 不需重新缓存；镜像 <code>main</code> 仍是 <code>d1810a03</code>（v350-p＋账本），<b>本一览不动作业镜像同步</b>（等作者对 issue #14 / PR #15 的回应后再定）。</p>
+    <div class="chips">
+      <span class="chip">重叠 0 处 · 同处改动 0</span>
+      <span class="chip">13 hunk 锚点全唯一</span>
+      <span class="chip">watch 符号零重叠（最近 27 行）</span>
+      <span class="chip">上游未做账本类功能（0 命中）</span>
+      <span class="chip">DB_VER 16 未变 · 无库升级</span>
+      <span class="chip">ib-sw.js 未变（6f48fcbb）</span>
+      <span class="chip warn">唯一贴身：H1 距 voice.transcript 27 行（同函数不同行）</span>
+      <span class="chip warn">本一览只读预览 · 未对任何仓库做写操作</span>
+    </div>
+  </div>
+
+  <div class="plan">
+    <h3>合并方案（账本 rebase 版 · 推荐顺序）</h3>
+    <ol>
+      <li><b>基座</b>：用 v351-p 干净成品 <code>Downloads/index_v351p.html</code>（4,899,525 B，blob <code>5d9b856c</code>＝上游 <code>7b425c6</code> 逐字节）作底版，<b>不掺镜像任何专属文件</b>。</li>
+      <li><b>hunk 来源</b>：从 <code>gh pr diff 15</code> 拉的原始 diff（<code>_pr15.diff</code>）机械抽取 13 个 hunk 的新增行，<b>不手抄、不从 PR 网页复制</b>。</li>
+      <li><b>逐 hunk 重放</b>：按映射表（基线行 → v351-p 行）落位；每处替换前用 <code>where.py</code>／<code>funcs-v351p.tsv</code> 复核锚点<b>唯一命中</b>，命中数 ≠1 即停并报告，不擅改语义。</li>
+      <li><b>H13 整模块</b>：<code>&lt;script id="ib-ctx-ledger"&gt;</code>（249 行）插在 <code>&lt;script id="ib-amsum-pack"&gt;</code>（v351-p 32256 行）之前，插后核脚本块总数 46→47。</li>
+      <li><b>重放后验证</b>：① 全部脚本块 vm 语法可解析；② 桩测 78 条（K6 双版本校验改对新底版：功能版断言测试块在、净版断言缺席、两版核心模块逐字节相同）；③ 净版／功能版 diff 仍仅测试块 5 行；④ 账本模块对上游零删除（顶层 function 名集合只增不减）。</li>
+      <li><b>PR #15 换基</b>（阶段二，需用户同意）：把分支 <code>ref/mobile-ctx-ledger</code> 重置为 <code>7b425c6</code>＋账本 hunk 并 force push——<b>PR 链接不变</b>，diff 仍只含 <code>index.html</code>；PR 描述两段与首行 <code>refs #14</code> 不动。issue #14 的基线陈述指「分析所用构建」，仍属实；换基后可选在 PR 里补一句「基于 V3.1.1 重放」（待用户裁）。</li>
+      <li><b>镜像侧不同步</b>：镜像 <code>main</code> 保持 <code>d1810a03</code>（v350-p＋账本），等作者回应或真机九项复测通过后再走手机端同步流程——<b>别让镜像变成「两边各修一份」的分叉</b>。</li>
+    </ol>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🎙</span><span class="ttl">语音转写升级：转写接口带回「声音与情绪」</span><span class="cnt">5 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">转写主入口换成 vtTranscribeX，文字稿旧口不变</div><div class="d"><code>vtTranscribe</code> 变成取其 <code>.text</code> 的薄包装，旧调用点零改；新入口回 <b><code>{text,ev,emo}</code></b>（文字、声音事件、情绪）。原生 / chat 音频 / FormData 三条路径都汇到它。</div></div><div class="meta"><span class="badge new">本次同步</span><code>vtTranscribeX</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">新增「语气声音与情绪（beta）」开关，默认开</div><div class="d">语音转写卡里新开关 <code>#vt-rich</code>，存 <code>apiSettings.voiceTrans.rich</code>（<code>rich!==false</code> 即开）。关掉时只出文字，行为回到本轮之前。</div></div><div class="meta"><span class="badge new">本次同步</span><code>vt.rich</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">Omni 富转写提示词：让模型末行输出【声音】【情绪】</div><div class="d">新常量 <code>_VT_RICH_PROMPT_M</code>：转写完另起一行，按固定格式写听到的非语言声音（笑 / 哭腔 / 叹气 / 咳嗽 / 清嗓 / 吸鼻子 / 打哈欠 / 喘，没有写「无」）与情绪（十个类目挑一到两个）。开着开关且用 Omni 时才发这段指令。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_VT_RICH_PROMPT_M</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">新解析器 _vtRichParseM：三路标签都认</div><div class="d">① 末行【声音】【情绪】；② SenseVoice 式事件标签（尖括号包住的事件名，如 <code>LAUGHTER</code>；NEUTRAL / Speech / BGM 只当「有标签」，不记事件）；③ 括号里的声音词（别的括号原样留）。声音事件去重，情绪最多两个（「平静」不挤占真情绪）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_vtRichParseM</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">常用模型新增两个「能听语气」的 Omni</div><div class="d">千问组加 <code>qwen3-omni-flash</code> 与 <code>qwen3.5-omni-flash</code>，下拉里标注「能听语气：笑 / 叹气 / 咳嗽」，选中即带默认地址。</div></div><div class="meta"><span class="badge new">本次同步</span><code>qwen3-omni-flash</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🧠</span><span class="ttl">语气分析重做：声学与模型两条证据合流</span><span class="cnt">3 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">_vmToneAnalyze 改带 rich 参数，两条证据加权合流</div><div class="d">文字里命中情绪词时记 <code>textHit</code>；没线索时声学证据加权 ×1.5；模型给的 <code>rich.ev</code> 是强证据（带「?」的疑似减半）；模型情绪（<code>rich.emo</code> 经 <code>_vmEmoCatM</code> 归类）<b>优先</b>——它只说「平静」而文字里有情绪词时听文字的。音频太短 / 无声 / 解析失败时回落 <code>richOnly()</code>，不再一概返回空。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_vmToneAnalyze</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">新增约 75 行本地声学事件检测</div><div class="d">逐帧谱倾斜（<code>tiltA</code>）＋发声段切分：等间隔高音脉冲串判「笑」、短响宽带判「咳嗽」、长而渐弱带气声判「叹气」、颤音＋吸气＋长停顿判「哭腔」；与模型标签合并取前 4 个，文字里出现「哈哈 / 咳 / 唉 / 哭」时把疑似升成确定。</div></div><div class="meta"><span class="badge new">本次同步</span><code>evL</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">_vmToneNatural 扩展：声音事件说成人话</div><div class="d">情绪类目补「惊讶」「厌恶」；新增「声音：」段解析，把「笑 / 咳嗽? / 叹气 / 哭腔」等转成「中间有笑声」「可能咳嗽了」这类自然语言，进给 TA 的语气参考。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_vmToneNatural</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🔌</span><span class="ttl">语音消息 · 群聊 · 记忆接线</span><span class="cnt">4 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">语音消息发送：转写结果连同事件一起进语气分析</div><div class="d">发送链改拿 <code>vtTranscribeX</code> 的完整返回 <code>rx9</code>；<code>_vmToneAnalyze(ab, transcript, rx9)</code>，音频解码失败时降级 <code>_vmToneAnalyze(null, transcript, rx9)</code> 也跑一次。</div></div><div class="meta"><span class="badge new">本次同步</span><code>rx9</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">通话「用嘴说」改走同一入口，没话也能接住</div><div class="d"><code>callASR</code> 从自己拼 FormData 改成调用 <code>vtTranscribeX</code>；只有笑 / 哭腔 / 叹气而没文字时也发一轮「（笑）」；录音虽短（&lt;0.6s）但有事件或情绪时仍做语气分析。</div></div><div class="meta"><span class="badge new">本次同步</span><code>callASR</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">新助手 _uQTextM＋_memQueryM 重写：语音消息进召回查询</div><div class="d">取消息正文，空则取 <code>voice.transcript</code>；闲聊阈值 6 → <b>12 字</b>；语音 / 视频通话消息可往前拼 2 条（90 秒内）补足查询；「没内容」判定抽成 <code>coreOf</code>。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_uQTextM</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">群聊与记忆筛选接线</div><div class="d">群聊取「最后一句」改用 <code>_uQTextM</code>（召回查询与 @ 判断同用）；群历史映射给语音消息加 <code>_voiceApiLine</code> 前缀；<code>_memQxM</code>（记忆筛选的近几句）把「正文空、文字稿在 voice 里」的语音消息也算进去。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_voiceApiLine</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🖥</span><span class="ttl">界面与说明书</span><span class="cnt">2 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">设置页新开关＋提示语</div><div class="d">语音转写卡模型栏下新增「语气声音与情绪（beta）」开关（含说明文案），底部提示语补「想让 TA 听出你笑了、叹气了，选千问 Omni（或自建带标签的 SenseVoice）并开着下面的开关」；打开设置页时回填开关态。</div></div><div class="meta"><span class="badge new">本次同步</span><code>#vt-rich</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">说明书两段</div><div class="d">功能模块简版与详版两处的「语音转写」段落都补上「选能听声音的模型（千问 Omni、自建 SenseVoice），TA 还能知道你笑了、叹气了、咳嗽了」；详版额外说明开开关后「转写时会顺带标出笑、叹气、咳嗽、哭腔与情绪，并入发给 TA 的语气参考；别的模型只做本机的声学判断」。</div></div><div class="meta"><span class="badge new">本次同步</span><code>7b425c6</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">📦</span><span class="ttl">文档与版本</span><span class="cnt">3 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">README 新增记忆系统开发参考致谢</div><div class="d">「记忆系统的开发参考了以下小红书老师的公开教程：池又雨、猎月、香脆小圆、鹤见、チリヌルヲワカ老师的公开教程和开源工程，非常感谢每一位公开教程的老师。」</div></div><div class="meta"><span class="badge new">本次同步</span><code>f8a3e14</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">README 开头 TIP 块拆成三条</div><div class="d">原一整段拆成三行 blockquote（定位／模块清单／数据与备份），内容不变，纯排版。</div></div><div class="meta"><span class="badge new">本次同步</span><code>42c53c9</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">应用内版本 v350-p → v351-p</div><div class="d">版本日期 <code>2026-10-10</code> → <code>2026-10-14</code>；本轮上游自己的补丁号从 v350 排到 <b>v351</b>（diff 内注释见 <code>v351-p</code> 字样）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>IB_VER</code></div></li>
+    </ul>
+  </section>
+
+  <footer>
+    数据来源：Compare API <code>repos/Sui-IB/InternalBeyond-Mobile/compare/9ae7034a...7b425c6</code>（3 commits / 无 merge；权威文件清单走 Git Trees <code>recursive=1</code>，2 个 blob 变更、<code>truncated=false</code>；行数走提交级 stats 累加 +162 −88，其中 <code>index.html</code> +157 −87、README +5 −1）。<code>index.html</code> 4,886,185 → 4,899,525 字节、blob <code>7ac4e15b</code> → <code>5d9b856c</code>（21 hunk）；<code>ib-sw.js</code> blob <code>6f48fcbb</code> 未变；<code>DB_VER</code> 16 未变；<code>IB_VER</code> <code>v350-p</code> → <code>v351-p</code>。重叠判定输入：PR #15 原始 diff（<code>gh pr diff 15</code>）13 hunk × v351-p 锚点映射（<code>where.py</code>／<code>funcs-v351p.tsv</code>，mkmap 生成）＋ 8 个语音 watch 符号分布扫描。<br>
+    图例：<span class="badge new">本次同步</span> 上游新增或改动　<span class="badge mid">同名不同物</span> / <span class="badge mid">同向不同实现</span> 看着像但不是同一件事，看清即可、不算冲突　<span class="badge done">建议保留</span> 建议留在我方　<span class="badge ov">与我们重叠</span> 真冲突，合并时必须二选一（本轮 0 处）。<br>
+    生成时间：2026-10-18（<b>本轮为只读预览：未 PATCH ref、未 push、未改 PR #15、未碰任何成品——这是预览，等用户确认后再执行 rebase / 同步</b>）
+  </footer>
+
+</div>
+</body>
+</html>

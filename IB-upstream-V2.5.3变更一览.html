@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IB upstream 变更一览 · V2.4.4 → V2.5.3</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --border:#e3e6ea; --border-soft:#eef0f3;
+    --text:#1a1d21; --muted:#616b76; --faint:#8b949e;
+    --accent:#0b62d6; --accent-soft:#e8f0fd;
+    --new:#b26a00; --new-bg:#fff3e0; --new-border:#f2d5a8;
+    --done:#1a7f37; --done-bg:#e9f6ec; --done-border:#bfe3c8;
+    --overlap:#a1327a; --overlap-bg:#fdeef7; --overlap-border:#f0c7e2;
+    --mid:#3d5163; --mid-bg:#eef1f4; --mid-border:#dfe3e8;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:36px 20px 64px;
+    background:var(--bg); color:var(--text);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:26px}
+  h1{margin:0 0 8px; font-size:29px; letter-spacing:-.4px; font-weight:700}
+  .sub{margin:0; color:var(--muted); font-size:14px}
+  .sub a{color:var(--accent); text-decoration:none}
+  .sub a:hover{text-decoration:underline}
+  .sub b{color:var(--text)}
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 30px}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .stat .n{display:block; font-size:26px; font-weight:700; letter-spacing:-.5px; line-height:1.15}
+  .stat .l{display:block; margin-top:4px; font-size:12.5px; color:var(--muted)}
+  .stat.hl .n{color:var(--accent)}
+  .stat.ov .n{color:var(--overlap)}
+  .sec{background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .sec-head{display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border-soft); background:linear-gradient(180deg,#fcfcfd,#f8f9fb)}
+  .sec-head .ico{font-size:17px; line-height:1}
+  .sec-head .ttl{font-weight:650; font-size:15.5px; letter-spacing:-.1px}
+  .sec-head .cnt{margin-left:auto; font-size:12px; color:var(--muted); background:#eff1f4; border:1px solid var(--border); border-radius:20px; padding:2px 10px; font-variant-numeric:tabular-nums}
+  ul.items{list-style:none; margin:0; padding:0}
+  ul.items li{display:flex; align-items:flex-start; gap:14px; padding:13px 20px; border-bottom:1px solid var(--border-soft)}
+  ul.items li:last-child{border-bottom:none}
+  ul.items li:hover{background:#fafbfc}
+  .dot{flex:0 0 auto; width:6px; height:6px; border-radius:50%; margin-top:9px; background:#c3c9d1}
+  .dot.new{background:var(--new)}
+  .dot.ov{background:var(--overlap)}
+  .body{flex:1 1 auto; min-width:0}
+  .t{font-weight:600; font-size:14.5px; letter-spacing:-.1px}
+  .d{margin-top:3px; font-size:13.2px; color:var(--muted); line-height:1.55}
+  .d b{color:var(--text)}
+  .meta{flex:0 0 auto; display:flex; align-items:center; gap:7px; padding-top:2px; white-space:nowrap}
+  code{font-family:var(--mono); font-size:11.8px; color:#424a53; background:#f2f4f7; border:1px solid var(--border); border-radius:6px; padding:2px 7px}
+  .badge{font-size:11.5px; font-weight:600; border-radius:6px; padding:2px 8px; border:1px solid transparent}
+  .badge.new{color:var(--new); background:var(--new-bg); border-color:var(--new-border)}
+  .badge.done{color:var(--done); background:var(--done-bg); border-color:var(--done-border)}
+  .badge.ov{color:var(--overlap); background:var(--overlap-bg); border-color:var(--overlap-border)}
+  .badge.mid{color:var(--mid); background:var(--mid-bg); border-color:var(--mid-border)}
+  .alert{background:#f2fbf4; border:1px solid #c9e6d1; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .alert h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#1a7f37}
+  .alert p{margin:0 0 8px; font-size:13.4px; color:#3f5a46; line-height:1.6}
+  .alert p:last-child{margin-bottom:0}
+  .alert code{background:#e9f6ec; border-color:#c9e6d1}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px}
+  .chip{font-size:11.5px; font-weight:600; border-radius:999px; padding:3px 10px; background:#e9f6ec; border:1px solid #c9e6d1; color:#1a7f37}
+  .chip.warn{background:#fff3e0; border-color:#f2d5a8; color:#b26a00}
+  .plan{background:#f7faff; border:1px solid #d6e4f7; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .plan h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#0b62d6}
+  .plan ol{margin:0; padding-left:20px; font-size:13.4px; color:#3d5163; line-height:1.75}
+  .plan li{margin-bottom:5px}
+  .plan code{background:#eaf1fb; border-color:#d6e4f7}
+  footer{margin-top:26px; padding-top:16px; border-top:1px solid var(--border); color:var(--faint); font-size:12.3px; line-height:1.7}
+  @media (max-width:760px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    ul.items li{flex-wrap:wrap}
+    .meta{width:100%; padding-top:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>InternalBeyond Mobile upstream 变更一览</h1>
+    <p class="sub">
+      <a href="https://github.com/Sui-IB/InternalBeyond-Mobile" target="_blank" rel="noopener">github.com/Sui-IB/InternalBeyond-Mobile</a>
+      &nbsp;·&nbsp; 上游版本 <b>V2.4.4 → V2.5.3</b>（应用内 v262-p → <b>v290-p</b>）
+      &nbsp;·&nbsp; 提交区间 <b>2026-09-24 ~ 09-25</b>（<code>ffa1056f</code> + <code>5104f831</code> + <code>f545d578</code> + <code>bf6a86a8</code>，基线 <code>1e2725b0</code>）
+      &nbsp;·&nbsp; 镜像 fork：<a href="https://github.com/PasleySage/InternalBeyond-Mobile" target="_blank" rel="noopener">PasleySage/InternalBeyond-Mobile</a>
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="n">4</span><span class="l">commits（区间全部）</span></div>
+    <div class="stat hl"><span class="n">4</span><span class="l">本次待同步到镜像</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">变更文件（index.html +1034/−228）</span></div>
+    <div class="stat ov"><span class="n">2</span><span class="l">与我们的补丁重叠 / 同向处</span></div>
+  </div>
+
+  <div class="alert">
+    <h3>合并提示：fix-r6 / fix-r7 均留档，功能上与上游对齐（已拍板）</h3>
+    <p>镜像现带 <b>本地补丁 10 提交</b>（fix-r6 摘要 ×6 + fix-r7 启动等待 ×4），基于上游 <code>1e2725b0</code>（V2.4.4）。上游 V2.5.0～V2.5.3 四版只动 <code>index.html</code>（3,304,065 → 3,462,557 字节，+158 KB），但<b>正压在 fix-r6 的落点上</b>。</p>
+    <p><b>重叠 1 · fix-r6（摘要）＝与我们重叠</b>：上游同方向重做了摘要——thinking 关闭、真因链 <code>_sumWhyM</code>、按 <code>finish_reason</code> 区分空正文。标识符都撞了（<code>_noThink</code>）。上游更细：只对 DeepSeek 系关思考、400/422 去 thinking 字段重试。<b>采用上游版；fix-r6 整套留档进 <code>自用补丁-归档\</code></b>。</p>
+    <p><b>重叠 2 · fix-r7（启动等待）＝同向不同实现</b>：上游 Presence「打开应用后先安静」（0/2/5/10/15 分钟）+ 主动开口时间持久化，修「换设备后抢话」。我们的开关+时长+起点模式功能面更宽，但<b>功能上跟上游即可，fix-r7 同样留档</b>，不叠回。</p>
+    <p><code>ib-sw.js</code> 的 blob 与 <code>DB_VER</code> 四版都没变，<b>不走库升级、不需重缓 SW 脚本</b>。归档四项（诊断面板 / 耗时埋点 / VersionError 自愈 / SW 完整性）<b>仍全未采纳</b>。V2.5.0～V2.5.2 提交说明均致谢 PasleySage。</p>
+    <p>⚠️ 提交说明是累计稿：V2.5.3 正文仍挂着 1～13 条（真增量只有「BUG 修订」标题本身 + diff 里 3 处界面小修）。V2.5.1 重复 V2.5.0 的 1～10；V2.5.2 再重复到 12 并加第 13 条。不要按条数去数 diff。</p>
+    <div class="chips">
+      <span class="chip warn">fix-r6 重叠 → 采用上游，留档</span>
+      <span class="chip warn">fix-r7 同向 → 采用上游，留档</span>
+      <span class="chip">ib-sw.js 未变（6f48fcbb）</span>
+      <span class="chip">DB_VER 未变</span>
+      <span class="chip">归档四项仍未采纳</span>
+      <span class="chip">致谢仅在 commit message（本体 0 命中）</span>
+    </div>
+  </div>
+
+  <div class="plan">
+    <h3>合并方案（已拍板：留档 + 功能同步）</h3>
+    <ol>
+      <li><b>以上游 <code>bf6a86a8</code>（V2.5.3）为基准重建</b>：镜像 <code>index.html</code> 直接取上游版，<b>撤掉 fix-r6 + fix-r7 全部落点</b>；功能上与上游完全一致。</li>
+      <li><b>fix-r6 / fix-r7 先留档再撤</b>：把两套补丁的落点说明与成品摘进 <code>Android\自用补丁-归档\</code>（含用户定稿文案），更新归档 README；<b>不在镜像上叠回</b>。</li>
+      <li><b>镜像专属文件</b>：<code>ib-ver.html</code> 探针页不参与上游同步，保留（只读版本与缓存、不碰业务逻辑）。</li>
+      <li><b>副作用</b>：<code>ib-sw.js</code> blob 未变 → SW 脚本不用重缓；<code>DB_VER</code> 未变 → 首启不走库升级；<code>index.html</code> +158 KB，SW 按原缓存名抓新文件，<b>首次打开需联网一次</b>。应用内版本回到上游 <code>v290-p</code>（不再是 <code>v262-p-r7</code>）。</li>
+      <li><b>复测清单</b>：摘要在 DeepSeek 等开思考型号上是否不再必失败、「立即更新」失败是否说真因；Presence「打开应用后先安静」冷启/换设备后是否安静；低端机滚动是否更顺、退到后台动画是否停；Bubble Lab 明暗两套气泡；收藏夹按月翻；Zone Glass / Zone Text；卡片投影开关有圆钮、聊天顶栏两根滑杆有进度；Beyond 单条全文；ws_blog_edit / ws_delete。</li>
+      <li><b>保持警惕</b>：不要在镜像上两边各修一份；留档只进归档目录，不进线上。</li>
+    </ol>
+  </div>
+  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🧠</span>
+      <span class="ttl">对话摘要 · 输出上限（本版重点 · 与 fix-r6 重叠）</span>
+      <span class="cnt">5 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot ov"></span>
+        <div class="body">
+          <div class="t">摘要请求关思考 + 空正文说真因（重叠 fix-r6）</div>
+          <div class="d">上游把摘要请求改成可下发 thinking 关闭，并新增 <code>_sumWhyM</code> 真因链：每次尝试先清空、失败出口逐条写明（未启用 / 找不到频道 / 读记录失败 / 没 Key / 封档线变了 / 空内容…），「立即更新」按真因提示，不再一律「消息不足或 API 不可用」。与我们 fix-r6 的 <code>_noThink</code> / <code>_sumLastErrM</code> <b>同一方向、标识符都撞了</b>。</div>
+        </div>
+        <div class="meta"><span class="badge ov">与我们重叠</span><code>_noThink / _sumWhyM</code></div>
+      </li>
+      <li>
+        <span class="dot ov"></span>
+        <div class="body">
+          <div class="t">只对 DeepSeek 系关思考；目标不认 thinking 字段则去参重试</div>
+          <div class="d"><code>_dsThinkOffM</code> 识别 deepseek 服务商 / 域名 / 模型名前缀；命中才下发 thinking 关闭。若中转回 400/422 且原文里带 thinking 字段，自动去掉该字段再发一次（<code>_noThinkOff</code>）。比我们 fix-r6「一律关」更细。</div>
+        </div>
+        <div class="meta"><span class="badge ov">与我们重叠</span><code>_dsThinkOffM / _noThinkOff</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">空正文按 finish_reason 区分：「思考吃光」不再背锅</div>
+          <div class="d">新增 <code>_finTruncM</code> 判断是否被输出上限截断。截断且正文空 → 提示「输出上限耗尽而正文为空（finish_reason: …）——模型把输出预算用在了思考上」，并自动用 16384 再试一轮；非截断空内容才报「API 返回了空内容」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_finTruncM</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">「立即更新」重做取窗逻辑</div>
+          <div class="d"><code>force</code> 路径改为：取可见尾部作参照，再取更长窗口做整理对象；<b>窗口外已无新消息</b>时直说「窗口内除了会原文发给 TA 的那 N 条，没有可整理的旧消息」，不再谎报消息不足。并发点按则提示「已有一轮摘要在整理」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>maybeSummarizeM / force</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">「单次输出上限」自动档真正生效；额度不足也会降档</div>
+          <div class="d">手机端聊天此前一直固定 4096，自动档并未生效——现已修。中转按上限预扣费回 403「额度/余额不足」时同样自动降档并记住（通过后本会话内生效）；报错里的 \uXXXX 转义先还原成汉字再匹配。摘要窗口档位同步上调（200 条 / 1500 字）。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>out-maxtok / _maxTokMemPend</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🤫</span>
+      <span class="ttl">打开应用后先安静（同向不同实现 · fix-r7）</span>
+      <span class="cnt">3 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot ov"></span>
+        <div class="body">
+          <div class="t">Presence 新增「打开应用后先安静」</div>
+          <div class="d">挂在定时推送设置里，下拉档位 <b>0（关）/ 2 / 5 / 10 / 15 分钟</b>。开启后打开应用的一段时间内 TA 不主动开口；不影响你说话与它回复。与我们 fix-r7 的「打开应用后等待」<b>同向</b>，但档位更少、没有「只算冷启动 / 冷启动+回前台」的起点模式。<b>功能上跟上游即可</b>。</div>
+        </div>
+        <div class="meta"><span class="badge mid">同向不同实现</span><code>pres-hb-quiet / hbQuietMin</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">上次主动开口时间持久化 + 前台计时</div>
+          <div class="d"><code>_hbLastFire</code> 写进 <code>localStorage</code>（<code>ib_hb_lastfire</code>），换设备/刷新后仍记得「刚才已经开过口」；另计 <code>_hbOpenAt</code> / 后台时长，离开再回来超过 1 分钟才重置安静窗口。直接修「换设备后 TA 主动开口」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_hbLastFireSet / _hbOpenAt</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">GUIDE 写明使用时机</div>
+          <div class="d">说明文案点明：「打开应用后先安静」可让冷启动或回到前台后的一段时间内不开口（默认关闭，<b>换设备后先导入备份时用</b>）。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>GUIDE</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">⚡</span>
+      <span class="ttl">低端机性能与流畅（V2.5.2 重点）</span>
+      <span class="cnt">4 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">会话区 content-visibility + 骨架条</div>
+          <div class="d">长列表滚出视口的消息不参与渲染（钉底期间强制真渲染）；开会话先画三条骨架条 <code>cv-skel</code>，减少首屏白等。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>content-visibility / cv-skel</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">退到后台时全站动画暂停</div>
+          <div class="d"><code>body.ib-hidden</code> 下 <code>animation-play-state: paused</code>，切走不烧电；回来自动继续。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>ib-hidden</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">钉底滚动改轻量</div>
+          <div class="d">贴底检测改成滚动阈值 + 短时 <code>setInterval</code> 自停；<code>touchstart/wheel/pointerdown</code> 用 <code>once + passive</code>，不抢主线程。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>pinBottom</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">装饰件容器查询收边</div>
+          <div class="d">头像贴纸等 deco 件在窄容器里按 <code>@container</code> 缩放；贴纸/文字件取消无谓动画与滤镜。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>@container</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🎨</span>
+      <span class="ttl">视觉：Zone Glass · 取色 · 主题 · 明暗气泡 · BUG 修订</span>
+      <span class="cnt">8 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Zone Glass — 分区玻璃（视觉主角）</div>
+          <div class="d">Visual → 基础新增「Zone Glass」卡：顶栏、底栏、导航抽屉、聊天会话顶栏、聊天输入区、Blog 阅读工具条、底部弹层、侧栏面板、子页顶栏/底栏、卡片/面板、迷你播放器等<b>十余个区域独立选色</b>；透明度跟随原有滑杆，明暗两套同色，减少动效下改实色。水水也学会了调色（设置表 <code>ui.gz.&lt;区&gt;</code>）。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>uv-gz-card / ui.gz</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Zone Text — 分区文字色（扩展到十九区）</div>
+          <div class="d">导航 / 顶栏 / 底栏 / 桌面挂件与月历 / 桌面图标文字与线条 / 大标题 / 分区小标 / 卡片 / 聊天正文 / 思考链 / 收藏夹 / Blog / 标记批注 / 社交圈·记忆·信箱 / 按钮 / 选中态 / 输入框 / 通话 / 线条。设置表 <code>ui.tz.&lt;区&gt;</code>。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>ui.tz</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">自绘取色器，全站不再弹系统取色框</div>
+          <div class="d">接入分区玻璃、强调色、背景遮罩颜色、PWA 主题色四处。强调色自动配前景色——极浅或极深时主按钮与分段按钮改用正文色。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>取色器</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Bubble Lab 明暗两套气泡（V2.5.2）</div>
+          <div class="d">气泡工作室顶部主题条（明亮 / 暗色）；「穿上」会问穿在哪个主题（明亮 / 暗色 / 两个都穿），只穿一个时另一个保留原套。开关只管当前主题；可撤销只给另一主题的穿法。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_ibBL / v283-p</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">外观设置按主题分开存；Wallpaper「明暗分开」</div>
+          <div class="d">大小类设置明暗共用、外观参数分家；背景图开「明暗分开」后各存一套，切主题自动换。主题方案 4 → 10 槽，修「应用方案写进错误主题」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>明暗分开 / 方案槽</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">气泡方案按当前主题读写</div>
+          <div class="d">Bubble 方案只写当前主题那对键（u/a 或 uD/aD），另一主题的保留；没有背景记录时滑杆不再写成「null%」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_pfMapLoad</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">选中态 / 通话配色 / 图标线条跟主题色</div>
+          <div class="d">选中格回白底更透方案；通话页文字、通话按钮、图标线条跟「通话 / 文字色」配置；GUIDE 页签与水水气泡归选中态。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>v285-p ~ v288-p</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">V2.5.3 BUG 修订：投影开关补圆钮 · 顶栏两杆补进度 · cvhCss 改写</div>
+          <div class="d">卡片投影开关补上内层圆钮（此前克隆行没带）；聊天顶栏不透明度 / 模糊两根滑杆补进度填充；<code>cvhCss</code> 改写——正确处理 <code>::before</code> 与 <code>background-image</code> 上的透明度，模糊作用在有 backdrop 的那一层。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>v290-p</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🌐</span>
+      <span class="ttl">Beyond 社交圈</span>
+      <span class="cnt">3 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">社交圈界面上改称「Beyond」</div>
+          <div class="d">全名 InternetBeyond 社交圈与顶栏标题不变；设置文案同步改为「主页设置 → Beyond」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>Beyond</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">TA 查看动态不再截断；新增只读一条全文</div>
+          <div class="d">列表每条给完整正文与最近几条评论；<code>&lt;ws_beyond_view id="动态编号"/&gt;</code> 可只读某一条的<b>全文与全部评论</b>。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>ws_beyond_view</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">传统节日提醒默认开启；修「留不了便笺」</div>
+          <div class="d">节日期间 TA 主动提醒；日历留便笺的失败路径已修。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>传统节日</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">📝</span>
+      <span class="ttl">Blog · 工作区 · Token</span>
+      <span class="cnt">4 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Blog 正文上限 10000 字；新增 ws_blog_edit</div>
+          <div class="d">TA 可以改<b>自己写的</b>日志（自闭合读回全文、带正文则修改），每条回复最多 1 次；历史里的正文自动归档成一句说明。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>ws_blog_edit</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">新增 ws_delete 删除工作区文件</div>
+          <div class="d">未识别的 <code>ws_</code> 指令不再静默，出卡并回传可用指令列表。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>ws_delete</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">写日志支持导入 txt / md / EPUB</div>
+          <div class="d">编辑器工具条「导入文本文件」；EPUB 在线解压读章节。二进制头检测，非文本挡下。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>m-ed-import</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Token 仪表盘支持按天翻看</div>
+          <div class="d">14 日柱以锚点日为末端；清除 / 导出与窗口对齐。DeepSeek 内置默认模型名改为 <code>deepseek-flash</code>。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>tk-day / deepseek-flash</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">💝</span>
+      <span class="ttl">收藏与装扮</span>
+      <span class="cnt">4 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">收藏消息一并存下思考链</div>
+          <div class="d">收藏夹里的思考链「收进纸里」——折着时只在署名旁显示「· THOUGHT PROCESS」，摊开后排在正文下方。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_favThOf</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">Bubble Lab「给好友」</div>
+          <div class="d">方案卡下「给好友」：选一位 TA；已在方案槽就复用；已穿着实验室方案会问覆盖还是存空槽；最后问穿在哪个主题。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>给好友</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">收藏夹按月翻（V2.5.2）</div>
+          <div class="d">名片上换好友键/头像在左、年份在右（三年以上是可拨年份带）；下面 ALL + 十二个月，点一格只看那月，有收藏的月份带小点；搜索时不按年月筛。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>fav-ov</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">收藏夹 UI 升级</div>
+          <div class="d">视觉优化边界扩张到文本；换好友键只留一枚（循环），左右滑名片照旧。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>fav-prev</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">📞</span>
+      <span class="ttl">通话与其它细节</span>
+      <span class="cnt">3 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">通话页新增「界面配色」；来电卡改圆钮</div>
+          <div class="d">全局通话配置可设界面配色；语音/视频来电卡去掉文字只留圆钮；通话页头像、昵称、读秒收小。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>通话配色</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">图标更换 · 间距修正 · 细节修复</div>
+          <div class="d">含提交说明第 10 条杂项与 V2.5.2 / V2.5.3 的 BUG 修复。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>细节</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">APP 自己给 maxTokens 时按它的</div>
+          <div class="d"><code>mpAi</code> 带来的 4096 视为保底（<code>_mpDef</code>）；APP 显式给了上限就采用 APP 的。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>_mpDef</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">📄</span>
+      <span class="ttl">版本与文档（含致谢）</span>
+      <span class="cnt">2 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">应用内版本号 → v290-p</div>
+          <div class="d">自 v262-p 跳到 <b>v290-p</b>，日期 2026-09-25。中间 v263-p ~ v289-p 只出现在代码注释里。README 四版未更新。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>IB_VER</code></div>
+      </li>
+      <li>
+        <span class="dot new"></span>
+        <div class="body">
+          <div class="t">提交说明点名致谢 PasleySage（本体 / GUIDE 无署名）</div>
+          <div class="d">V2.5.0 / V2.5.1 / V2.5.2 <b>提交说明</b>均写明「感谢（社区）PasleySage 提交的 Issues」（V2.5.3 仅标题「BUG修订」）。核过上游 <code>index.html</code> 全文：<code>PasleySage</code> / <code>致谢</code> / <code>鸣谢</code> 均为 <b>0 命中</b>——<b>只在 commit message，不在应用本体与 GUIDE</b>。第 10 条写的「GUIDE 致谢补充」对不上点名致谢，不能当「GUIDE 里有我们」。</div>
+        </div>
+        <div class="meta"><span class="badge new">本次同步</span><code>commit message</code></div>
+      </li>
+    </ul>
+  </section>  <section class="sec">
+    <div class="sec-head">
+      <span class="ico">🗂</span>
+      <span class="ttl">我们这边的补丁 · 上游状态（本轮复检）</span>
+      <span class="cnt">7 项</span>
+    </div>
+    <ul class="items">
+      <li>
+        <span class="dot ov"></span>
+        <div class="body">
+          <div class="t">fix-r6 摘要修复 → 上游已重做，留档</div>
+          <div class="d">thinking 关闭、真因提示、finish_reason 区分均被上游以更完整实现覆盖。<b>采用上游版；fix-r6 整套进 <code>自用补丁-归档\</code></b>。</div>
+        </div>
+        <div class="meta"><span class="badge ov">与我们重叠</span><code>fix-r6</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">fix-r7 打开应用后等待 → 同向，留档</div>
+          <div class="d">上游「打开应用后先安静」；我们功能面更宽但<b>功能上跟上游即可</b>。fix-r7 同样留档，不叠回。</div>
+        </div>
+        <div class="meta"><span class="badge mid">同向不同实现</span><code>fix-r7</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">启动看门狗 + 诊断面板</div>
+          <div class="d">上游仍无 <code>_ibGuard</code> 一类面向排查的界面层。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">启动各步耗时埋点 / 自动脱敏</div>
+          <div class="d">上游仍无 <code>_ibStepLog</code> / <code>_ibTimed</code> / <code>_ibRedact</code>。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">VersionError 自愈</div>
+          <div class="d">上游仍无 <code>ib_verfix</code>（库版本比页面新时清缓存重载）。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">SW 的压缩响应完整性判断</div>
+          <div class="d">上游 <code>ib-sw.js</code> 四版 blob 未变（<code>6f48fcbb</code>），仍是「<code>r.ok</code> 就写缓存」。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>本地</code></div>
+      </li>
+      <li>
+        <span class="dot "></span>
+        <div class="body">
+          <div class="t">镜像专属：版本探针页 ib-ver.html</div>
+          <div class="d">不参与上游同步；只读线上版本与 Cache Storage、可清离线缓存。保留。</div>
+        </div>
+        <div class="meta"><span class="badge done">建议保留</span><code>ib-ver.html</code></div>
+      </li>
+    </ul>
+  </section>
+  <footer>
+    数据来源：GitHub Compare API <code>1e2725b0...bf6a86a8</code>（4 commits / 1 file / +1034 −228；V2.5.0 <code>ffa1056f</code> +714 −197，V2.5.1 <code>5104f831</code> +231 −38，V2.5.2 <code>f545d578</code> +137 −46，V2.5.3 <code>bf6a86a8</code> +12 −7；index.html 3,304,065 → 3,462,557 字节，<code>ib-sw.js</code> 的 blob <code>6f48fcbb</code> 与 <code>README.md</code> 四版均未变，diff 内无 <code>DB_VER</code> 改动）；
+    条目按提交说明与 <code>index.html</code> 的实际 diff 归类（四版说明均为累计稿，V2.5.3 真增量仅 3 处界面小修）。镜像现状：<code>PasleySage/InternalBeyond-Mobile</code> <code>main=3718804</code>，本地补丁 10 提交基于 <code>1e2725b0</code>。
+    <br>图例：<span class="badge new">本次同步</span> 上游新增；<span class="badge ov">与我们重叠</span> 改在同一处（采用上游版）；<span class="badge mid">同向不同实现</span> 方向同、实现不同；<span class="badge mid">同名不同物</span> 撞名不是同一件事；<span class="badge done">建议保留</span> 上游未采纳、留本地归档。
+    <br>生成时间：2026-09-25 · 针对镜像 fork（PasleySage/InternalBeyond-Mobile，基线 V2.4.4 <code>1e2725b0</code>，镜像现带 fix-r6/r7；用户已拍板两者留档、功能同步上游）
+  </footer>
+
+</div>
+</body>
+</html>

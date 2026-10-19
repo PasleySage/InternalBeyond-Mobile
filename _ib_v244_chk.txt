@@ -1,0 +1,32 @@
+== 全站 accept 属性 15 处 ==
+  16 字符 / 1 项  accept="image/*"
+  128 字符 / 22 项  accept="audio/*,.mp3,.m4a,.aac,.wav,.flac,.ogg,.oga, …
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+  60 字符 / 8 项  accept=".txt,.md,.markdown,.json,.log,.csv,.text,tex …
+  31 字符 / 2 项  accept=".json,application/json"
+  31 字符 / 2 项  accept=".json,application/json"
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+  796 字符 / 138 项  accept=".txt,.text,.md,.markdown,.mdx,.rst,.adoc,.or …
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+  16 字符 / 1 项  accept="image/*"
+
+最长那处（chat-doc-file）：138 项 / 787 字符 / 含 MIME 通配 = false
+  含 .svg ? false　含 .ts ? false　含 .tsx ? true
+  头：.txt,.text,.md,.markdown,.mdx,.rst,.adoc,.org,.tex,.bib,.js,.mjs,.cjs,.tsx,.jsx,.vue,.svel
+  尾：ass,.ssa,.lrc,.sub,.geojson,.kml,.gpx,.dot,.mermaid,.mmd,.puml,.diff,.patch,.eml,.vcf,.ics
+
+== 常量 ==
+  IB_VER = v262-p / 2026-09-18
+  DB_VER = 15
+  归档锚点：_ibGuard=false  _ibStepLog|_ibTimed=false  _ibRedact=false  ib_verfix=false
+
+== ib-sw.js ==
+  大小 = 2977 B
+  缓存名 = ib-cache-v3
+  content-encoding 判断 = false
+  快回退常量 = true
