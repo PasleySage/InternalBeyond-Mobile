@@ -12332,8 +12332,8 @@ async function genReplyGroup(pcfg,opt){
           if((m.senderName||'')===selfName)return{role:'assistant',content:_wsStubHistoryM(sanitizeGroupReply(m.content,selfName),m.wsResults)};
           return{role:'user',content:'['+(m.senderName||'AI')+'] '+_wsStubHistoryM((m.content||''),m.wsResults).replace(/<ws_sticker\b[^>]*?name="([^"]*)"[^>]*?\/?>(?:\s*<\/ws_sticker\s*>)?/gi,'（发了表情包「$1」）')};/* v323-p：其他成员发的表情包在历史里改成一句叙述（自己发的标签原样留） */
         });
+        _ctxT.addHist(mapped.map(function(m){return (m&&m.content)||''}).join('\n\n'),mapped.length,combined.filter(function(m){return m&&m.role==='user'}).length,combined.filter(function(m){return m&&m.role!=='user'}).length,mapped.reduce(function(a,m){return a+((m&&m.images&&m.images.length)||0)},0));/* D18.1 上下文账本：群聊历史窗口——捕获点移到 collapse 之前（D17 原测 messages＝合并后数组；群聊「成员回复→user-role」映射使连续同 role 被并成一条，条数恒少算——真机 Selene 轮 234 字却显 1 条）。n=mapped.length 真实条数（含 roundExtras 本轮先发言成员）；u/a 按源 role（真实用户 vs AI 成员）；img 按 mapped＝所发帧数；文本与合并后逐字节等价（同一 '\n\n' 拼接，已验证的 234 不变）。仍在群摘要注入（下一行）之前*/
         const messages=collapseSameRoleM(mapped);
-        _ctxT.addHist(messages.map(function(m){return (m&&m.content)||''}).join('\n\n'),messages.length,messages.filter(function(m){return m&&m.role==='user'}).length,messages.filter(function(m){return m&&m.role==='assistant'}).length,messages.reduce(function(a,m){return a+((m&&m.images&&m.images.length)||0)},0));/* D17 上下文账本：群聊历史窗口整块（摘要拼入前、tails 包裹前取「窗口即所发」；其他成员的话以 [名字] 用户位出现在窗口里，故 u 含成员消息）*/
         let _gSumTail9=false;if(gSum){if(messages.length>1)messages[0]=Object.assign({},messages[0],{content:'【对话历史备忘（此为后台参考信息，不要向对方复述或提及此段内容的存在）】\n'+gSum+'\n\n'+String(messages[0].content||'')});else _gSumTail9=true}/* v323-p 33：群聊摘要进窗口第一条吃缓存（同 1对1），只在窗口前移时跟着变；窗口只剩这一条时照旧放附言 */
         _ctxT.addSummary((gSum&&messages.length>1)?gSum:'');/* D17 上下文账本：群聊滚动摘要（进窗口第一条时单列、快照折叠进 hist；窗口只剩一条时走 grp.tail.gsum 附言）*/
         if(!messages.length){aiEl.remove();continue}
