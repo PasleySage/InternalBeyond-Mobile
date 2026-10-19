@@ -1,17 +1,18 @@
 # `_retired\` —— 已被取代的脚本
 
-**建立于 2026-09-19。** 这里放的是**功能仍在、但已被更好的脚本取代**的旧工具。移进来是为了让 `Android\` 根目录只留"当前在用的"，而不是因为它们坏了。
+**建立于 2026-09-19。** 这里放的是**功能仍在、但已被更好的脚本取代**的旧工具，或**测试对象已不存在**的旧测试。移进来是为了让工作区根目录只留"当前在用的"，而不是因为它们坏了。
 
 | 脚本 | 被谁取代 | 取代依据 |
 |---|---|---|
-| `_ib_compare.js` | `Android\_ib_new_compare.js` | 后者是超集：区间判定 + fork 反查 + 上游 README + 电脑端现状 |
-| `_ib_diff_detail.js` | `Android\_ib_v243b_probe.js` / `_ib_v244.js` | 旧脚本**硬编码提交号**（`e7d12621…27d87d6`），上游一发版就失效；新脚本动态取 BASE/HEAD |
+| `_ib_compare.js` | `_ib_new_compare.js` | 后者是超集：区间判定 + fork 反查 + 上游 README + 电脑端现状 |
+| `_ib_diff_detail.js` | `docs\evidence\_ib_v243b_probe.js` / `docs\evidence\_ib_v244.js` | 旧脚本**硬编码提交号**（`e7d12621…27d87d6`），上游一发版就失效；新脚本动态取 BASE/HEAD |
 | `_ib_v242_diff.js` | 同上 | 同样硬编码（`27d87d6…eae90dec`） |
-| `_desk_cmp.js` | `Android\_ib_new_compare.js` 的后半段 + `Android\_check_sync.js` | 两库对照的职责被拆到这两个里 |
+| `_desk_cmp.js` | `_ib_new_compare.js` 的后半段 + `_check_sync.js` | 两库对照的职责被拆到这两个里 |
+| `_test_ib_startup_wait.js` | 无（测试对象已撤） | r7「启动等待」补丁已在 V3.0 纯上游同步时撤出镜像（用户 2026-10-09 定：fix-r6/fix-r7 留档、不叠回）；当前镜像 main 只含账本模块，本测试相对现状过期且必然失败。其「产物 script 块语法节」检查法已固化在文档，需要时从桩测（`.scratch\ib-ctx-ledger\_ctx_ledger_test.js`）取 |
 
 ## 还跑得动吗
 
-跑得动，但**要自己改路径**：这几个脚本里写的是 `Android\` 下的相对位置，移进来之后路径差一层；另外它们读的下载快照（如 `_u_index.html`）按需由新脚本生成，不会常驻磁盘。
+跑得动，但**要自己改路径**：这几个脚本里写的是工作区根下的相对位置，移进来之后路径差一层；另外它们读的下载快照（如 `_u_index.html`）按需由新脚本生成，不会常驻磁盘。
 
 **建议直接用上面"被谁取代"里的新脚本**，不要为了用它们去改路径。
 

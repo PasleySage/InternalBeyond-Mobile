@@ -1,24 +1,29 @@
 /* 变更一览一致性自检（skill: upstream-update-brief §4b 的两份同源必做项）
    用法：node _test_ib_brief_consistency.js [基准名 | 路径]
-     · 只给名字（例 IB-upstream-V2.4.3变更一览）→ 在本目录下找
+     · 只给名字（例 IB-upstream-V2.4.3变更一览）→ 在本目录或 docs/briefs/ 下找
      · 给路径（绝对路径，或含 \ 或 / 的相对路径）→ 按路径找，带不带 .html 都行
-   不传参数时：扫本目录，取 mtime 最新的 *变更一览.html 那一对。
+   不传参数时：扫本目录与 docs/briefs/，取 mtime 最新的 *变更一览.html 那一对。
    校验：分组数/顺序/标题、每组条目数与声明项数、逐条条目名、标注词、代码提示、标注用词范围、图例覆盖、提交号。 */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const base = __dirname + path.sep;
-const WORKSPACE = __dirname + path.sep;
+const BRIEFS = path.join(__dirname, 'docs', 'briefs') + path.sep;
 
 function pickBase() {
   const arg = process.argv[2];
   if (arg) {
     const looksLikePath = path.isAbsolute(arg) || /[\\/]/.test(arg);
-    const p = looksLikePath ? path.resolve(arg) : base + arg;
-    return p.replace(/\.html$/i, '');
+    if (looksLikePath) return path.resolve(arg).replace(/\.html$/i, '');
+    /* 纯名字：先根目录、再 docs/briefs/（2026-10-19 重构后一览归档在那边） */
+    for (const dir of [base, BRIEFS]) {
+      const p = dir + arg;
+      if (fs.existsSync(p) || fs.existsSync(p + '.html')) return p.replace(/\.html$/i, '');
+    }
+    return base + arg;
   }
   const cands = [];
-  [base, WORKSPACE].forEach(dir => {
+  [base, BRIEFS].forEach(dir => {
     let list; try { list = fs.readdirSync(dir); } catch (e) { return; }
     list.filter(f => /变更一览\.html$/.test(f))
       .forEach(f => cands.push({ p: dir + f.replace(/\.html$/i, ''), t: fs.statSync(dir + f).mtimeMs }));

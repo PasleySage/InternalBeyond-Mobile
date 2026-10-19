@@ -1,6 +1,7 @@
 /* IB聊天记录录入器 —— 结构与样式覆盖检查（第三/四层） */
 const fs = require('fs');
-const html = fs.readFileSync('IB聊天记录录入器.html', 'utf8');
+const path = require('path');
+const html = fs.readFileSync(path.join(__dirname, 'tools', 'pages', 'IB聊天记录录入器.html'), 'utf8');
 const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1];
 

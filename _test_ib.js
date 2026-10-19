@@ -44,10 +44,17 @@ global.localStorage = {
 global.alert = () => {};
 global.confirm = () => true;
 global.Blob = function(){};
-global.URL = { createObjectURL: () => 'blob:x', revokeObjectURL(){} };
+/* URL mock 必须是可调用的：宿主环境（WorkBuddy）的 fs shim 内部会做
+   `filePath instanceof URL`，若这里是普通对象，读文件时会抛
+   "Right-hand side of 'instanceof' is not callable"。
+   页面脚本只用到 URL.createObjectURL / URL.revokeObjectURL 两个静态方法。 */
+function URLMock(){}
+URLMock.createObjectURL = () => 'blob:x';
+URLMock.revokeObjectURL = () => {};
+global.URL = URLMock;
 
 /* ---- 载入页面脚本 ---- */
-const html = require('fs').readFileSync(path.join(__dirname, 'IB聊天记录录入器.html'), 'utf8');
+const html = require('fs').readFileSync(path.join(__dirname, 'tools', 'pages', 'IB聊天记录录入器.html'), 'utf8');
 const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 require('fs').writeFileSync(path.join(__dirname, '_tmp_script_0.js'), js);
 const M = require('./_tmp_script_0.js');
