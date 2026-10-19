@@ -76,7 +76,7 @@ gh issue create --repo <上游> --title "<标题>" --body-file _body_XX.md
 - 先从**基线提交**建分支：`node _push_ref_branch.js <file> <分支名> <基线提交> "<提交说明>"`
   （走 blobs→trees→commits→POST /git/refs；**ref 已存在则报错退出，不覆盖**）。
   ⚠️ 本地 git 写不落盘，别用 `git push`。
-- ⚠️ 推的必须是**剔掉镜像专用项**的那一版（`IB_PR=1 node _mk_summary_patch.js …` 生成：不改 `IB_VER`、不含探针页），
+- ⚠️ 推的必须是**剔掉测试块与镜像专用项**的净版（现行做法：用 effort 自带的净版生成器从功能版剥离测试块——账本 effort 是 `.scratch\ib-ctx-ledger\patch\_make_net.js`，PR #16 即用它生成；早期 r6 时代的 `IB_PR=1 node _mk_summary_patch.js` 已随 2026-10-19 深清理删除），
   且 **diff 里只应有 `index.html`**、不新增/删除文件。
 - ```
   gh pr create --draft --repo <上游> --base main --head <我方账号>:<分支> --title "<标题>" --body-file _body_pr.md

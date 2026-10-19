@@ -17,25 +17,22 @@ D:\IB-Workspace-Mobile\
 ├─ index.html  ib-sw.js  ib-ver.html  manifest.webmanifest  icon-*.png  ← 镜像 main＋PWA 面（勿动，见白名单）
 ├─ README.md  LICENSE  COPYRIGHT.md  apps\  assets\                     ← 上游文件（同步时逐字节比对）
 ├─ _工具与产物清单.md            脚本与产物的**唯一索引**
-├─ _*.js                        同步 / 部署 / 补丁引擎 / 探针 / 发布自检 / 测试
+├─ _*.js                        同步 / 部署 / 探针 / 发布自检 / 测试
 ├─ deepseek_to_ib.js  _live_sync.txt
 ├─ CONTEXT.md  AGENTS.md        术语表 / 根记忆入口
 ├─ docs\
 │  ├─ adr\  agents\  workspace-readme.md
-│  ├─ briefs\          IB-upstream-*变更一览（html/md 双格式）
-│  ├─ issues\          issue / PR 外发稿（已外发＋未发草稿）
-│  ├─ patches\         补丁 diff 与补丁说明
-│  ├─ evidence\        V2.4.3b / V2.4.4 对比证据链（脚本与产物同住）
-│  ├─ investigations\  排查记录与诊断手册
-│  ├─ archive\         历史存档（派活单 / 功能介绍 / 作废稿）
-│  └─ IB-本体缺陷-复核清单.md
-├─ tools\pages\        被测静态页（聊天记录录入器 / 诊断面板预览 / 附件选择器实测）
+│  ├─ briefs\          IB-upstream-V3.1.1变更一览（现行基线；旧版一览已清，git 历史可查）
+│  ├─ issues\          已外发英文稿存档（带 GitHub 编号：issue #14 / #17、PR #15）
+│  ├─ investigations\  IB白屏-诊断与自救手册
+│  └─ IB-本体缺陷-复核清单.md   两端共用的本体缺陷清单
+├─ tools\pages\        被测静态页（聊天记录录入器 / 附件选择器实测）
 ├─ data\chat\          聊天记录转换素材（ib-selene-chat_part*.json）
-├─ 自用补丁-归档\  _retired\     归档资产
+├─ 自用补丁-归档\       已撤下补丁的恢复源（用户 2026-09-25 定「留档」）
 └─ .scratch\                    本地 effort：spec + issues + 对外稿（不入库）
 ```
 
-**补丁流水线（手机端）**：可重复的改动一律走 `_patch_engine.js`（引擎）＋ `_patch_rN_*.js`（清单＝数据），从**干净上游原文**重放；镜像产物一律用 `_mk_mirror.js` 生成，不手改在用文件当唯一真相。
+**镜像产物的现行路线**：纯上游同步走 `_sync_mirror.js`（以上游 tree 为基准）；上下文账本功能版走 `_deploy_ctx_ledger.js`（从 `.scratch\ib-ctx-ledger\` 的净版／功能版推镜像 main，每次部署前打回滚 tag）。r6/r7 时代的锚点补丁引擎链已于 2026-10-19 深清理移除（功能均已上游化，见 `_工具与产物清单.md` §十七）；电脑端 parity 补丁流水线在 `D:\IB-Workspace-Desktop\_patches\`（引擎＋driver＋测试，自包含）。
 
 ## Code style（编码思路）
 
@@ -87,7 +84,7 @@ node _check_tables.js <稿路径>
 | 回滚镜像 main | `node _rollback_main.js <提交>` |
 | 看镜像是否对齐 | `node _check_sync.js`（⚠️ 镜像已带自用补丁时改为锚点等价核对；sandbox 内跑不动，用 bash 侧 `gh`/`curl`） |
 | 取上游源码快照 | `node _fetch_upstream.js <commit> --expect-sha <前缀>` |
-| 生成镜像产物 | `node _mk_mirror.js <上游原文> [输出]`（链式按 `needs` 应用全部补丁清单） |
+| 部署账本功能版到镜像 | `node _deploy_ctx_ledger.js <文件> <repo> <vXXX-p> "<用途>"`（每次部署前打回滚 tag；与 `_sync_mirror.js` 互斥） |
 | 恢复归档能力 | 见 `自用补丁-归档\README.md` 与项目记忆 |
 | 脚本 / 产物索引 | **`_工具与产物清单.md`（唯一索引）** |
 | 电脑端操作 | 见 `D:\IB-Workspace-Desktop`（补丁重放、与上游差异、变更一览） |
