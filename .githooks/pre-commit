@@ -1,0 +1,21 @@
+#!/bin/sh
+# IB 手机端预提交守栏（2026-10-19 retro S1.3 落地）
+# 内容：6 个活测试 + _check_docs.js + _probe_lint.js；任一侧失败即阻止提交。
+# 约定：脚本逻辑与输出只用 ASCII（文件为 UTF-8，注释含中文无碍 sh 执行）；
+# node 不在 PATH 时退回 WorkBuddy 受管 node。绕过要用 --no-verify（请说明原因）。
+set -e
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+if command -v node >/dev/null 2>&1; then NODE=node; else NODE="/c/Users/20513/.workbuddy/binaries/node/versions/22.22.2-6/node.exe"; fi
+
+echo "[pre-commit] 活测试（6 个）..."
+for t in _test_ib.js _test_ib_structure.js _test_ib_attach_probe.js _test_ib_brief_consistency.js _test_deepseek_conv.js _test_deepseek_chunks.js; do
+  printf '  %s ... ' "$t"
+  if "$NODE" "$t" >/dev/null 2>&1; then echo ok; else echo FAIL; "$NODE" "$t"; exit 1; fi
+done
+
+echo "[pre-commit] _check_docs.js ..."
+"$NODE" _check_docs.js
+echo "[pre-commit] _probe_lint.js ..."
+"$NODE" _probe_lint.js
+echo "[pre-commit] 全部通过"

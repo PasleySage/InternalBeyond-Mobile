@@ -4,7 +4,7 @@
 
 **原线上形态**：镜像 `main=3718804`（`v262-p-r7`），本地补丁 10 提交（fix-r6 ×6 + fix-r7 ×4 + 验证版清理），基于上游 `1e2725b0`（V2.4.4）。
 
-**完整代码源**：补丁清单文件仍在 `Android\_patch_r6_summary.js`（13 处锚点）与 `Android\_patch_r7_startup_wait.js`（12 处锚点），由 `Android\_patch_engine.js` 重放；本留档只摘用途、锚点、定稿文案与上游对应关系。
+**完整代码源**：补丁清单文件**曾**在 `Android\_patch_r6_summary.js`（13 处锚点）与 `Android\_patch_r7_startup_wait.js`（12 处锚点）、由 `Android\_patch_engine.js` 重放（均为拆分前路径；2026-10-19 深清理已删，git 历史可查）；本留档只摘用途、锚点、定稿文案与上游对应关系。
 
 ---
 

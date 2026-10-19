@@ -47,7 +47,7 @@
 
 ## 6. Edit 工具「先读再改」闸门失灵（2026-09-23，p03 棒实测）
 
-- 现象：对 `Windows\_patches\` 下文件调 `Edit`，前面明明 `Read` 过（含重读目标行段），仍报 `File has not been read yet. Read it first before writing to it.`，换写法重试无效。
+- 现象：对 `Windows\_patches\`（拆分前路径，已不存在）下文件调 `Edit`，前面明明 `Read` 过（含重读目标行段），仍报 `File has not been read yet. Read it first before writing to it.`，换写法重试无效。
 - 对策：**别反复硬撞**，直接 PowerShell 精确替换：`[IO.File]::ReadAllText($p,[Text.UTF8Encoding]::new($false))` → `.Replace()` → `WriteAllText` 同编码。改完**必须重跑该文件的测试 / 按 UTF-8 重读验证**，不要凭一次 PowerShell 输出就当改对。
 - ⚠️ 控制台中文显示乱码 ≠ 文件写坏：PS 5.1 控制台输出码页会把 UTF-8 中文显示成 GBK 乱码。验证编码用 `ReadAllText($p,$enc)` 后 `.Contains('原文特征串')`，别信屏幕。
 - ⚠️ 读写中文 `.js`/`.md` 一律显式 `UTF8Encoding($false)`（无 BOM）；不要赌 `ReadAllLines(path)` 的默认探测。

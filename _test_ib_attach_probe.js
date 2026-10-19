@@ -4,11 +4,12 @@
    ③ 校验内嵌的「现状」accept 未被误改（796 字符 / 140 项 / 零通配）。 */
 'use strict';
 const fs = require('fs');
+const os = require('os');
 const vm = require('vm');
 const path = require('path');
 const base = __dirname + path.sep;
 const PAGE = base + 'tools' + path.sep + 'pages' + path.sep + 'IB附件选择器-真机实测.html';
-const EXT = base + '_tmp_probe_script.js';
+const EXT = path.join(os.tmpdir(), '_tmp_probe_script.js');
 
 let pass = 0, fail = 0;
 const lines = [];
