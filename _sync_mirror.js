@@ -65,7 +65,7 @@ try {
   const msg = '同步上游 ' + upRepo.replace(/^.*\//, '') + ' ' + upCommit.slice(0, 7) + '：' +
     upC.commit.message.split('\n')[0] + '\n\n' +
     '树＝上游 ' + upCommit.slice(0, 8) + ' ＋ 镜像专属 ' + FORK_ONLY.join('、') + '。\n' +
-    '零本地补丁：与上游逐文件 blob 全等。变更详见 IB-upstream-*.变更一览。';
+    '零本地补丁：与上游逐文件 blob 全等。变更详见 docs/briefs/ 下的 IB-upstream-*变更一览。';
   const bc = path.join(tmp, 'commit.json');
   fs.writeFileSync(bc, JSON.stringify({ message: msg, tree: newTree, parents: [curMain] }), 'utf8');
   const newCommit = JSON.parse(ghIn('-X POST /repos/' + repo + '/git/commits', bc)).sha;

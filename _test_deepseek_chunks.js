@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
-const NODE = 'C:/Users/20513/.workbuddy/binaries/node/versions/22.22.2-3/node.exe';
+const NODE = process.execPath;
 const SCRIPT = path.join(__dirname, 'deepseek_to_ib.js');
 
 let pass = 0, fail = 0;

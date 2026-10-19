@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = __dirname;
 
 const PENDING = ['待批', '待发'];
 const DONE = ['已外发', '已发表'];
@@ -39,7 +39,7 @@ function walk(dir, out = []) {
 
 function defaultFiles() {
   return [
-    'AGENTS.md', 'CONTEXT.md', 'README.md', 'IB-本体缺陷-复核清单.md',
+    'AGENTS.md', 'CONTEXT.md', 'README.md',
     ...walk(path.join(ROOT, 'docs')),
     ...walk(path.join(ROOT, '.scratch'))
   ].filter(f => fs.existsSync(f));

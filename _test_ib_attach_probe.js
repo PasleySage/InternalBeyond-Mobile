@@ -7,7 +7,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 const base = __dirname + path.sep;
-const PAGE = base + 'IB附件选择器-真机实测.html';
+const PAGE = base + 'tools' + path.sep + 'pages' + path.sep + 'IB附件选择器-真机实测.html';
 const EXT = base + '_tmp_probe_script.js';
 
 let pass = 0, fail = 0;

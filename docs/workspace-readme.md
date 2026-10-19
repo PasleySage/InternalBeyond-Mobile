@@ -14,15 +14,24 @@ Internal Beyond（IB）**手机端（PWA）**工作空间 —— 上游 `Sui-IB/
 
 ```
 D:\IB-Workspace-Mobile\
-├─ index.html  ib-sw.js …       ← 镜像 main（e95c5937，clone 自带）
+├─ index.html  ib-sw.js  ib-ver.html  manifest.webmanifest  icon-*.png  ← 镜像 main＋PWA 面（勿动，见白名单）
+├─ README.md  LICENSE  COPYRIGHT.md  apps\  assets\                     ← 上游文件（同步时逐字节比对）
 ├─ _工具与产物清单.md            脚本与产物的**唯一索引**
-├─ _*.js                        同步 / 补丁引擎 / 探针 / 发布自检等
+├─ _*.js                        同步 / 部署 / 补丁引擎 / 探针 / 发布自检 / 测试
+├─ deepseek_to_ib.js  _live_sync.txt
+├─ CONTEXT.md  AGENTS.md        术语表 / 根记忆入口
+├─ docs\
+│  ├─ adr\  agents\  workspace-readme.md
+│  ├─ briefs\          IB-upstream-*变更一览（html/md 双格式）
+│  ├─ issues\          issue / PR 外发稿（已外发＋未发草稿）
+│  ├─ patches\         补丁 diff 与补丁说明
+│  ├─ evidence\        V2.4.3b / V2.4.4 对比证据链（脚本与产物同住）
+│  ├─ investigations\  排查记录与诊断手册
+│  ├─ archive\         历史存档（派活单 / 功能介绍 / 作废稿）
+│  └─ IB-本体缺陷-复核清单.md
+├─ tools\pages\        被测静态页（聊天记录录入器 / 诊断面板预览 / 附件选择器实测）
+├─ data\chat\          聊天记录转换素材（ib-selene-chat_part*.json）
 ├─ 自用补丁-归档\  _retired\     归档资产
-├─ IB-upstream-*                 上游变更一览（html/md 双格式）
-├─ CONTEXT.md                   术语表（只放词汇）
-├─ docs\adr\                    决策记录（0002 启动等待／0004 拆分）
-├─ docs\agents\                 issue 流程 / 上游收口 / 规格与拆票 / shell 环境
-├─ docs\workspace-readme.md     本文件
 └─ .scratch\                    本地 effort：spec + issues + 对外稿（不入库）
 ```
 
@@ -53,9 +62,9 @@ D:\IB-Workspace-Mobile\
 
 ```bash
 # 手机端回归（若本轮改了补丁/脚本）
-node _test_ib_startup_wait.js        # 语法节是补丁流程的固定检查
-node _test_ib.js && node _test_ib_structure.js
-node _test_deepseek_conv.js
+node _test_ib.js && node _test_ib_structure.js && node _test_ib_attach_probe.js
+node _test_deepseek_conv.js && node _test_deepseek_chunks.js
+node _test_ib_brief_consistency.js    # 动了 docs/briefs/ 下的变更一览时必跑
 
 # 对外文稿（若本轮有 issue / PR / 评论稿）
 node _check_publish.js <稿路径>
