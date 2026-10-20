@@ -12,6 +12,8 @@ Internal Beyond（IB）**手机端（PWA）**工作空间 —— 上游 `Sui-IB/
 
 ## Architecture
 
+> 简版架构树如下；**完整带注释目录树（含每个文件的用途）见 `docs/workspace-tree.md`**（2026-10-20 建，结构有变时重生成）。
+
 ```
 D:\IB-Workspace-Mobile\
 ├─ index.html  ib-sw.js  ib-ver.html  manifest.webmanifest  icon-*.png  ← 镜像 main＋PWA 面（勿动，见白名单）
