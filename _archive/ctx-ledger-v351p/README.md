@@ -16,6 +16,13 @@
 | `_pr15.diff` | PR #15（第一层）原始 diff（`gh pr diff 15` 拉取） |
 | `pr16.diff` / `pr16diff说明.md` | PR #16 第二层增量包原始 diff 与转发说明（注意：是 PR #15→#16 差＝纯第二层，非 PR #16 全量） |
 | `_deploy_ctx_ledger.js` | 旧部署脚本（推镜像 main；已退役——现行镜像路线＝`_sync_mirror.js` 同源同步） |
+| `toolchain/_ctx_ledger_test.js` | 桩测套件（A–M 组 119 断言）——**AGENTS.md Code style 第 8 条的行为桩测模板**（M 组＝群聊条数回归）；默认路径指向已删的旧构建物，作模板参考 |
+| `toolchain/_make_net.js` | 净版生成器（从功能版剥测试块，PR #16 载体即用它生成）——SKILL.md `ib-upstream-issue-publish` 引用的做法来源 |
+| `toolchain/_ctx_syntax_check.js` | 全 script 块 vm 编译检查（补丁前后各跑一次） |
+| `toolchain/_layer2_verify.js` | 纯第二层 diff 交付前自检（vm 编译／无 CSS 残留／git apply 往返） |
+| `design/issues/01–10-*.md` | effort 的十份票规格（全部 `Status: resolved`）：捕获点／预览预算／真实分布／六组框架／快照形状／水水指令／面板行／合并或独立／外发文稿／证据复核 |
+| `design/map.md` | effort 地图（Destination／Notes／Decisions-so-far／Fog），票 01 的 Answer 曾并入此图 |
+| `design/README.md` | 设计记录的来源与用途说明 |
 
 ## 历史节点（补丁生命周期）
 
@@ -25,6 +32,12 @@
 - 归档 tag：`archive/ib-selfpatch-ctx-ledger`（指向 `e95c5937`，fork 上可取回）
 - PR #15／#16（分支 `ref/mobile-ctx-ledger`／`ref/mobile-ctx-ledger-group-hb`）去留由用户 2026-10-20 定夺（其亲往 GitHub 处理）
 
-## 还剩什么没进本目录
+## 原 `.scratch/ib-ctx-ledger/` 的去向（2026-10-20 清理完毕）
 
-`.scratch/ib-ctx-ledger/`（本地 effort、不入库）仍有：spec 与 issue 底稿（`issues/`）、已外发草稿（`draft-09/10-*`）、补丁脚本链（`patch/_ctx_patch*.js`）、净版产物（`out/IB-ctx-ledger-净版-v351p.html` 等）、真机日志。这些是本地追踪资产，按 `.gitignore` 约定不入库；本目录收的是**需要随 git 历史长期保存**的那一份。
+effort 退役后本地 scratch 已**整体移除**，去向三类：
+
+- **移入本目录**：`toolchain/` 四件（被正式文档引用的工具）＋ `design/`（十份票规格与 map，历史设计记录，内容一字未改）。
+- **已删（重复或可再生）**：草稿与外发前源稿（`draft-09/10-*`，定稿已在 `docs/issues/`）、旧构建物（`out/` 六份 4.9MB 功能版/净版/PR 载体，内容可由归档 diff＋可拉取的上游基重生）、补丁脚本链（`patch/_ctx_patch*.js` 27 件，累计改动以本目录 80 hunk diff 为准）、一次性分析与执行案脚本、API 快照。
+- **已删（经核实无未决依赖）**：`prototype/` 原型与 16 张验证截图（十份规格全部 resolved、无一处引用原型文件本身，设计结论在规格正文与台账）；真机诊断包 4 份日志＋4 份补测原始输出（关键结论已存于 `改动一览.md` 的 20 处真机反馈记录）。
+
+台账 `改动一览.md` 顶部有相应注记；`design/README.md` 说明设计记录的来源。

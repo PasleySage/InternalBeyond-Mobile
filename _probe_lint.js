@@ -15,17 +15,18 @@
  *   ④ 空壳节 —— 往 CONTEXT.md 插节时把另一节的正文挤走，标题与内容分离。
  *   ⑤ 引用悬空 —— 删了票 02 的 §7，§3/§4 里引用 D1–D4 的地方不知道；改了轮数口径，
  *      写「9 轮」的证据行不同步。**改了一处、忘了引用它的另一处**，五轮审查的根因。
- *      ⑤ 是跨文件的（要读目标文件的标题），单独一整节跑，扫整个 effort 目录。
+ *      （⑤ 已于 2026-10-20 随账本 effort 退役——其扫描对象是 effort 票规格的 §N/D-Q 标签，
+ *       目标文档体系已不存在；跨文件悬空由 ⑦ 的路径存在性全域扫描把守。见下方默认集注释。）
  *   ⑥ __dirname 上跳（2026-10-19 加）—— 根级脚本用 `__dirname/..` 定位，文件一移定位就漂，
  *      且失效是静默的（退出码照样 0）。`_check_docs.js` 与本品各出过一次同款事故。
  *   ⑦ 文档引用路径不存在（2026-10-19 加）—— 深清理后悬空引用 6 处、技能里死路径活一天，
  *      全靠人肉 grep。反引号路径（含分隔符）在 .md 正文出现即检存在性。
  *
- * 六条都是确定性的：同样的输入必然给出同样的判定。所以它们属于**检查器**，不属于文档规约。
+ * 各条都是确定性的：同样的输入必然给出同样的判定。所以它们属于**检查器**，不属于文档规约。
  *
  * 用法：
- *   node _probe_lint.js                       # 默认集＝glob 全 effort .md（排除证据/临时文件）＋3 探针＋CONTEXT.md；另恒扫全 effort 跑引用检查
- *   node _probe_lint.js <路径> ...            # 只检查指定文件（覆盖默认集；引用扫描仍扫全 effort）
+ *   node _probe_lint.js                       # 默认集＝工作空间根 CONTEXT.md（2026-10-20 起；原 effort glob 随账本清理退役）
+ *   node _probe_lint.js <路径> ...            # 只检查指定文件（覆盖默认集）
  *
  * 退出码：FAIL 数为 0 时退 0，否则退 1。WARN 不影响退出码。
  */
@@ -34,40 +35,22 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;        // 工作空间根（拆分后脚本所在即根）
-const LEDGER = path.join(ROOT, '.scratch', 'ib-ctx-ledger');
 
-// ── 默认检查集的构成（S2，2026-10-13）─────────────────────
-// A = glob：effort 目录下全部 .md（含 issues/ 子目录、含 map.md）
-// B = 显式：三个探针脚本
-// C = 若存在：工作空间根 CONTEXT.md
-// DEFAULTS = A ∪ B ∪ C；命令行显式传路径时覆盖本集合（行为不变）。
-// 排除规则（显式清单）——证据文件与临时文件不参与结构检查：
-//   ① 名以「无」「对话」开头且不含「-」：原始输出证据（无always.md、对话中创建always.md）
-//   ② 名含 fixture／tmp／.bak：一次性夹具与备份
-// ⚠️ 排除基于文件名模式（无/对话开头且无连字符）——新增文件若命名巧合会被静默排除。
-//    若发现某 .md 未被扫描：先检查文件名是否触发此规则；必要时改为显式文件名清单。
-const EXCLUDE_MD = [/^无[^-]*$/, /^对话[^-]*$/, /fixture/, /tmp/i, /\.bak$/];
-function collectMd(dir) {
+// ── 默认检查集的构成（2026-10-20 起：effort 已清退）──────────
+// 沿革：默认集原为「glob 账本 effort 全部 .md＋3 探针脚本＋CONTEXT.md」（S2，2026-10-13）。
+// 2026-10-20 上下文账本 effort 整体退役（功能被上游 v353-p 采纳，scratch 清除、设计文档入
+// `_archive/ctx-ledger-v351p/design/` 冻结区）⇒ A（effort glob）与 B（探针脚本）失去对象。
+// 现行默认集＝C：工作空间根 CONTEXT.md（存在才加）——它是活文档，且 ④ 空壳节事故
+// （往 CONTEXT.md 插节挤走正文）正是本品要防的那类。命令行显式传路径时覆盖本集合。
+// 随 effort 一起退役的还有 ⑤ 引用锚点检查：其扫描对象是 effort 票规格的 §N/D-Q 标签体系，
+// 活文档不用该约定，强挂即虚构用途；跨文件悬空另有 ⑦（路径存在性，全域扫描）把守。
+function defaultFiles() {
   const out = [];
-  if (!fs.existsSync(dir)) return out;
-  fs.readdirSync(dir).forEach(f => {
-    const p = path.join(dir, f);
-    if (fs.statSync(p).isDirectory()) out.push.apply(out, collectMd(p));
-    else if (/\.md$/.test(f)) out.push(p);
-  });
-  return out;
-}
-const EFFORT_MD = collectMd(LEDGER);               // 引用扫描用：effort 内全部 .md（不排除，见 ⑤ 节）
-const DEFAULTS = (function () {
-  const out = EFFORT_MD.filter(f => !EXCLUDE_MD.some(re => re.test(path.basename(f))));   // A：glob
-  ['预览预算-1挂采集器.js', '预览预算-2出报告.js', '真实分布-3出分布表.js'].forEach(n => { // B：显式探针
-    const p = path.join(LEDGER, n);
-    if (fs.existsSync(p)) out.push(p);
-  });
-  const ctx = path.join(ROOT, 'CONTEXT.md');       // C：存在才加
+  const ctx = path.join(ROOT, 'CONTEXT.md');
   if (fs.existsSync(ctx)) out.push(ctx);
   return out;
-})();
+}
+const DEFAULTS = defaultFiles();
 
 function die(msg, code) { console.error(msg); process.exit(code == null ? 1 : code); }
 
@@ -190,155 +173,12 @@ function checkEmptySection(file, src, out) {
   }
 }
 
-// ── ⑤ 引用锚点与标签（跨文件，扫整个 effort 目录）──────────
-// effort 文档互引用密集（票↔票、节↔节）。删节／改号之后引用方不会自动知道——
-// 2026-10-12/13 两轮里这类悬空出了五次，全靠人工撞见。本检查把两类引用变成机械判定：
-//   ⑤a §N 锚点：`[文本](xx.md) §N`（§N 在链接文本内或紧随链接后）／`票 NN §N`／裸 `§N`
-//        → 目标文件须有对应编号标题（`### 2. 标题` 或 `## Answer §1 标题` 两种写法都认）
-//   ⑤b D/Q 标签：`D1`/`Q1` 式编号（本 effort 的拍板项）→ effort 内须有定义
-//        （`**D1 …**` 粗体标签，或标题内含该标签）
-// 判不了的留着不判（宁可漏报不可误报）：
-//   · canonical 数字发散（同概念不同值，如一轮写 9 轮一轮写 7 轮）需要语义，不在本检查内；
-//   · `§N–§M` 区间是行文 shorthand，不当引用（如「Answer 见 §2–§6、§8–§12」）；
-//   · 标签用全局注册表：跨文件同名会互相兜底（map 写「Q2 裁决」由票 04 的 Q2 满足）；
-//   · 紧跟票号的裸形式（「01 §2」＝票 01 的 §2）归属该票；其余裸 §N 若本文件无此节、
-//     句内也未标明目标票，报 WARN（目标不明）而不硬判同文件——宁可漏报不可误报。
-// EFFORT_MD（effort 内全部 .md，不做排除）在文件头定义，本节直接用。
-
-function headingNums(src) {
-  const nums = new Set();
-  src.split('\n').forEach(l => {
-    let m = l.match(/^#{2,3}\s+(\d+)[.．\s]/);           // ### 2. 标题
-    if (m) { nums.add(m[1]); return; }
-    m = l.match(/^#{2,3}\s+(?:Answer\s+)?§\s*(\d+)/);    // ## Answer §1 ／ ## §3 标题
-    if (m) nums.add(m[1]);
-  });
-  return nums;
-}
-
-function labelDefs(src) {
-  const defs = new Set();
-  src.split('\n').forEach(l => {
-    const clean = l.replace(/\b([DQ]\d+)\s*[–\-—~]\s*([DQ]\d+)\b/g, ' ');  // 区间不算定义也不算引用
-    let m;
-    const bold = /\*\*([DQ]\d+)/g;                        // **D1 …** 粗体标签（定义位）
-    while ((m = bold.exec(clean))) defs.add(m[1]);
-    const quote = /「([DQ]\d+)/g;                         // 「Q7 补测排期」角引标签（定义位）
-    while ((m = quote.exec(clean))) defs.add(m[1]);
-    const head = /^#{2,3}\s+.*?\b([DQ]\d+)\b/g;           // 标题内含（### 3. Q1「…」）
-    while ((m = head.exec(clean))) defs.add(m[1]);
-  });
-  return defs;
-}
-
-function ticketTarget(file, n) {
-  const dir = path.dirname(file);
-  const issuesDir = path.basename(file) === 'map.md' ? path.join(dir, 'issues') : dir;
-  try {
-    const hit = fs.readdirSync(issuesDir).find(f => new RegExp('^' + n + '-.*\\.md$').test(f));
-    return hit ? path.join(issuesDir, hit) : null;
-  } catch (e) { return null; }
-}
-
-function checkAnchorRefs(file, src, idx, out) {
-  const seen = new Set();
-  const rel = p => path.relative(ROOT, p);
-  // 「§N（该节已删）」式标注＝有意的历史叙述（说明节已不存在），不当悬空报
-  const annotated = (line, endIdx) => /^\s*（[^）]{0,16}(?:已删|已移除|现已删除)/.test(line.slice(endIdx));
-  const report = (n, target, lineNo) => {
-    const key = lineNo + '|' + n + '|' + (target || 'self');
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push(['FAIL', '悬空引用', rel(file) + ' 第 ' + lineNo + ' 行引用 §' + n +
-      '，但 ' + (target ? rel(target) : '本文件') + ' 无此编号标题']);
-  };
-  const hasNum = (target, n) => (target ? idx.get(target) : idx.get(file)).has(n);
-  src.split('\n').forEach((line, i) => {
-    const lineNo = i + 1;
-    const handled = new Set();                            // 本行已由 ①/② 判过的节号，③ 跳过
-    // ① 链接文本内的 §N，与紧随链接后的 §N
-    const linkRe = /\[([^\]]*)\]\(([^)]+)\)/g;
-    let m;
-    while ((m = linkRe.exec(line))) {
-      const target = /\.md$/.test(m[2]) ? path.resolve(path.dirname(file), m[2]) : null;
-      if (target && !fs.existsSync(target)) continue;     // 指向 effort 外，不判
-      const inText = m[1].match(/§\s*(\d+)/);
-      if (inText) { handled.add(inText[1]); if (!hasNum(target, inText[1])) report(inText[1], target, lineNo); }
-      const tail = line.slice(m.index + m[0].length);
-      const after = tail.match(/^\s{0,2}§\s*(\d+)/);
-      if (after && target) {
-        handled.add(after[1]);
-        if (!annotated(line, m.index + m[0].length + after.index + after[0].length) &&
-            !hasNum(target, after[1])) report(after[1], target, lineNo);
-      }
-    }
-    // ② 「票 NN §N」无链接形式（NN 与 § 间可隔一个 Answer）→ issues/NN-*.md
-    const tickRe = /票\s*(\d{1,2})\s+(?:Answer\s+)?§\s*(\d+)/g;
-    while ((m = tickRe.exec(line))) {
-      handled.add(m[2]);
-      const target = ticketTarget(file, m[1]);
-      if (target && !annotated(line, m.index + m[0].length) && !hasNum(target, m[2])) report(m[2], target, lineNo);
-    }
-    // ③ 裸 §N：按归属确定度分级判（确定→FAIL，多半→WARN，不明→WARN）
-    // 表格行归属：行首单元格链接到某票（Frontier 表的写法），行内裸 §N 归该票
-    const rowTick = (line.match(/^\s*\|?\s*\[[^\]]*\]\((?:issues\/)?(\d{1,2})-[^)]+\.md\)/) || [])[1];
-    const bareRe = /§\s*(\d+)/g;
-    while ((m = bareRe.exec(line))) {
-      if (handled.has(m[1])) continue;                    // 本行已由 ①/② 判过同一节号
-      const pre = line.slice(0, m.index);
-      if (/\)\s*$/.test(pre)) continue;                   // 紧随链接后，① 已判
-      if (/票\s*\d{1,2}\s*$/.test(pre)) continue;         // 「票 NN §N」，② 已判
-      if (annotated(line, m.index + m[0].length)) continue; // 「§N（该节已删）」历史叙述，豁免
-      // 归属一（确定）：前面紧跟票号（可隔一个 Answer）——「01 §2」「01 Answer §2」
-      const adj = pre.match(/(?:^|[^\w§])(\d{1,2})\s+(?:Answer\s+)?$/);
-      if (adj) {
-        const t = ticketTarget(file, adj[1]);
-        if (t) { if (!hasNum(t, m[1])) report(m[1], t, lineNo); continue; }
-      }
-      // 归属二（确定）：表格行首链接的票
-      if (rowTick) {
-        const t = ticketTarget(file, rowTick);
-        if (t) { if (!hasNum(t, m[1])) report(m[1], t, lineNo); continue; }
-      }
-      if (hasNum(null, m[1])) continue;                   // 同文件有这节，正常
-      // 归属三（多半）：句内最近的「票 NN」或指向票文件的链接（前 60 字内）
-      const near = pre.slice(-60);
-      const lb = near.match(/票\s*(\d{1,2})(?!\d)/g);
-      const lnk = near.match(/\]\((?:issues\/)?(\d{1,2})-[^)]+\.md\)/g);
-      let t2 = null;
-      if (lb && lb.length) t2 = ticketTarget(file, lb[lb.length - 1].replace(/\D/g, ''));
-      else if (lnk && lnk.length) t2 = ticketTarget(file, lnk[lnk.length - 1].replace(/\D/g, ''));
-      if (t2) {
-        if (!hasNum(t2, m[1])) out.push(['WARN', '引用或悬空', rel(file) + ' 第 ' + lineNo + ' 行引用 §' + m[1] +
-          '，' + rel(t2) + ' 无此编号标题（按句内最近的票号归属，请人工确认）']);
-        continue;
-      }
-      out.push(['WARN', '引用目标不明', rel(file) + ' 第 ' + lineNo + ' 行引用 §' + m[1] +
-        '：本文件无此节、句内也未标明目标票——若指别票请补「票 NN」或链接']);
-    }
-  });
-}
-
-function checkLabelRefs(file, src, defsAll, out) {
-  const rel = p => path.relative(ROOT, p);
-  src.split('\n').forEach((line, i) => {
-    const clean = line.replace(/\b([DQ]\d+)\s*[–\-—~]\s*([DQ]\d+)\b/g, ' ');  // 区间不当引用
-    const re = /\b([DQ]\d+)\b/g;
-    let m;
-    while ((m = re.exec(clean))) {
-      if (defsAll.has(m[1])) continue;
-      out.push(['FAIL', '悬空标签引用', rel(file) + ' 第 ' + (i + 1) + ' 行引用 ' + m[1] +
-        '，effort 内无定义（粗体标签 **' + m[1] + ' 或标题内含）']);
-    }
-  });
-}
-
 // ── ⑥ __dirname 禁上跳（根级脚本）────────────────────────────
 // 2026-10-19 事故：`_check_docs.js` 的 `ROOT = path.resolve(__dirname,'..')` 在目录提升后
 // 指向 `D:\`，默认检查面塌到 4 个文件还报「全部通过」一整天；`_probe_lint.js` 十月份
 // 出过同族 bug（ROOT 多一层，裸跑从来查不到文件）。根级脚本没有上行的理由——
 // 它一跳，定位就跟着文件位置漂移，而这类失效是静默的（退出码照样是 0）。
-// 检查面显式收窄为**根级 `_*.js`＋三个探针**：`.scratch` 里的一次性脚本住得深，
+// 检查面显式收窄为**根级 `_*.js`**：`.scratch` 里的一次性脚本住得深，
 // 上跳是合法定位方式，不判（宁漏毋滥）。
 const UP_RE = /__dirname\s*(?:,\s*['"]\.\.['"]|\+\s*['"]\/\.\.)/;
 function rootJsFiles() {
@@ -346,10 +186,7 @@ function rootJsFiles() {
   try {
     fs.readdirSync(ROOT).forEach(n => { if (/^_.*\.js$/.test(n)) out.push(path.join(ROOT, n)); });
   } catch (e) { /* 目录读不到就跳过 */ }
-  ['预览预算-1挂采集器.js', '预览预算-2出报告.js', '真实分布-3出分布表.js'].forEach(n => {
-    const p = path.join(LEDGER, n);
-    if (fs.existsSync(p)) out.push(p);
-  });
+  // 2026-10-20 账本 effort 清理：原追加的三个探针脚本（预览预算-1/2、真实分布-3）已随删
   return out;
 }
 function checkDirnameUp(out) {
@@ -507,33 +344,6 @@ if (jsProducers.length && jsConsumers.length) {
   }
 }
 
-// 引用检查是跨文件的：扫整个 effort 目录，与传入的文件清单无关
-console.log('--- 引用锚点与标签（整 effort 扫描）---');
-if (!EFFORT_MD.length) {
-  console.log('· 跳过（effort 目录不存在或无 .md）');
-} else {
-  const idx = new Map();
-  const defsAll = new Set();
-  const srcs = new Map();
-  EFFORT_MD.forEach(f => {
-    const s = fs.readFileSync(f, 'utf8');
-    srcs.set(f, s);
-    idx.set(f, headingNums(s));
-    labelDefs(s).forEach(l => defsAll.add(l));
-  });
-  const out = [];
-  EFFORT_MD.forEach(f => {
-    checkAnchorRefs(f, srcs.get(f), idx, out);
-    checkLabelRefs(f, srcs.get(f), defsAll, out);
-  });
-  if (!out.length) {
-    console.log('✓ ' + EFFORT_MD.length + ' 个 .md：§N 锚点与 D/Q 标签引用无悬空');
-  } else {
-    out.forEach(r => console.log('  ' + r[0] + ' ' + r[1] + '（' + r[2] + '）'));
-    totalFail += out.filter(r => r[0] === 'FAIL').length;
-  }
-}
-
 // ⑥ __dirname 禁上跳（根级脚本；工作区级检查，与传入文件清单无关）
 console.log('--- __dirname 禁上跳（根级脚本）---');
 {
@@ -560,10 +370,11 @@ console.log('--- 文档引用路径存在性 ---');
   }
 }
 
-// 下限断言（S1.2）：默认跑法下 effort 还在、扫描面却塌缩 ⇒ 检查器定位坏了，不是文档变少。
+// 下限断言（S1.2）：默认跑法下扫描面塌缩 ⇒ 检查器定位坏了，不是文档变少。
 // 2026-10-19 事故：_check_docs.js 默认集塌到 4 个文件仍报「全部通过」一整天。
-if (!argv.length && fs.existsSync(LEDGER) && files.length < 10) {
-  console.log('✗ 检查面塌缩：默认集只扫到 ' + files.length + ' 个文件（effort 目录存在，理应远多于此）——先查检查器自己的定位（__dirname 上跳类 bug）。');
+// 2026-10-20 起默认集只有 CONTEXT.md 一件 ⇒ 为 0 只可能是 ROOT 定位坏（连它都没扫到）。
+if (!argv.length && files.length === 0) {
+  console.log('✗ 检查面塌缩：默认集 0 个文件（应恒含 CONTEXT.md）——先查检查器自己的定位（__dirname 上跳类 bug）。');
   process.exit(1);
 }
 

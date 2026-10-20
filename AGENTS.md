@@ -9,7 +9,7 @@ Internal Beyond **手机端（PWA）**工作空间 —— 上游 `Sui-IB/Interna
 
 ### Issue tracker
 
-Issues live as local markdown files under `.scratch/<feature>/issues/NN-*.md`（**已存在**：`.scratch/ib-body-defects/`、`.scratch/ib-ctx-ledger/` 等）. See `docs/agents/issue-tracker.md`.
+Issues live as local markdown files under `.scratch/<feature>/issues/NN-*.md`（**已存在**：`.scratch/ib-body-defects/`、`.scratch/ib-ibm-parity/` 等）. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -38,7 +38,7 @@ Single-context：根 `CONTEXT.md`（术语表，只放词汇、不放实现细�
 5. **优先用已有能力。** 动手前先查 `_工具与产物清单.md` 与既有 `_*.js`；不要重写项目里已有的解析、同步、自检工具。要引入外部库先确认是否真能降低复杂度。
 6. **假定「做不到」前先核实。** 不要假设浏览器 / 现有函数没有某能力——先 grep 源码与文档（单文件用 `grep -n` + 抽段，勿整读）。
 7. **架构决定按长期形态做。** 不接受「先这样、以后再换」的临时方案；若必须临时，写进 ADR 并写明退出条件。
-8. **捕获点必须配行为桩测。** 凡给组包路径加捕获点（埋点），同一个补丁要附带一个行为桩测：把线上真实的上游变换（合并、截断、切分等）提取出来跑在模拟场景上，证明捕获点取的数组和时序是对的。模块桩测只覆盖模块自身行为，管不到接线测错对象——2026-10-19 的教训：群聊历史条数在「同 role 合并」之后取，模块测试全绿，真机才发现条数恒少算。模板见 `.scratch/ib-ctx-ledger/_ctx_ledger_test.js` 的 M 组。
+8. **捕获点必须配行为桩测。** 凡给组包路径加捕获点（埋点），同一个补丁要附带一个行为桩测：把线上真实的上游变换（合并、截断、切分等）提取出来跑在模拟场景上，证明捕获点取的数组和时序是对的。模块桩测只覆盖模块自身行为，管不到接线测错对象——2026-10-19 的教训：群聊历史条数在「同 role 合并」之后取，模块测试全绿，真机才发现条数恒少算。模板见 `_archive/ctx-ledger-v351p/toolchain/_ctx_ledger_test.js` 的 M 组（2026-10-20 随账本 effort 归档）。
 
 ### 交付前（与 Code style 配套）
 
