@@ -79,7 +79,7 @@ C2L('_deploy_ctx_ledger.js', '旧部署脚本（已退役；镜像现行路线�
 // 隐藏条目（集中列于末尾）
 F('.githooks/', '预提交守栏（core.hooksPath 指向处）');
 C1L('pre-commit', '6 活测试 + _check_docs + _probe_lint；任一失败即阻止提交');
-F('.scratch/', '本地 effort（.gitignore 不入库）：10 个 effort 目录 + 4 张 10-17 真机截图');
+F('.scratch/', '本地 effort（.gitignore 不入库）：11 个 effort 目录 + 4 张 10-17 真机截图');
 F('.workbuddy/', '会话记忆（memory/）＋项目技能 ib-upstream-issue-publish（.gitignore 不入库，不展开）');
 F('.obsidian/', 'Obsidian 配置（.gitignore 不入库）');
 F('.git/', '仓库元数据（不展开）');
