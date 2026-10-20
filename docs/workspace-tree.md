@@ -67,7 +67,7 @@ D:\IB-Workspace-Mobile\
 │       └── _deploy_ctx_ledger.js       # 旧部署脚本（已退役；镜像现行路线＝_sync_mirror.js）
 ├── .githooks/                          # 预提交守栏（core.hooksPath 指向处）
 │   └── pre-commit                      # 6 活测试 + _check_docs + _probe_lint；任一失败即阻止提交
-├── .scratch/                           # 本地 effort（.gitignore 不入库）：10 个 effort 目录 + 4 张 10-17 真机截图
+├── .scratch/                           # 本地 effort（.gitignore 不入库）：11 个 effort 目录 + 4 张 10-17 真机截图
 ├── .workbuddy/                         # 会话记忆（memory/）＋项目技能 ib-upstream-issue-publish（.gitignore 不入库，不展开）
 ├── .obsidian/                          # Obsidian 配置（.gitignore 不入库）
 ├── .git/                               # 仓库元数据（不展开）
