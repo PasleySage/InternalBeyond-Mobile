@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IB upstream 变更一览 · V3.1.1 → V3.1.3（账本已被上游采纳——同步决策）</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --border:#e3e6ea; --border-soft:#eef0f3;
+    --text:#1a1d21; --muted:#616b76; --faint:#8b949e;
+    --accent:#0b62d6; --accent-soft:#e8f0fd;
+    --new:#b26a00; --new-bg:#fff3e0; --new-border:#f2d5a8;
+    --done:#1a7f37; --done-bg:#e9f6ec; --done-border:#bfe3c8;
+    --overlap:#a1327a; --overlap-bg:#fdeef7; --overlap-border:#f0c7e2;
+    --mid:#3d5163; --mid-bg:#eef1f4; --mid-border:#dfe3e8;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:36px 20px 64px;
+    background:var(--bg); color:var(--text);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:26px}
+  h1{margin:0 0 8px; font-size:29px; letter-spacing:-.4px; font-weight:700}
+  .sub{margin:0; color:var(--muted); font-size:14px}
+  .sub a{color:var(--accent); text-decoration:none}
+  .sub a:hover{text-decoration:underline}
+  .sub b{color:var(--text)}
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 30px}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .stat .n{display:block; font-size:26px; font-weight:700; letter-spacing:-.5px; line-height:1.15}
+  .stat .l{display:block; margin-top:4px; font-size:12.5px; color:var(--muted)}
+  .stat.hl .n{color:var(--accent)}
+  .stat.ov .n{color:var(--overlap)}
+  .sec{background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .sec-head{display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border-soft); background:linear-gradient(180deg,#fcfcfd,#f8f9fb)}
+  .sec-head .ico{font-size:17px; line-height:1}
+  .sec-head .ttl{font-weight:650; font-size:15.5px; letter-spacing:-.1px}
+  .sec-head .cnt{margin-left:auto; font-size:12px; color:var(--muted); background:#eff1f4; border:1px solid var(--border); border-radius:20px; padding:2px 10px; font-variant-numeric:tabular-nums}
+  ul.items{list-style:none; margin:0; padding:0}
+  ul.items li{display:flex; align-items:flex-start; gap:14px; padding:13px 20px; border-bottom:1px solid var(--border-soft)}
+  ul.items li:last-child{border-bottom:none}
+  ul.items li:hover{background:#fafbfc}
+  .dot{flex:0 0 auto; width:6px; height:6px; border-radius:50%; margin-top:9px; background:#c3c9d1}
+  .dot.new{background:var(--new)}
+  .dot.ov{background:var(--overlap)}
+  .dot.done{background:var(--done)}
+  .body{flex:1 1 auto; min-width:0}
+  .t{font-weight:600; font-size:14.5px; letter-spacing:-.1px}
+  .d{margin-top:3px; font-size:13.2px; color:var(--muted); line-height:1.55}
+  .d b{color:var(--text)}
+  .meta{flex:0 0 auto; display:flex; align-items:center; gap:7px; padding-top:2px; white-space:nowrap}
+  code{font-family:var(--mono); font-size:11.8px; color:#424a53; background:#f2f4f7; border:1px solid var(--border); border-radius:6px; padding:2px 7px}
+  .badge{font-size:11.5px; font-weight:600; border-radius:6px; padding:2px 8px; border:1px solid transparent}
+  .badge.new{color:var(--new); background:var(--new-bg); border-color:var(--new-border)}
+  .badge.done{color:var(--done); background:var(--done-bg); border-color:var(--done-border)}
+  .badge.ov{color:var(--overlap); background:var(--overlap-bg); border-color:var(--overlap-border)}
+  .badge.mid{color:var(--mid); background:var(--mid-bg); border-color:var(--mid-border)}
+  .alert{background:#fff8f0; border:1px solid #f2d5a8; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .alert h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#b26a00}
+  .alert p{margin:0 0 8px; font-size:13.4px; color:#5c4a2e; line-height:1.6}
+  .alert p:last-child{margin-bottom:0}
+  .alert code{background:#fff3e0; border-color:#f2d5a8}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px}
+  .chip{font-size:11.5px; font-weight:600; border-radius:999px; padding:3px 10px; background:#fdeef7; border:1px solid #f0c7e2; color:#a1327a}
+  .chip.warn{background:#fff3e0; border-color:#f2d5a8; color:#b26a00}
+  .plan{background:#f7faff; border:1px solid #d6e4f7; border-radius:14px; padding:18px 22px; margin-bottom:16px}
+  .plan h3{margin:0 0 10px; font-size:15px; font-weight:650; color:#0b62d6}
+  .plan ol{margin:0; padding-left:20px; font-size:13.4px; color:#3d5163; line-height:1.75}
+  .plan li{margin-bottom:5px}
+  .plan code{background:#eaf1fb; border-color:#d6e4f7}
+  footer{margin-top:26px; padding-top:16px; border-top:1px solid var(--border); color:var(--faint); font-size:12.3px; line-height:1.7}
+  @media (max-width:760px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    ul.items li{flex-wrap:wrap}
+    .meta{width:100%; padding-top:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>InternalBeyond Mobile upstream 变更一览</h1>
+    <p class="sub">
+      <a href="https://github.com/Sui-IB/InternalBeyond-Mobile" target="_blank" rel="noopener">github.com/Sui-IB/InternalBeyond-Mobile</a>
+      &nbsp;·&nbsp; 上游版本 <b>V3.1.1 → V3.1.3</b>（应用内 v351-p → <b>v360-p</b>）
+      &nbsp;·&nbsp; 提交区间 <b>2026-10-18 → 2026-10-20</b>（<code>7b425c6</code> → <code>4649aaa7</code>，2 个提交）
+      &nbsp;·&nbsp; 本一览用途：<b>账本重叠判定与同步决策</b> · 形态 A（镜像 main 仍带本地账本补丁）
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="n">2</span><span class="l">commits（V3.1.2 一枚装进上游 v352→v359 八个内部版；V3.1.3 只是发送键＋版本号小修）</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">变更文件（只动 index.html；compare files[] 1 条，未触 300 条上限）</span></div>
+    <div class="stat"><span class="n">+480 −101</span><span class="l">index.html（74 hunk，4,899,525 → 4,949,808 B，blob 5d9b856c → d4ed84c）</span></div>
+    <div class="stat ov"><span class="n">1 大项</span><span class="l">与我们的重叠处＝整个上下文账本（同名模块＋同注册键＋同消息字段＋同接口）</span></div>
+  </div>
+
+  <div class="alert">
+    <h3>合并提示：上游把「上下文账本」整个采纳了（v353-p 起）——与本地补丁全面重叠，必须二选一</h3>
+    <p>区间两枚提交只动 <code>index.html</code>。<code>cc7b9302</code>（V3.1.2）一枚装进上游自己的 <b>v352-p→v359-p 八个内部版本</b>；<code>4649aaa7</code>（V3.1.3）只是发送键换纸飞机＋版本号＋一处 CSS。最大的一件事：<b>作者把我们的「上下文账本」提案（issue #14，已关闭）整个实现了</b>——diff 注释里 <code>v353-p</code>／<code>v355-p</code>／<code>v356-p</code> 三处标记就是采纳痕迹。</p>
+    <p><b>重叠判定（形态 A）：同一功能、同名同键。</b>上游新版自带 <code>&lt;script id="ib-ctx-ledger"&gt;</code> 模块本体（11,714 B）＋三处调用点（genReply 的 <code>dm.*</code> 14 块、群聊 <code>grp.*</code> 22 块、主动开口 <code>hb.*</code> 16 块）＋消息面板行＋水水直答＋备份排除。接口 <code>begin/noteSave/readLast/reportM/rowHtml/detailHtml</code>、注册键 <code>apiSettings.ibCtxLedger</code>、消息字段 <code>m.ctxSnap</code>、500 轮上限、<code>N_TURNS=6</code> <b>与我们逐项相同</b>。我方本地的 80 个 hunk（模块 243 行＋调用点＋面板行＋CSS＋水水钩子＋测试钩子）落在同一批函数、同一批锚点上——不是「撞车」，是<b>整个功能被上游重做了一遍</b>。</p>
+    <p><b>硬不兼容（关键）：</b>上游调用点会用句柄的 <code>_ctxT.tk()</code>／<code>tk2()</code>／<code>img()</code>（附言下标测量、图片张数）——我们的 <code>begin()</code> 句柄<b>没有这三个方法</b>。若保留我们的模块去配上上游的调用点，<code>_ctxT.tk</code> 一调就 TypeError，被 genReply 的 catch 吞成「连接中断」——<b>回复直接发不出去</b>。所以不存在「模块留我们、埋点用上游」的混搭，必须整体二选一。推荐：<b>用上游版</b>（它就是作者实现的同一功能，后续改进都走上游）。</p>
+    <p><b>我方四项本地裁定与上游实现的差异（决策点）：</b>① D17.1「主动消息不渲染面板行」——上游改为渲染；且 v360-p 起主动消息本身有 usage 与 Token 行（我们当时「独行突兀」的前提已消失）；② D18.1「群聊条数测合并前」——上游用 <code>addHist(messages, mapped.length)</code> 第二参数实现，同结果、不同机制；③ 用户视图：面板行文案（「N 组 · 占比最高 X」→「X最多 · Y%」）、展开形态（四格表→六行列表）、组名（前序历史→对话历史等三处）、水水触发词（新增「输入构成」）；④ 我方三条测试钩子（上下文空态A/B/示例）上游没有，且上游模块不导出 <code>EMPTY_A/EMPTY_B</code>。</p>
+    <p>口径：<code>DB_VER</code> <b>16 未变</b> ⇒ 无库升级；<code>ib-sw.js</code> blob <code>6f48fcbb</code> <b>未变</b> ⇒ 不需重新缓存；本地已落的账本数据（<code>m.ctxSnap</code>＋registry）上游模块<b>直接可读</b>（形状差异良性，渲染只取共有字段）；无任何测试脚本断言账本代码内容 ⇒ 换基不打断回归。本一览只读预览，未对任何仓库做写操作。</p>
+    <div class="chips">
+      <span class="chip">重叠 1 大项：整个账本（同名同键同字段）</span>
+      <span class="chip">接口逐项相同：begin/noteSave/readLast/reportM/rowHtml/detailHtml</span>
+      <span class="chip warn">硬不兼容：上游 tk/tk2/img 三方法我方句柄没有</span>
+      <span class="chip warn">混搭会 TypeError 打断回复——必须整体二选一</span>
+      <span class="chip">推荐用上游版（作者实现 · issue #14 已关闭）</span>
+      <span class="chip">D17.1 前提消失（v360-p 主动消息有 Token 行）</span>
+      <span class="chip">D18.1 上游用 cnt 参数等价实现</span>
+      <span class="chip">老数据兼容：ctxSnap/registry 直接可读</span>
+      <span class="chip">DB_VER 16 未变 · 无库升级</span>
+      <span class="chip">ib-sw.js 未变（6f48fcbb）</span>
+      <span class="chip">测试零断言账本 ⇒ 回归不受影响</span>
+      <span class="chip warn">只读预览 · 未 PATCH ref / 未 push</span>
+    </div>
+  </div>
+
+  <div class="plan">
+    <h3>合并方案（换基版 · 推荐顺序）</h3>
+    <ol>
+      <li><b>换基（local-work）</b>：<code>index.html</code> 整体替换为上游 v360-p 原文（<code>curl</code> 落盘后核 blob <code>d4ed84c</code>、4,949,808 B、<code>IB_VER=v360-p</code>）——本地账本四件套（模块 243 行＋调用点＋面板行＋CSS＋水水钩子＋三条测试钩子）随替换一并撤下，上游版接管同一功能。</li>
+      <li><b>本地其余文件不动</b>：<code>tools/</code>、测试、<code>docs/</code>、清单原样；已核 <code>_test_*.js</code>／<code>_check_*.js</code> 零账本断言（只查结构与文档）⇒ 回归不受影响，换后照跑一遍全量＋预提交守栏。</li>
+      <li><b>历史归档三件</b>（Phase 2 做，先不动）：<code>_deploy_ctx_ledger.js</code>、<code>自用补丁-归档/index.html</code>、<code>.scratch</code> 里账本专属产物（<code>_pr15.diff</code>／<code>_pr16.diff</code> 等）标注「已被上游 v353-p 采纳」转存档，不删。</li>
+      <li><b>镜像 main 同步</b>（Phase 2，需单独授权）：先打 tag 归档当前 <code>e95c5937</code>（建议 <code>archive/ib-selfpatch-ctx-ledger</code>），再 PATCH <code>refs/heads/main</code> 到 <code>4649aaa7</code>（非快进 ⇒ 需 force，归档在先）；等 Pages 重建后复核：fork main＝上游同一提交、tree 相同、线上 <code>index.html</code> 与上游逐字节一致、应用内 <code>v360-p</code>。真机走 <code>?v=20</code>。</li>
+      <li><b>用户视图变化五条</b>（同步后自然生效）：① 面板行「上下文 · N 组 · 占比最高 X」→「输入构成 · X最多 · Y%」（带百分比）；② 展开从四格表变六行列表；③ 组名三处（前序历史→对话历史、功能与规则→功能说明、动态资料→实时资料）；④ 主动消息连发第一条也会带输入构成行（v360-p 起主动消息有 usage 与 Token 行）；⑤ 水水新增「输入构成」问法与常驻快捷指令（旧叫法「上下文」仍认）。</li>
+      <li><b>决策点（待你拍板，未确认前不执行）</b>：a. 五条视图变化是否照单接受（建议接受＝与上游同源）；b. D17.1 是否在新版上重新实施（建议不——前提已消失）；c. PR #15／#16 去留（建议关闭或转参考存档，你定）；d. 三条测试钩子要不要按上游模块重搭（可选，上游模块不导出 <code>EMPTY_A/EMPTY_B</code>）。</li>
+      <li><b>数据与副作用</b>：<code>DB_VER</code> 16 未变 ⇒ 无库升级；<code>ib-sw.js</code> blob <code>6f48fcbb</code> 未变 ⇒ 不需重新缓存；本地已落的 <code>ctxSnap</code>＋registry 上游模块直接可读；备份导出仍自动剔除账本数据（上游同设计）。</li>
+      <li><b>复测清单（同步后按现象验收）</b>：安装形态＋浏览器标签各开 3~5 次；断网冷启；1对1／群聊／主动消息各来一轮，看面板行与展开；水水问「输入构成」与「上下文」；开联网搜索发一轮看气泡实时卡与落库后的搜索卡；分区玻璃七组折叠与共读间／观影室外观；圆钮三态与纸飞机发送键；升级前有账本的老消息面板行兼容。</li>
+    </ol>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🧾</span><span class="ttl">上下文账本「输入构成」——作者采纳版</span><span class="cnt">6 项</span></div>
+    <ul class="items">
+      <li><span class="dot ov"></span><div class="body"><div class="t">消息面板新增「输入构成」行</div><div class="d">有用量记录的回复，长按面板多一行「输入构成」：折起写占比最高的部分＋百分比，点开就地展开六部分（字符数／token／占比）。群聊每位发言成员各记一轮，主动消息记在连发第一条；停止／断线保留的回复与工具续答那条没有这一行。</div></div><div class="meta"><span class="badge ov">与我们重叠</span><code>_ctxLedgerM.rowHtml</code></div></li>
+      <li><span class="dot ov"></span><div class="body"><div class="t">三层埋点：一对一 14 块＋群聊 22 块＋主动开口 16 块</div><div class="d">genReply／群聊／主动开口三条组装路径各挂一轮次句柄，system 两块、历史窗口、摘要、附言逐块计量；统一入口 <code>_ctxBeginM()</code>，模块缺席时全 no-op 兜底、组包不受影响。</div></div><div class="meta"><span class="badge ov">与我们重叠</span><code>_ctxBeginM</code></div></li>
+      <li><span class="dot ov"></span><div class="body"><div class="t">模块本体 _ctxLedgerM 随版自带</div><div class="d">六组聚合、快照 <code>v:1</code> 形状、500 轮注册表；句柄带 <code>tk</code>／<code>tk2</code>（附言下标测量）与 <code>img</code>（图片张数）；<code>lenP</code> 代理对感知、不整串展开（几十万字历史也不分配大数组）。</div></div><div class="meta"><span class="badge ov">与我们重叠</span><code>ib-ctx-ledger</code></div></li>
+      <li><span class="dot ov"></span><div class="body"><div class="t">水水直答「输入构成」＋常驻快捷指令</div><div class="d">问「输入构成」或旧叫法「上下文（账本｜日志）」，本地直出最近 6 轮 Markdown 报告（不走 API）；水水常驻指令行新增「输入构成」，能力注册表同步补这一条。</div></div><div class="meta"><span class="badge ov">与我们重叠</span><code>_ctxLedgerM.readLast</code></div></li>
+      <li><span class="dot ov"></span><div class="body"><div class="t">快照与登记表不进备份</div><div class="d">导出备份剔除消息的 <code>ctxSnap</code> 与 <code>apiSettings.ibCtxLedger</code>——「只记大小、不保存内容」的设计闭环，与我方实现意图相同。</div></div><div class="meta"><span class="badge ov">与我们重叠</span><code>delete v.ctxSnap</code></div></li>
+      <li><span class="dot ov"></span><div class="body"><div class="t">群聊条数测合并前＋用量真值回填</div><div class="d"><code>addHist(messages, mapped.length)</code> 以合并同角色前的条数为准（＝我方 D18.1 裁定的等价物，不同机制）；轮头「总」取服务商 <code>usage.i</code>＋缓存读 <code>cr</code>＋缓存写 <code>cw</code>。</div></div><div class="meta"><span class="badge mid">同向不同实现</span><code>addHist</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🔍</span><span class="ttl">原生联网搜索记录</span><span class="cnt">4 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">流式搜索回执解析三家</div><div class="d">边流边解析：Anthropic 服务器工具事件、Gemini grounding、OpenAI annotations；查询词与结果分别去重，结果上限 20 条。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_srchMakeM</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">气泡内「正在联网搜索…」实时卡</div><div class="d">搜索期间气泡里先出一张待定卡，拿到查询词后改写「正在联网搜索 · 词」，出结果定稿「已联网搜索 · N 条结果」。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_srchLiveM</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">搜索卡重做</div><div class="d">标签改写结果总数（原来写的是展示上限）；每条下面带网站与页面时间；失败的写原因（「这次搜索没有成功（code）」）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>searchCard</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">wsSearches 字段入库</div><div class="d">与电脑端同名字段；自动续写的每一轮也可能搜，轮间合并；停止／断线保留的回复同样记。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_srchKeepM</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🪟</span><span class="ttl">分区玻璃分七组</span><span class="cnt">1 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">Zone Glass 七组可折叠</div><div class="d">通用／导航抽屉／聊天与通话／桌面／功能页／共读间与观影室／地图；点组名展开收起，组头写「N 区 · 已设 K」，空组隐藏；展开状态本次打开有效，改色整卡重画照旧展开；原位重画改为认组身（原来只认卡身，行在组里会重复追加）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_UV_GZ_GRP</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">📖</span><span class="ttl">共读间与观影室外观</span><span class="cnt">3 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">房间背景跟随站点壁纸</div><div class="d">APP 根挂 <code>.ibap-room</code>，背景＝网站当前背景图，切主题、换图当场跟上；「减少动效」下背景是实色、不模糊。</div></div><div class="meta"><span class="badge new">本次同步</span><code>ibap-room</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">分区玻璃新组「共读间与观影室」</div><div class="d">三行：<code>room</code> 背景玻璃、<code>roomBar</code> 栏与卡片（顶栏／纸条区／衔接条／书卡与片卡／输入框）、文字行 <code>tz.room</code>（设了就压过卡片／小标／输入框／按钮那几行）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>room/roomBar</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">新设置项 ui.roomAlpha／ui.roomBlur</div><div class="d">背景玻璃不透明度 0.1–1（默认 100%）、背景模糊 0–30px（默认 14px）；随主题分开存，「恢复默认」连带清这两键。</div></div><div class="meta"><span class="badge new">本次同步</span><code>ui.roomAlpha</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">⌨️</span><span class="ttl">输入区圆钮与输入框</span><span class="cnt">2 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">圆钮三态 mic／send／stop</div><div class="d">最右圆钮随状态切换：输入框空着是语音键（按住说话、松开发送、上滑取消），打了字变发送，TA 回复中变停止；MutationObserver＋value setter 钩子驱动，CSS 按 <code>data-mode</code> 显隐。</div></div><div class="meta"><span class="badge new">本次同步</span><code>_cvBtnModeM</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">输入框自适应修订</div><div class="d">autoGrow 补上边框宽度补偿，超过 110px 才出滚动条（原来长文本被裁）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>autoGrow</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🖌</span><span class="ttl">视觉小项</span><span class="cnt">4 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">记忆图标换「灯泡」</div><div class="d">导航抽屉与 Desk 侧栏两处 Memory 图标换成倾斜灯泡＋星星。</div></div><div class="meta"><span class="badge new">本次同步</span><code>memory 图标</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">信封火漆印重做</div><div class="d">蜡封改 SVG 浮雕光照（漫反射＋高光＋投影三滤镜）；v358-p 起改变量驱动（<code>--wx-lt</code>／<code>--wx</code>／<code>--wx-dk</code>），只换底色、光照与形状不动。</div></div><div class="meta"><span class="badge new">本次同步</span><code>--wx-*</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">发送键换纸飞机</div><div class="d">v360-p：发送键图标改纸飞机并补 <code>aria-label</code>；send 态不再填强调色底（改文字色、svg 18px 细线）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>cv-send</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">语音条双语原文键「文」→心形</div><div class="d">提示词与界面同步：双语原文查看键改心形；语音条配色（<code>vbu</code>／<code>vbc</code>）连带加原文键描边与选中底。</div></div><div class="meta"><span class="badge new">本次同步</span><code>vbc</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">🔧</span><span class="ttl">其他</span><span class="cnt">2 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">记忆卡片 meta 收敛</div><div class="d">详情 meta 行去掉「激活 N 次」（展开区仍可查看激活次数）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>memd-meta</code></div></li>
+      <li><span class="dot new"></span><div class="body"><div class="t">说明书与水水知识同步</div><div class="d">输入构成六部分说明、分区玻璃七组、共读间／观影室外观、语音键三态、表情键入口、收藏夹改版等多处 GUIDE 文案更新。</div></div><div class="meta"><span class="badge new">本次同步</span><code>GUIDE</code></div></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="ico">📦</span><span class="ttl">文档与版本</span><span class="cnt">1 项</span></div>
+    <ul class="items">
+      <li><span class="dot new"></span><div class="body"><div class="t">应用内版本 v351-p → v360-p</div><div class="d">版本日期 <code>2026-10-14</code> → <code>2026-10-19</code>；上游自己的补丁号从 v352-p 排到 v360-p（diff 注释可见九连发）。</div></div><div class="meta"><span class="badge new">本次同步</span><code>IB_VER</code></div></li>
+    </ul>
+  </section>
+
+  <footer>
+    数据来源：Compare API <code>repos/Sui-IB/InternalBeyond-Mobile/compare/7b425c6...4649aaa7</code>（2 commits／无 merge；files[] 仅 1 条、未触 300 条上限；权威行数走提交级 stats 累加 +480 −101，其中 <code>index.html</code> +478 −99，差异为 GitHub 两种口径的正常出入）。<code>index.html</code> 4,899,525 → 4,949,808 字节、blob <code>5d9b856c</code> → <code>d4ed84c</code>（74 hunk）；<code>ib-sw.js</code> blob <code>6f48fcbb</code> 未变；<code>DB_VER</code> 16 未变；<code>IB_VER</code> <code>v351-p</code> → <code>v360-p</code>（<code>2026-10-14</code> → <code>2026-10-19</code>）。重叠判定输入：本地 vs 上游 v351-p 全量 diff（80 hunk 全落账本区：面板行／genReply／群聊／备份排除／hb／CSS／水水钩子／模块 243 行）＋上游 v360-p 账本模块全文（<code>ib-ctx-ledger</code> 11,714 B vs 本地 16,249 B）＋两边 <code>_ctxLedgerM</code> 17／27 处上下文逐项比对＋水水指令区比对（本地「上下文（账本｜日志）」vs 上游「输入构成」＋旧叫法照认）。<br>
+    图例：<span class="badge new">本次同步</span> 上游新增或改动　<span class="badge mid">同向不同实现</span> 看着像但不是同一件事，看清即可、不算冲突　<span class="badge done">建议保留</span> 建议留在我方　<span class="badge ov">与我们重叠</span> 真冲突，合并时必须二选一（本轮 1 大项：整个账本）。<br>
+    生成时间：2026-10-20（<b>本轮为只读预览：未 PATCH ref、未 push、未改任何 PR/issue、未碰本地成品——这是预览，等你确认后再执行同步/合并</b>）
+  </footer>
+
+</div>
+</body>
+</html>

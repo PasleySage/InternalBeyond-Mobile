@@ -378,7 +378,11 @@ function checkDirnameUp(out) {
 //   · 通配符／`{a,b}` 简写／`<占位符>`／命令行／URL／带删除标注的行一律不判（宁可漏报）。
 // 扫描面＝全工作区 .md，排除 .git／node_modules／.scratch（历史 effort）／.obsidian／
 // .workbuddy/memory（append-only 日志）；.workbuddy/skills 是活指令，纳入。
-const SKIP_DIRS_7 = new Set(['.git', 'node_modules', '.scratch', '.obsidian']);
+// `_archive\`＝冻结历史区（退役补丁归档，2026-10-20 建）：其内文档刻意保留旧布局的相对路径
+// （如账本台账指向原 `.scratch\ib-ctx-ledger\` 的 out//issues/），按新区位解析必然悬空。
+// ⑦ 管的是活文档，冻结区整体豁免（与 `.scratch` 同因）；活文档引用 `_archive\...` 仍照查
+// （按引用方所在位置解析，不在豁免内）。
+const SKIP_DIRS_7 = new Set(['.git', 'node_modules', '.scratch', '.obsidian', '_archive']);
 // 与上游逐字节同步的文件（`_sync_mirror.js`／`_win_sync.js` 的覆盖目标）不本地编辑，
 // 其内部路径以上游仓库布局为准 —— 桌面端 README 引用 `DLC/IB-Cinema.js`（上游仓库自身
 // 多一层 `DLC\`）即属此类。显式列出，不静默排除。

@@ -22,17 +22,18 @@ D:\IB-Workspace-Mobile\
 ├─ CONTEXT.md  AGENTS.md        术语表 / 根记忆入口
 ├─ docs\
 │  ├─ adr\  agents\  workspace-readme.md
-│  ├─ briefs\          IB-upstream-V3.1.1变更一览（现行基线；旧版一览已清，git 历史可查）
+│  ├─ briefs\          IB-upstream-V3.1.3变更一览（现行；旧版一览已清，git 历史可查）
 │  ├─ issues\          已外发英文稿存档（带 GitHub 编号：issue #14 / #17、PR #15）
 │  ├─ investigations\  IB白屏-诊断与自救手册
 │  └─ IB-本体缺陷-复核清单.md   两端共用的本体缺陷清单
 ├─ tools\pages\        被测静态页（聊天记录录入器 / 附件选择器实测）
 ├─ data\chat\          聊天记录转换素材（ib-selene-chat_part*.json）
+├─ _archive\           退役补丁历史归档（ctx-ledger-v351p＝已被上游 v353-p 采纳，勿再启用）
 ├─ 自用补丁-归档\       已撤下补丁的恢复源（用户 2026-09-25 定「留档」）
 └─ .scratch\                    本地 effort：spec + issues + 对外稿（不入库）
 ```
 
-**镜像产物的现行路线**：纯上游同步走 `_sync_mirror.js`（以上游 tree 为基准）；上下文账本功能版走 `_deploy_ctx_ledger.js`（从 `.scratch\ib-ctx-ledger\` 的净版／功能版推镜像 main，每次部署前打回滚 tag）。r6/r7 时代的锚点补丁引擎链已于 2026-10-19 深清理移除（功能均已上游化，见 `_工具与产物清单.md` §十七）；电脑端 parity 补丁流水线在 `D:\IB-Workspace-Desktop\_patches\`（引擎＋driver＋测试，自包含）。
+**镜像产物的现行路线**：纯上游同步走 `_sync_mirror.js`（以上游 tree 为基准）。2026-10-20 起上下文账本已被上游 v353-p 采纳（issue #14 关闭、署名），镜像换基 v360-p 与上游**同源**；本地账本补丁整套退役并归档至 `_archive/ctx-ledger-v351p/`（含旧部署脚本 `_deploy_ctx_ledger.js`，勿再启用）。r6/r7 时代的锚点补丁引擎链已于 2026-10-19 深清理移除（功能均已上游化，见 `_工具与产物清单.md` §十七）；电脑端 parity 补丁流水线在 `D:\IB-Workspace-Desktop\_patches\`（引擎＋driver＋测试，自包含）。
 
 ## Code style（编码思路）
 
@@ -87,14 +88,14 @@ node _check_tables.js <稿路径>
 | 回滚镜像 main | `node _rollback_main.js <提交>` |
 | 看镜像是否对齐 | `node _check_sync.js`（⚠️ 镜像已带自用补丁时改为锚点等价核对；sandbox 内跑不动，用 bash 侧 `gh`/`curl`） |
 | 取上游源码快照 | `node _fetch_upstream.js <commit> --expect-sha <前缀>` |
-| 部署账本功能版到镜像 | `node _deploy_ctx_ledger.js <文件> <repo> <vXXX-p> "<用途>"`（每次部署前打回滚 tag；与 `_sync_mirror.js` 互斥） |
-| 恢复归档能力 | 见 `自用补丁-归档\README.md` 与项目记忆 |
+| ~~部署账本功能版到镜像~~ | **已退役（2026-10-20）**：`_deploy_ctx_ledger.js` 已归档至 `_archive/ctx-ledger-v351p/`；账本功能已被上游 v353-p 采纳，镜像走 `_sync_mirror.js` 同源同步，勿再推非官方修改版 |
+| 恢复归档能力 | 见 `自用补丁-归档\README.md`、`_archive\ctx-ledger-v351p\README.md` 与项目记忆 |
 | 脚本 / 产物索引 | **`_工具与产物清单.md`（唯一索引）** |
 | 电脑端操作 | 见 `D:\IB-Workspace-Desktop`（补丁重放、与上游差异、变更一览） |
 
 ## 本线定位
 
-- **手机端**：PWA + Service Worker，可部署 GitHub Pages 镜像。自用补丁（账本三层等）与上游不同源时，复核用**锚点等价核对**（判据＝逐项比补丁台账）。
+- **手机端**：PWA + Service Worker，可部署 GitHub Pages 镜像。截至 2026-10-20 镜像 main 与上游同源（v360-p）；若未来再出自用补丁，与上游不同源时复核用**锚点等价核对**（判据＝逐项比补丁台账）。
 
 ## git 绑定（2026-10-19 拆分）
 

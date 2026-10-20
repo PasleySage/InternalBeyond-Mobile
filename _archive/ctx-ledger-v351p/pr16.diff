@@ -1,0 +1,276 @@
+--- a/index.html
++++ b/index.html
+@@ -8882,7 +8882,7 @@
+   b.innerHTML='<div class="mi-head"><div class="mh-ava mi-ava" id="mi-ava"></div><div class="mi-who"><div class="mi-nm">'+esc(av.name||'')+'</div><div class="mi-rl">'+(m.role==='user'?'你发出的消息':'AI 的回复')+'</div></div></div>'
+     +'<div class="mi-grid">'+rows.map(r=>'<div class="mi-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+'</div>'
+     +'<div class="mi-acts" id="mi-acts"></div>';
+-  if(m.ctxSnap){try{var _cg=b.querySelector('.mi-grid');if(_cg){_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.rowHtml(m.ctxSnap));var _cr0=$('mi-ctx-row');if(_cr0)_cr0.addEventListener('click',function(){var _op=$('mi-ctx-expand'),_rw=$('mi-ctx-row'),_ar=_rw?_rw.querySelector('.ctx-arr'):null;if(_op){_op.classList.remove('open');_op.remove();if(_ar)_ar.classList.remove('on')}else{_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.tableHtml(m.ctxSnap));var _nw=$('mi-ctx-expand');if(_nw)_nw.classList.add('open');if(_ar)_ar.classList.add('on')}})}}catch(e){}}/* 上下文账本：长按面板行（票07；DOM 存在性即开关态，面板重开天然重置折叠）*/
++  if(m.ctxSnap&&!(m.ctxSnap.path==='hb')){try{var _cg=b.querySelector('.mi-grid');if(_cg){_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.rowHtml(m.ctxSnap));var _cr0=$('mi-ctx-row');if(_cr0)_cr0.addEventListener('click',function(){var _op=$('mi-ctx-expand'),_rw=$('mi-ctx-row'),_ar=_rw?_rw.querySelector('.ctx-arr'):null;if(_op){_op.classList.remove('open');_op.remove();if(_ar)_ar.classList.remove('on')}else{_cg.insertAdjacentHTML('beforeend',_ctxLedgerM.tableHtml(m.ctxSnap));var _nw=$('mi-ctx-expand');if(_nw)_nw.classList.add('open');if(_ar)_ar.classList.add('on')}})}}catch(e){}}/* 上下文账本：长按面板行（票07；DOM 存在性即开关态，面板重开天然重置折叠）。D17.1（用户 2026-10-19 真机裁定）：主动开口层 path:'hb' 不渲染面板行——上游不给主动消息挂 usage、面板无 Token 行，账本行单独出现会突兀；数据层照记（ctxSnap 入库＋registry，水水报告可查）。群聊/一对一不变 */
+   setAvaEl($('mi-ava'),av.src,av.name);
+   const acts=$('mi-acts');
+   const mkb=(t,fn,danger)=>{const x=document.createElement('button');x.className='mi-btn'+(danger?' danger':'');x.textContent=t;x.addEventListener('click',()=>{closeSheets();fn()});acts.appendChild(x)};
+@@ -12296,6 +12296,7 @@
+       if(_ac.signal.aborted)break;
+       const selfName=cfgName(cfg);
+       if(!cfg.apiKey){toast(selfName+'：未配置 Key，跳过');continue}
++      var _ctxT=(typeof _ctxLedgerM!=='undefined'&&_ctxLedgerM&&_ctxLedgerM.begin)?_ctxLedgerM.begin():{add:function(){},addHist:function(){},addSummary:function(){},seg:function(){},wrap:function(){},snapshot:function(){return null}};var _ctxSnap=null;/* D17 上下文账本：群聊每位成员一份轮次句柄（入口 guard——账本块缺失时 no-op 句柄兜底，组包不受影响；句柄随调用走，跨成员/跨会话不串话）*/
+       const _tp=buildTypingRow(selfName,_pfAvatar(cfg));
+       const aiEl=_tp.row;
+       box.appendChild(aiEl);box.scrollTop=box.scrollHeight;
+@@ -12331,13 +12332,17 @@
+           if((m.senderName||'')===selfName)return{role:'assistant',content:_wsStubHistoryM(sanitizeGroupReply(m.content,selfName),m.wsResults)};
+           return{role:'user',content:'['+(m.senderName||'AI')+'] '+_wsStubHistoryM((m.content||''),m.wsResults).replace(/<ws_sticker\b[^>]*?name="([^"]*)"[^>]*?\/?>(?:\s*<\/ws_sticker\s*>)?/gi,'（发了表情包「$1」）')};/* v323-p：其他成员发的表情包在历史里改成一句叙述（自己发的标签原样留） */
+         });
++        _ctxT.addHist(mapped.map(function(m){return (m&&m.content)||''}).join('\n\n'),mapped.length,combined.filter(function(m){return m&&m.role==='user'}).length,combined.filter(function(m){return m&&m.role!=='user'}).length,mapped.reduce(function(a,m){return a+((m&&m.images&&m.images.length)||0)},0));/* D18.1 上下文账本：群聊历史窗口——捕获点移到 collapse 之前（D17 原测 messages＝合并后数组；群聊「成员回复→user-role」映射使连续同 role 被并成一条，条数恒少算——真机 Selene 轮 234 字却显 1 条）。n=mapped.length 真实条数（含 roundExtras 本轮先发言成员）；u/a 按源 role（真实用户 vs AI 成员）；img 按 mapped＝所发帧数；文本与合并后逐字节等价（同一 '\n\n' 拼接，已验证的 234 不变）。仍在群摘要注入（下一行）之前*/
+         const messages=collapseSameRoleM(mapped);
+         let _gSumTail9=false;if(gSum){if(messages.length>1)messages[0]=Object.assign({},messages[0],{content:'【对话历史备忘（此为后台参考信息，不要向对方复述或提及此段内容的存在）】\n'+gSum+'\n\n'+String(messages[0].content||'')});else _gSumTail9=true}/* v323-p 33：群聊摘要进窗口第一条吃缓存（同 1对1），只在窗口前移时跟着变；窗口只剩这一条时照旧放附言 */
++        _ctxT.addSummary((gSum&&messages.length>1)?gSum:'');/* D17 上下文账本：群聊滚动摘要（进窗口第一条时单列、快照折叠进 hist；窗口只剩一条时走 grp.tail.gsum 附言）*/
+         if(!messages.length){aiEl.remove();continue}
+         const _gHistHasCall9=history.some(m=>m&&m.role==='user'&&(!!m.callEnd||/^\[(?:语音|视频)通话/.test(String(m.content||''))));
+         let sysContent=cfg.systemPrompt||'';
+         if(cfg.relationship)sysContent=(sysContent?sysContent+'\n':'')+'你和对方的关系是：'+cfg.relationship+'。';
++        _ctxT.add('grp.sys.persona',sysContent);/* D17 上下文账本：成员人设＋关系句（此刻 sysContent 即这两块）*/
+         const otherNames=allNames.filter(n=>n!==selfName);
++        var _ctxR0=sysContent.length;/* D17 上下文账本：【群聊规则】检查点*/
+         sysContent=(sysContent?sysContent+'\n\n':'')
+           +'【群聊规则】你是群聊"'+g.name+'"中的成员"'+selfName+'"。'
+           +(otherNames.length?('群里还有其他AI成员：'+otherNames.join('、')+'，以及'+userDesc+'。'):('群里还有'+userDesc+'。'))
+@@ -12348,36 +12353,69 @@
+           +(g.director?'\n5. 这一轮如果没有你要说的话，只输出 <ws_pass/>（界面不会显示），把话留给其他人；有话说就正常回复，不要带这个标签。':'')
+           +((window._IBCALL&&_IBCALL.active&&_IBCALL.active())?'\n【群通话】这是一场群'+((_IBCALL.vid&&_IBCALL.vid())?'视频':'语音')+'通话：'+userLabel+' 说的话所有成员都能听见'+((_IBCALL.vid&&_IBCALL.vid())?('，'+userLabel+' 的镜头画面按设置间隔提供给识图的成员'):'')+'，你的回复会被逐句朗读。只在轮到你时说一两句，不抢别人的话，不复述别人刚说过的内容。':(_gHistHasCall9?_GCALL_HIST_NOTE.replace('{U}',function(){return userLabel}):''))
+           +((g.notice&&String(g.notice).trim())?('\n\n【群公告】\n'+String(g.notice).trim()):'');/* v323-p：随开打 / 挂断整块起挂 */
++        _ctxT.add('grp.sys.rules',sysContent.slice(_ctxR0));/* D17 上下文账本：【群聊规则】整块（含群公告、群通话说明；检查点差值测量，原拼接行一字不动）*/
++        var _ctxS1=sysContent.length;
+         sysContent+='\n\n'+_ibSiteNoteM(about);/* 站点说明：与 1对1 同一常量，位置同电脑端（群聊规则之后、用户资料之前） */
++        _ctxT.add('grp.sys.sitenote',sysContent.slice(_ctxS1));/* D17 上下文账本：站点说明（检查点差值）*/
+         const uctx=buildUserCtx(about,cfg);
+         if(uctx)sysContent+='\n\n'+uctx;
++        _ctxT.add('grp.sys.userctx',uctx||'');/* D17 上下文账本：用户资料块*/
+         let amBlock=null;
+         try{amBlock=await buildAmBlocks(cfg,lastTxt)}catch(e){}
+         if(amBlock&&amBlock.sys)sysContent+='\n\n'+amBlock.sys;/* v323-p *//* v323-p：档案本体挪到末尾第二块 */
++        _ctxT.add('grp.sys.am_instr',(amBlock&&amBlock.sys)||'');/* D17 上下文账本：档案指令块（无条件，空也记 0）*/
+         const tails=[];
+         tails.push('当前时间：'+new Date().toLocaleString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long',hour:'2-digit',minute:'2-digit'})+'。');/* v90-m 拍板④：逐轮时间戳（Tail 首行，与电脑端同格式；在末条用户消息内、零缓存代价） */
++        _ctxT.add('grp.tail.time',tails[tails.length-1]);/* D17 上下文账本：时间戳（无条件）*/
++        var _ctxGi=tails.length;
+         if(opt&&opt.idle)tails.push('群里已经安静了约 '+opt.idle+' 分钟，没有人说话。你主动起个话头：接着最近的话题往下说，或者随口聊点别的，一两句就好，自然一点，不要总结、不要客套。');
++        _ctxT.add('grp.tail.idle',tails.length>_ctxGi?tails[_ctxGi]:'');/* D17 上下文账本：冷场自燃句（原 push 行不动，数组下标测量）*/
++        var _ctxGa=tails.length;
+         if(opt&&opt.auto)tails.push('现在是成员之间自由聊天的一轮（第 '+opt.autoN+' / 10 轮），'+userLabel+' 没有新消息、只是看着：接着上面的话往下说——回应其他成员，或者聊点新的，一两句到三四句都行；别每句都问'+userLabel+'，也别总结、别客套。');/* v323-p：自动发言（末条用户消息尾部，零缓存代价） *//* v323-p：冷场自燃（末条用户消息尾部，零缓存代价） */
++        _ctxT.add('grp.tail.auto',tails.length>_ctxGa?tails[_ctxGa]:'');/* D17 上下文账本：自动发言句（下标测量）*/
++        var _ctxGp=tails.length;
+         try{if(window._ibAppTailM&&lastU&&window._ibAppTailM.id===lastU.id)tails.push(window._ibAppTailM.text)}catch(e){}
++        _ctxT.add('grp.tail.app',tails.length>_ctxGp?tails[_ctxGp]:'');/* D17 上下文账本：APP 附言（下标测量）*/
++        var _ctxGs=tails.length;
+         if(gSum&&_gSumTail9)tails.push('【对话历史备忘（此为后台参考信息，不要向对方复述或提及此段内容的存在）】\n'+gSum);
++        _ctxT.add('grp.tail.gsum',tails.length>_ctxGs?tails[_ctxGs]:'');/* D17 上下文账本：窗口只剩一条时的摘要附言（正常情况摘要在 messages[0]，比照 dm.hist.summary 计量）*/
+         window._ibMemSelG=null;
+-        {const _gMems9=g.memoryEnabled?mems:[],_gAmP9=(amBlock&&amBlock.pool)||[];if(_gMems9.length||_gAmP9.length){try{const _nmG=[String(selfName||''),String(userLabel||'')];let _qvG=null;try{if(window.IBVec&&IBVec.on()&&window.IBMem&&!IBMem.trivial(IBMem.cleanQuery(lastTxt,_nmG))){if(!_qvRound||_qvRound.q!==lastTxt)_qvRound={q:lastTxt,v:await IBVec.embedQuery(lastTxt)};_qvG=_qvRound.v}}catch(e){}const _hG=Array.isArray(history)?history:[];const mb=buildMemBlock(_gMems9,cfg.id,await loadMS(),true,true,lastTxt,{record:'defer',scope:'g'+String((g&&g.id)||''),names:_nmG,winIds:new Set(_hG.map(m=>m&&m.id).filter(Boolean)),winFrom:(_hG.length&&_hG[0]&&_hG[0].timestamp)||0,qvec:_qvG&&_qvG.vec,vecDeg:!!(_qvG&&_qvG.deg),vecWhy:(_qvG&&_qvG.why)||'',am:_gAmP9,gaze:!!(cfg&&cfg.memGaze)});window._ibMemSelG=window._ibMemSelM;if(mb)tails.push(mb);const _adG=(window._ibMemSelM&&window._ibMemSelM.amBlock)||'';if(_adG)tails.push(_adG)/* v323-p：群聊按群记账 *//* v323-p N2：意思榜、原话窗口、称呼与 isGroup 补齐；过门的档案溢出条目同样出块 */}catch(e){}}}/* v88-m：群聊同样按当前消息加权 */
++        var _ctxGm=tails.length;
++        {const _gMems9=g.memoryEnabled?mems:[],_gAmP9=(amBlock&&amBlock.pool)||[];if(_gMems9.length||_gAmP9.length){try{const _nmG=[String(selfName||''),String(userLabel||'')];let _qvG=null;try{if(window.IBVec&&IBVec.on()&&window.IBMem&&!IBMem.trivial(IBMem.cleanQuery(lastTxt,_nmG))){if(!_qvRound||_qvRound.q!==lastTxt)_qvRound={q:lastTxt,v:await IBVec.embedQuery(lastTxt)};_qvG=_qvRound.v}}catch(e){}const _hG=Array.isArray(history)?history:[];const mb=buildMemBlock(_gMems9,cfg.id,await loadMS(),true,true,lastTxt,{record:'defer',scope:'g'+String((g&&g.id)||''),names:_nmG,winIds:new Set(_hG.map(m=>m&&m.id).filter(Boolean)),winFrom:(_hG.length&&_hG[0]&&_hG[0].timestamp)||0,qvec:_qvG&&_qvG.vec,vecDeg:!!(_qvG&&_qvG.deg),vecWhy:(_qvG&&_qvG.why)||'',am:_gAmP9,gaze:!!(cfg&&cfg.memGaze)});window._ibMemSelG=window._ibMemSelM;if(mb)tails.push(mb);const _adG=(window._ibMemSelM&&window._ibMemSelM.amBlock)||'';if(_adG)tails.push(_adG)/* v323-p：群聊按群记账 *//* v323-p N2：意思榜、原话窗口、称呼与 isGroup 补齐；过门的档案溢出条目同样出块 */}catch(e){}}}
++        _ctxT.add('grp.tail.mem',tails.length>_ctxGm?tails[_ctxGm]:'');_ctxT.add('grp.tail.amdyn',tails.length>_ctxGm+1?tails[_ctxGm+1]:'');/* D17 上下文账本：群记忆块＋档案溢出（下标测量；块内 const 不出作用域）*//* v88-m：群聊同样按当前消息加权 */
++        var _ctxGb=tails.length;
+         try{if(cfg&&cfg.beyond&&cfg.beyond.on&&await _ibfMaster()){let btG=await buildBeyondTail(cfg);if(btG){if(btG.length>5500)btG=btG.slice(0,5500)+'\n（清单超出预算已截断——需要完整读某条请用 <ws_beyond_view/>）';tails.push(btG);const _ibxG=await _bxInboxTail(cfg);if(_ibxG)tails.push(_ibxG)}}}catch(e){}
++        _ctxT.add('grp.tail.beyond',tails.length>_ctxGb?tails[_ctxGb]:'');_ctxT.add('grp.tail.bxinbox',tails.length>_ctxGb+1?tails[_ctxGb+1]:'');/* D17 上下文账本：Beyond 动态＋信箱（下标测量）*/
++        var _ctxGg=tails.length;
+         try{if(_gwFeedQ.length){const _gqG=_gwFeedQ.filter(x=>x.fid===cfg.id);_gwFeedQ=_gwFeedQ.filter(x=>x.fid!==cfg.id);_gqGT=_gqG;/* fix-m① */if(_gqG.length)tails.push('【调取结果】\n'+_gqG.map(x=>x.text).join('\n'))}}catch(e){}/* v323-p：#3 群内动作成败同样回传给发起动作的那位成员 */
++        _ctxT.add('grp.tail.gwfeed',tails.length>_ctxGg?tails[_ctxGg]:'');/* D17 上下文账本：群内调取结果（下标测量）*/
+         if(tails.length){/* v87-m 语义反序（群聊）：同 1对1 */
+           for(let i=messages.length-1;i>=0;i--){if(messages[i].role==='user'){messages[i].content=_IB_TAIL_HEAD+tails.join('\n\n')+_IB_TAIL_USER+messages[i].content;break}}
+         }
++        _ctxT.wrap((tails.length&&messages.length)?(_IB_TAIL_HEAD.length+_IB_TAIL_USER.length):0);/* D17 上下文账本：tails 包裹标记实测（同 1对1；采集在包裹前，hist 不含标记）*/
+         const gc=Object.assign({},cfg);
+         if(!g.thinkingEnabled)gc.thinkingEnabled=false;
+         await loadMP();const pa=mpAi(cfg);
+         
++        var _ctxQ0=sysContent.length;
+         if(await _askGlobalGetM())sysContent+=_ASK_INSTR_BLOCK;/* v66-m：与电脑端共用 askGlobal */
++        _ctxT.add('grp.sys.ask',sysContent.slice(_ctxQ0));/* D17 上下文账本：askGlobal 块（tails 注入之后才追加，检查点差值）*/
++        var _ctxK0=sysContent.length;
+         try{var _stkG9=window._ibStkBlockM?window._ibStkBlockM(cfg):'';if(_stkG9)sysContent+='\n\n'+_stkG9}catch(e){}/* v323-p：表情包块进群聊（开着且当前预设有完整条目时，每位发言成员都带） */
++        _ctxT.add('grp.sys.sticker',sysContent.slice(_ctxK0));/* D17 上下文账本：表情包块（检查点差值）*/
++        var _ctxB0=sysContent.length;
+         try{if(cfg&&cfg.beyond&&cfg.beyond.on&&await _ibfMaster())sysContent+='\n\n'+await _ibBeyondInstrM(cfg)}catch(e){}
++        _ctxT.add('grp.sys.beyond_instr',sysContent.slice(_ctxB0));/* D17 上下文账本：Beyond 操作协议（检查点差值）*/
+         /* v89-m：群聊联网搜索边界已按用户决定移除 */
++        var _ctxL0=sysContent.length;
+         try{if(window._IBCALL&&_IBCALL.active&&_IBCALL.active()){const _clSg=await loadCALL();if(_clSg&&_clSg.on!==false){sysContent+=_CALL_INSTR_BLOCK;if(_IBCALL.vid&&_IBCALL.vid())sysContent+=_VID_INSTR_BLOCK+(_noVisionM(cfg)?_VID_NOVIS_NOTE:'')}}}catch(e){}/* v323-p：群通话进行中注入通话协议段（与 1对1 同一份常量块，随开打 / 挂断整块起挂） */
++        _ctxT.add('grp.sys.call',sysContent.slice(_ctxL0));/* D17 上下文账本：群通话/视频协议（检查点差值）*/
+         sysContent+=_SYS_SPLIT_M+((amBlock&&amBlock.stable)?'\n\n'+amBlock.stable:'')+(_gChapTx9?'\n\n'+_gChapTx9:'')+_IB_PERSONA_LOCK;/* v323-p 33：群聊前情提要进块二（没开或没有章时一字不加） *//* v87-m 人格收束（群聊） *//* v323-p：第二块（档案核心 + 人格收束） */
++        _ctxT.add('grp.sys2.amstable',(amBlock&&amBlock.stable)||'');_ctxT.add('grp.sys2.chap',_gChapTx9||'');_ctxT.add('grp.sys2.persona',_IB_PERSONA_LOCK);/* D17 上下文账本：块二三块（_SYS_SPLIT_M 之后，与缓存断点对齐）*/
++        {const _kG=sysContent.indexOf(_SYS_SPLIT_M);_ctxT.seg(_kG<0?sysContent:sysContent.slice(0,_kG),_kG<0?'':sysContent.slice(_kG+1));}/* D17 上下文账本：sys1/sys2 段长（按 _SYS_SPLIT_M 实串切分，同 1对1）*/
++        var _ctxSnap=null;try{_ctxSnap=_ctxT.snapshot({who:selfName,path:'group',cfgId:cfg&&cfg.id,threadId:myThread?(myThread.id||''):'',quiet:false})}catch(e){}/* D17 上下文账本：收口快照（每位成员一份，callAIC 前；group 路径无 quiet 概念）*/
+         const r=await callAIC(gc,messages,sysContent,onDelta,myAc.signal,pa);/* v61-m t9：接入自动续写 */
++        try{if(_ctxSnap&&r&&r.u){_ctxSnap.total=Number(r.u.i)||0;_ctxSnap.cr=Number(r.u.cr)||0;_ctxSnap.cw=Number(r.u.cw)||0}}catch(e){}/* D17 上下文账本：usage 真值回填（total=usage.i；cr/cw 同 1对1）*/
+         var _gFin=r.fin||'';
+         accT=sanitizeGroupReply(r.t,selfName);accK=r.k;
+         accT=String(accT||'').replace(/<ws_pass\b[^>]*\/?>/gi,'').trim();
+@@ -12389,7 +12427,9 @@
+         if(_finTruncM(_gFin))am.truncated=true;/* v65-m：群聊同样挂"继续生成"药丸 */
+         if(opt&&opt.idle){am.proactive=true;am.idleFire=1}/* v323-p */
+         try{const _gs9=window._ibMemSelG;if(_gs9){const _mh9=_memHitFromSelM(_gs9);if(_mh9&&Array.isArray(_mh9.it)&&_mh9.it.length)am.memHit=_mh9}}catch(e){}/* v323-p 33 收尾：群聊成员回复也记下这一轮想起了什么（只在想起了才记） */
++        if(_ctxSnap)am.ctxSnap=_ctxSnap;
+         try{await dbPut('chatMessages',am)}catch(e){toast('回复保存失败')}
++        try{if(_ctxSnap)_ctxLedgerM.noteSave(am.id)}catch(e){}/* D17 上下文账本：快照随成员消息入库（dbPut 前挂）＋registry 登记（fire-and-forget）*/
+         _msgs.push(am);try{var _gc9=window._ibMemSelG;window._ibMemSelG=null;if(_gc9&&_gc9.commit)_gc9.commit()}catch(e){}/* v323-p：成员回复落库后再落冷却与轮数 */
+         aiEl.replaceWith(buildMsgEl(am));
+   try{_tmCollapseAll()}catch(e){}/* v97-m 任务3 */
+@@ -12402,14 +12442,18 @@
+         if(err&&err.name==='AbortError'){
+           if(accT.trim()){
+             const am={id:'msg_'+Date.now()+'_'+Math.floor(Math.random()*100000),role:'assistant',content:sanitizeGroupReply(accT,selfName),friendId:g.id,senderId:cfg.id,senderName:selfName,timestamp:Date.now()};
++            if(_ctxSnap)am.ctxSnap=_ctxSnap;
+             try{await dbPut('chatMessages',am)}catch(e){}
++            try{if(_ctxSnap)_ctxLedgerM.noteSave(am.id)}catch(e){}/* D17 上下文账本：中止路径的部分回复同样挂快照（快照跟随实际写入的记录）*/
+             if(_activeCfg&&_activeCfg.id===pcfg.id){_msgs.push(am);aiEl.replaceWith(buildMsgEl(am))}else{if(aiEl.isConnected)aiEl.remove()}
+           }else aiEl.remove();
+           toast('已停止');break;
+         }
+         if(accT.trim()){
+           const am9={id:'msg_'+Date.now()+'_'+Math.floor(Math.random()*100000),role:'assistant',content:sanitizeGroupReply(accT,selfName),friendId:g.id,senderId:cfg.id,senderName:selfName,timestamp:Date.now(),truncated:true};
++          if(_ctxSnap)am9.ctxSnap=_ctxSnap;
+           try{await dbPut('chatMessages',am9)}catch(e){}
++          try{if(_ctxSnap)_ctxLedgerM.noteSave(am9.id)}catch(e){}/* D17 上下文账本：错误路径的部分回复同样挂快照*/
+           if(_activeCfg&&_activeCfg.id===pcfg.id){_msgs.push(am9);aiEl.replaceWith(buildMsgEl(am9))}else{if(aiEl.isConnected)aiEl.remove()}
+           toast(selfName+'：连接中断，保留了已生成的部分');continue;
+         }
+@@ -18615,31 +18659,46 @@
+   return {cfg:c,lastTs:lm.timestamp||0};
+ }catch(e){return null}}
+ async function _hbCtxFor(cfg,q,opt){
+-  opt=opt||{};var out={sys:(cfg&&cfg.systemPrompt||'').trim(),tail:''};try{
++  opt=opt||{};var out={sys:(cfg&&cfg.systemPrompt||'').trim(),tail:''};var _ctxT=(opt&&opt._ctxT)?opt._ctxT:{add:function(){},addHist:function(){},addSummary:function(){},seg:function(){},wrap:function(){},snapshot:function(){return null}};/* D17 上下文账本：_hbFireFor 传入轮次句柄时记账；后台一次性调用不传＝no-op 句柄零开销（无消息可挂、不落账本——与票01 §4 设想的差异记入台账）*/try{
+     var about=null;try{about=await loadAbout()}catch(e){}
+     try{await loadMP()}catch(e){}var pa={};try{pa=(typeof mpAi==='function')?mpAi(cfg):{}}catch(e){}
+     var sp=(cfg.systemPrompt||'').trim();var parts=[sp,(sp?'':_IB_NOPERSONA_NOTE),buildUserCtx(about,cfg)];
++    _ctxT.add('hb.sys.persona',parts[0]||'');_ctxT.add('hb.sys.nopersona',parts[1]||'');_ctxT.add('hb.sys.userctx',parts[2]||'');/* D17 上下文账本：系统提示／无人设说明／用户资料（读 parts 数组，不重复构建）*/
+     var am=null;try{am=await buildAmBlocks(cfg,String(q||''))}catch(e){}
+     if(am&&am.sys&&!opt.noInstr)parts.push(am.sys);
++    _ctxT.add('hb.sys.am_instr',(am&&am.sys)||'');/* D17 上下文账本：档案指令块（noInstr 的后台调用不走记账，故所记即所 push 值）*/
+     if(am&&am.stable)parts.push(am.stable);
++    _ctxT.add('hb.sys.amstable',(am&&am.stable)||'');/* D17 上下文账本：档案本体（稳定块）*/
+     parts.push(_IB_PERSONA_LOCK.replace(/^\n+/,''));
++    _ctxT.add('hb.sys.persona_lock',_IB_PERSONA_LOCK);/* D17 上下文账本：人格收束*/
+     out.sys=parts.filter(Boolean).join('\n\n');
+     var tails=[];
+     try{var _amP9=(am&&am.pool)||[];var ms9=(pa.memInject!==false)?await _memAllM():[];if(ms9.length||_amP9.length){var mb=buildMemBlock(ms9,cfg.id,await loadMS(),undefined,undefined,String(q||''),{am:_amP9});if(mb)tails.push(mb);var _ad9=(window._ibMemSelM&&window._ibMemSelM.amBlock)||'';if(_ad9)tails.push(_ad9)}}catch(e){}
++    _ctxT.add('hb.tail.mem',mb||'');_ctxT.add('hb.tail.amdyn',_ad9||'');/* D17 上下文账本：记忆块＋档案溢出（var 提升到函数作用域，块外可读；未检索到时记 0）*/
+     try{if(cfg.beyond&&cfg.beyond.on&&await _ibfMaster()){var bt=await buildBeyondTail(cfg);if(bt){if(bt.length>2500)bt=bt.slice(0,2500)+'\n（清单已截断）';tails.push(bt)}}}catch(e){}
++    _ctxT.add('hb.tail.beyond',bt||'');/* D17 上下文账本：Beyond 动态（截断 2,500；var 提升可读）*/
+     tails=tails.filter(Boolean);if(tails.length)out.tail=((typeof _IB_TAIL_HEAD==='string')?(_IB_TAIL_HEAD+'\n'):'')+tails.join('\n\n');
+   }catch(e){}return out}
+ async function _hbFireFor(cfg,o){try{/* v115-m：主动开口生成（原模块二主体抽出复用）；o.reason:'wake'＝点通知回到应用 */
+   o=o||{};if(!cfg||!cfg.apiKey)return;
++  var _ctxT=(typeof _ctxLedgerM!=='undefined'&&_ctxLedgerM&&_ctxLedgerM.begin)?_ctxLedgerM.begin():{add:function(){},addHist:function(){},addSummary:function(){},seg:function(){},wrap:function(){},snapshot:function(){return null}};var _ctxSnap=null;/* D17 上下文账本：主动开口轮次句柄（入口 guard——账本块缺失时 no-op 句柄兜底，不影响请求）*/
+   var _t0=Date.now();/* v121-p：#3 撞车对账基线 */
+   _hbLastFireSet(Date.now());
+   var about=null;try{about=await loadAbout()}catch(e){}
+   var ctx='当前时间：'+new Date().toLocaleString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long',hour:'2-digit',minute:'2-digit'})+'。\n';/* v122-p：#5 主动开口先知道「今天是什么日子」 */
++  _ctxT.add('hb.ctx.time',ctx);/* D17 上下文账本：时间行（此刻 ctx 即该行）*/
++  var _ctxC1=ctx.length;
+   if(cfg.relationship)ctx+='你和对方的关系是：'+cfg.relationship+'。\n';
+   var _seal=(cfg.sealTimestamp||0);/* v117-p：#6 封档线之上不再进定时推送/自动发布上下文 */
+   var hist=[];try{hist=(await dbGetByIndex('chatMessages','byFriend',cfg.id)).filter(function(m){return !m.threadId&&(m.timestamp||0)>_seal}).sort(function(a,b){return (a.timestamp||0)-(b.timestamp||0)}).slice(-8)}catch(e){}
++  var _ctxC2=ctx.length;
+   if(hist.length){ctx+='\n【最近的聊天记录】\n';hist.forEach(function(m){ctx+=(m.gift?_giftLineM(m):((m.role==='user'?((about&&about.name)||'用户'):cfgName(cfg))+'：'+String(m.content||(m.voice?'[语音消息]':'')).slice(0,120)))+'\n'})}/* v73-m r4 */
++  _ctxT.add('hb.ctx.relation',ctx.slice(_ctxC1));/* D17 上下文账本：关系句（长度检查点切块；_ibfAutoOnce 的同构块不走 _hbFireFor 句柄、天然不记账）*/
++  _ctxT.add('hb.ctx.recent',ctx.slice(_ctxC2));/* D17 上下文账本：最近聊天记录（最近 8 条，检查点切块）*/
++  var _ctxC3=ctx.length;
+   try{var _cbF=await buildCalBlock(cfg);if(_cbF)ctx+='\n【今天与临近的日子｜背景参考】知道今天是什么日子、什么日子快到了就够了；除非对方先提起或话头确实自然，不要主动把话题引到这些日程上，更不要逐条播报。\n'+_cbF+'\n'}catch(e){}
++  _ctxT.add('hb.ctx.cal',ctx.slice(_ctxC3));/* D17 上下文账本：日历背景（检查点切块）*/
++  var _ctxC4=ctx.length;
+   try{await loadMP();if(_mp&&_mp.presence&&_mp.presence.hbCheck===true&&Math.random()<1/3){
+     var _pp9=(_mp&&_mp.perms)||{};var _ck9=[];
+     if(_pp9.geo||_pp9.wx){var _gw9=null;try{_gw9=await _gwEnsure()}catch(e){}
+@@ -18647,22 +18706,33 @@
+     if(_pp9.phone){var _ps9='';try{_ps9=await _phoneSnapM()}catch(e){}if(_ps9)_ck9.push('手机状态：'+_ps9)}
+     if(_ck9.length)ctx+='\n【你刚看了一眼对方手机的实时状态（后台调取，非对方发言）】\n'+_ck9.join('\n')+'\n随便看看就好：想调侃就自然带一句，不想用就忽略，不必逐项汇报，也不要输出任何调取标签。\n';
+   }}catch(e){}
++  _ctxT.add('hb.ctx.phonesnap',ctx.slice(_ctxC4));/* D17 上下文账本：手机状态抽查（1/3 概率；未抽中记 0）*/
+   var mins=Math.max(0,parseInt(o.sinceMin)||0);
+   var whereLine=o.reason==='wake'?'对方刚点开你的消息通知，回到了应用里。':(o.inConv?'对方仍停留在聊天界面。':'对方在应用里，但没有停在你们的聊天界面。');
++  var _ctxC5=ctx.length;
+   ctx+='\n你们的对话已经安静了大约 '+mins+' 分钟，'+whereLine+'\n对方已经离开了一段时间。你可以自然地说一些你想对TA说的话，或是与TA分享一些你的想法、思念，提醒，不着边际的创意思考——依你们的关系框架而定。可以只发一条，也可以像平时那样连着发 2–3 条短的：分条时在每条之间单独占一行写 ---（三个半角减号），不要编号。直接输出消息内容。';/* v73-m r4 → v115-m 场景分句 → v117-p：#10 允许连发 */
++  _ctxT.add('hb.ctx.instruction',ctx.slice(_ctxC5));/* D17 上下文账本：主动开口指令行（安静时长＋场景分句；按「每轮现取」归 dynamic 组）*/
+   var _callRoll=false;
+   try{if(o.reason!=='wake'&&typeof loadCALL==='function'&&typeof _ibShowCallInvite==='function'){var _cs9=await loadCALL();if(_cs9&&_cs9.on!==false&&_cs9.perApi&&_cs9.perApi[cfg.id]&&_cs9.perApi[cfg.id].procall&&!(window._IBCALL&&window._IBCALL.active&&window._IBCALL.active())&&Math.random()<1/3)_callRoll=true}}catch(e){}
++  var _ctxC6=ctx.length;
+   if(_callRoll)ctx+='\n\n【给TA打个电话吧】不想再发文字消息了，直接给对方打个电话——只写一句话作为你的开场白，你来电的缘由，你此刻的想法与感受——不超过 16 个字（例：想听听你的声音），不用写别的。要打视频就在前面加「视频｜」。';/* v164-p */
++  _ctxT.add('hb.ctx.callinvite',ctx.slice(_ctxC6));/* D17 上下文账本：来电邀请块（检查点切块）*/
+   var ac=new AbortController();
+   var pa=(typeof mpAi==='function')?mpAi(cfg):undefined;
+-  var _hx=await _hbCtxFor(cfg,(String(ctx).split('【最近的聊天记录】')[1]||'').slice(0,800));var r=await callAI(Object.assign({},cfg,{thinkingEnabled:false,streaming:false,promptCache:false}),[{role:'user',content:(_hx.tail?(_hx.tail+'\n\n'):'')+ctx}],_hx.sys||(cfg.systemPrompt||'').trim(),function(){},ac.signal,pa);/* 资料在前、任务在后；一次性调用不打缓存断点 */
++  var _hx=await _hbCtxFor(cfg,(String(ctx).split('【最近的聊天记录】')[1]||'').slice(0,800),{_ctxT:_ctxT});/* D17 上下文账本：sys/tail 捕获进同一轮次句柄*/
++  _ctxT.seg(_hx.sys||'','');/* D17 上下文账本：hb 路径无 _SYS_SPLIT_M，system 整段计入 sys1 段长*/
++  var _ctxSnap=null;try{_ctxSnap=_ctxT.snapshot({who:cfgName(cfg),path:'hb',cfgId:cfg&&cfg.id,threadId:'',quiet:false})}catch(e){}/* D17 上下文账本：收口快照（callAI 前；撞车对账／空回复时无消息可挂，快照自然不引用）*/
++  var r=await callAI(Object.assign({},cfg,{thinkingEnabled:false,streaming:false,promptCache:false}),[{role:'user',content:(_hx.tail?(_hx.tail+'\n\n'):'')+ctx}],_hx.sys||(cfg.systemPrompt||'').trim(),function(){},ac.signal,pa);/* 资料在前、任务在后；一次性调用不打缓存断点 */
++  try{if(_ctxSnap&&r&&r.u){_ctxSnap.total=Number(r.u.i)||0;_ctxSnap.cr=Number(r.u.cr)||0;_ctxSnap.cw=Number(r.u.cw)||0}}catch(e){}/* D17 上下文账本：usage 真值回填（promptCache:false，cr/cw 预期 0）*/
+   var t=String((r&&r.t)||'').trim();
+   if(!t)return;
+   if(_callRoll){
+     var _vk9=/^\s*[\[【]?视频[\]】｜|:：]/.test(String(t));var _say9=_ibSayStrip(String(t)).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').replace(/^[\s"'“”「」『』]+|[\s"'“”「」『』。.]+$/g,'').trim().slice(0,16);
+     if(await _hbClash(cfg,_t0))return;
+     var _am9={id:'msg_'+Date.now()+'_hb',role:'assistant',content:'<ws_call say="'+_say9.replace(/"/g,'”')+'"'+(_vk9?' kind="video"':'')+'/>',friendId:cfg.id,senderName:cfgName(cfg),timestamp:Date.now(),proactive:true,wsResults:[{type:'call',ok:true,label:(_vk9?'视频':'')+'来电邀请已送达',say:_say9,video:_vk9}]};/* v164-p：视频来电 */
++    if(_ctxSnap)_am9.ctxSnap=_ctxSnap;
+     await dbPut('chatMessages',_am9);
++    try{if(_ctxSnap)_ctxLedgerM.noteSave(_am9.id)}catch(e){}/* D17 上下文账本：快照随来电消息入库＋registry 登记*/
+     if(_activeCfg&&_activeCfg.id===cfg.id&&(typeof _activeThread==='undefined'||!_activeThread)){_msgs.push(_am9);var _bx9=convEl('cv-msgs');_bx9.appendChild(buildMsgEl(_am9,_msgs[_msgs.length-2]||null));_bx9.scrollTop=_bx9.scrollHeight}
+     try{_friendsBump()}catch(e){}
+     try{_ibShowCallInvite(cfg,_say9,_vk9)}catch(e){}
+@@ -18674,8 +18744,10 @@
+   var base=Date.now();
+   for(var pi=0;pi<parts.length;pi++){
+     var am={id:'msg_'+(base+pi)+'_hb',role:'assistant',content:parts[pi].slice(0,600),friendId:cfg.id,senderName:cfgName(cfg),timestamp:base+pi,proactive:true};
++    if(_ctxSnap)am.ctxSnap=_ctxSnap;
+     await dbPut('chatMessages',am);
+     if(_activeCfg&&_activeCfg.id===cfg.id&&(typeof _activeThread==='undefined'||!_activeThread)){_msgs.push(am);var bx=convEl('cv-msgs');bx.appendChild(buildMsgEl(am,_msgs[_msgs.length-2]||null));bx.scrollTop=bx.scrollHeight}
++    try{if(_ctxSnap)_ctxLedgerM.noteSave(am.id)}catch(e){}/* D17 上下文账本：连发 1–3 条共用一份快照，各自挂各自记录*/
+     Promise.resolve(procMemOps(cfg,am)).catch(function(){}).then(function(){return procIbOps(cfg,am)}).catch(function(){});/* v123-p：#通用 串行化（同收尾管线） */
+   }
+   try{_tmCollapseAll()}catch(e){}/* v97-m 任务3 */
+@@ -32306,7 +32378,7 @@
+ (function(){
+ 'use strict';
+ /* ── 常量（票05 Q3/Q7；WRAP_OVERHEAD＝tails 包裹标记字符数基线值：_IB_TAIL_HEAD 65 字＋_IB_TAIL_USER 11 字；实际值由埋点 wrap() 在 :10774 包裹 if 前实测，本常量退为桩测基准——上游改标记文案时零漂移）── */
+-var N_TURNS=6,U_CAP=500,HEAD_N=150,WRAP_OVERHEAD=76;
++var N_TURNS=6,U_CAP=500,HEAD_N=150,WRAP_OVERHEAD=76;/* D17：HEAD_N 随作者移植约定③退为历史常量——add/snapshot 均不再存 150 字预览，只存 id/len/tok；保留备查 */
+ /* ── 六组固定语义序＋副标（票04 §1/§5 Q5；跨轮可比为支柱，非按大小排序）── */
+ var GROUPS=[["persona","人设与资料","TA 是谁、你是谁、System Prompt 等"],
+ ["rules","功能与规则","工具用法与能力设定，只要不关能力，每次发的内容都一样"],
+@@ -32315,7 +32387,7 @@
+ ["dynamic","动态资料","每轮现取：时间、日程、Blog、Beyond、信箱、音乐、离开时长、调取结果等"],
+ ["other","其他","不好归到上面五组的部分，正常为空"]];
+ /* ── 块 ID → 语义组（票04 §2 交付物②；报告层可改映射——改组名/归属不重打埋点）── */
+-var GROUP_M={"dm.sys.persona":"persona","dm.sys.userctx":"persona","dm.sys.nopersona":"persona","dm.sys.sitenote":"persona","dm.sys2.persona":"persona","dm.sys.protocols":"rules","dm.sys.tools":"rules","dm.sys.am_instr":"rules","dm.hist.summary":"hist","dm.sys2.chap":"hist","dm.sys2.amcore":"memory","dm.sys2.cold":"memory","dm.tail.mem":"memory","dm.tail.amdyn":"memory","dm.tail.time":"dynamic","dm.tail.cal":"dynamic","dm.tail.music":"dynamic","dm.tail.posts":"dynamic","dm.tail.blogread":"dynamic","dm.tail.beyond":"dynamic","dm.tail.bxinbox":"dynamic","dm.tail.presence":"dynamic","dm.tail.gwfeed":"dynamic","dm.tail.app":"dynamic"};
++var GROUP_M={"dm.sys.persona":"persona","dm.sys.userctx":"persona","dm.sys.nopersona":"persona","dm.sys.sitenote":"persona","dm.sys2.persona":"persona","dm.sys.protocols":"rules","dm.sys.tools":"rules","dm.sys.am_instr":"rules","dm.hist.summary":"hist","dm.sys2.chap":"hist","dm.sys2.amcore":"memory","dm.sys2.cold":"memory","dm.tail.mem":"memory","dm.tail.amdyn":"memory","dm.tail.time":"dynamic","dm.tail.cal":"dynamic","dm.tail.music":"dynamic","dm.tail.posts":"dynamic","dm.tail.blogread":"dynamic","dm.tail.beyond":"dynamic","dm.tail.bxinbox":"dynamic","dm.tail.presence":"dynamic","dm.tail.gwfeed":"dynamic","dm.tail.app":"dynamic","grp.sys.persona":"persona","grp.sys.rules":"rules","grp.sys.sitenote":"persona","grp.sys.userctx":"persona","grp.sys.am_instr":"rules","grp.sys.ask":"rules","grp.sys.sticker":"rules","grp.sys.beyond_instr":"rules","grp.sys.call":"rules","grp.sys2.amstable":"memory","grp.sys2.chap":"hist","grp.sys2.persona":"persona","grp.tail.time":"dynamic","grp.tail.idle":"dynamic","grp.tail.auto":"dynamic","grp.tail.app":"dynamic","grp.tail.gsum":"hist","grp.tail.mem":"memory","grp.tail.amdyn":"memory","grp.tail.beyond":"dynamic","grp.tail.bxinbox":"dynamic","grp.tail.gwfeed":"dynamic","hb.sys.persona":"persona","hb.sys.nopersona":"persona","hb.sys.userctx":"persona","hb.sys.am_instr":"rules","hb.sys.amstable":"memory","hb.sys.persona_lock":"persona","hb.tail.mem":"memory","hb.tail.amdyn":"memory","hb.tail.beyond":"dynamic","hb.ctx.time":"dynamic","hb.ctx.relation":"persona","hb.ctx.recent":"hist","hb.ctx.cal":"dynamic","hb.ctx.phonesnap":"dynamic","hb.ctx.instruction":"dynamic","hb.ctx.callinvite":"dynamic"};/* D17：群聊 grp.*（22）＋主动开口 hb.*（16）两层块 ID→六组映射（票01 §3/§4；hb 路径无 _SYS_SPLIT_M，system 块统一 hb.sys.* 前缀；idle/auto/instruction 按「每轮现取」归 dynamic）*/
+ /* ── headShow 映射（票02 §10 定值；注：06/07 两入口定稿均为组级渲染、不放 head，
+    故本映射当前不渲染——保留映射与桩测断言（任何渲染路径不得输出块 head），
+    防回归；若未来形态变更要显 head，按此映射取用）── */
+@@ -32340,7 +32412,7 @@
+    add 系列仍无条件执行，空串也记 {id,0}，异常记 {id,missed:1}——票01 §8）── */
+   function begin(){
+   var h=null;try{h={at:Date.now(),who:"",path:"dm",cfgId:"",threadId:"",quiet:false,blocks:[],hist:null,sumText:null,sys1Len:0,sys2Len:0,wrapLen:0}}catch(e){return noopTurn()}
+-  function add(id,text){try{var t=(text==null)?"":String(text);h.blocks.push({id:id,len:lenP(t),tok:estTok(t),head:t.slice(0,HEAD_N)})}catch(e){try{h.blocks.push({id:id,missed:1})}catch(e2){}}}
++  function add(id,text){try{var t=(text==null)?"":String(text);h.blocks.push({id:id,len:lenP(t),tok:estTok(t)})}catch(e){try{h.blocks.push({id:id,missed:1})}catch(e2){}}}/* D17：作者约定③——块只存 id/len/tok，不存 head 预览（渲染层本就不显 head，外观零变化）*/
+   function addHist(text,n,u,a,img){try{var t=(text==null)?"":String(text);h.hist={len:lenP(t),tok:estTok(t),n:n|0,u:u|0,a:a|0,img:img|0,missed:0}}catch(e){try{h.hist={missed:1}}catch(e2){}}}
+   function addSummary(text){try{h.sumText=(text==null)?"":String(text)}catch(e){}}
+   function seg(s1,s2){try{h.sys1Len=lenP((s1==null)?"":String(s1));h.sys2Len=lenP((s2==null)?"":String(s2))}catch(e){}}
+@@ -32354,14 +32426,14 @@
+     var b1=[],b2=[],bt=[],s1t=0,s2t=0,tt=0,tl=0;
+     for(var i=0;i<h.blocks.length;i++){
+       var b=h.blocks[i],_bid="";try{_bid=String((b&&b.id)||"")}catch(e){_bid=""}
+-      if(_bid.indexOf("dm.sys2.")===0){b2.push(b);if(!b.missed)s2t+=b.tok||0}
+-      else if(_bid.indexOf("dm.sys.")===0){b1.push(b);if(!b.missed)s1t+=b.tok||0}
++      if(_bid.indexOf("dm.sys2.")===0||_bid.indexOf("grp.sys2.")===0){b2.push(b);if(!b.missed)s2t+=b.tok||0}/* D17：grp.sys2.* 同入块二段（与 _SYS_SPLIT_M 缓存断点对齐）*/
++      else if(_bid.indexOf("dm.sys.")===0||_bid.indexOf("grp.sys.")===0||_bid.indexOf("hb.sys.")===0){b1.push(b);if(!b.missed)s1t+=b.tok||0}/* D17：grp.sys.*／hb.sys.* 同入块一段；grp.tail.*／hb.tail.*／hb.ctx.* 落 else 段（tails——hb 的 ctx 块在 user 消息内、tail 之后）*/
+       else{bt.push(b);if(!b.missed){tt+=b.tok||0;tl+=b.len}}
+     }
+     var hLen=0,hTok=0,hn=0,hu=0,ha=0,hImg=0,hMiss=0,sum=null;
+     if(h.hist&&!h.hist.missed){hLen=h.hist.len;hTok=h.hist.tok;hn=h.hist.n;hu=h.hist.u;ha=h.hist.a;hImg=h.hist.img}
+     else if(h.hist&&h.hist.missed)hMiss=1;
+-    if(h.sumText){sum={len:lenP(h.sumText),tok:estTok(h.sumText),head:h.sumText.slice(0,HEAD_N)};hLen+=sum.len;hTok+=sum.tok}
++    if(h.sumText){sum={len:lenP(h.sumText),tok:estTok(h.sumText)};hLen+=sum.len;hTok+=sum.tok}/* D17：摘要同样不存 head（约定③）*/
+     var s1=h.sys1Len||0,s2=h.sys2Len||0;
+     var snap={at:h.at,who:h.who,path:h.path,cfgId:h.cfgId,threadId:h.threadId,quiet:h.quiet,
+       total:0,cr:0,cw:0,
