@@ -1,4 +1,4 @@
-> 存档：GitHub issue #14（closed，第一层上下文账本）线上正文，2026-10-19 拉取。外发前的英文源稿见 `.scratch/ib-ctx-ledger/draft-09-context-ledger.md`。
+> 存档：GitHub issue #14（closed，第一层上下文账本）线上正文，2026-10-19 拉取。外发前的英文源稿（本地草稿）已于 2026-10-20 随账本 effort 清理移除；本文件即该稿的外发定稿。
 
 
 # Context ledger: attributing each request to the blocks that carried it

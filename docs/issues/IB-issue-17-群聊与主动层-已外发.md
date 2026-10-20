@@ -1,4 +1,4 @@
-> 存档：GitHub issue #17（open，群聊＋主动开口第二层）线上正文，2026-10-19 拉取，**以线上为准**。外发前的英文源稿见 `.scratch/ib-ctx-ledger/draft-10-group-proactive.md`。
+> 存档：GitHub issue #17（open，群聊＋主动开口第二层）线上正文，2026-10-19 拉取，**以线上为准**。外发前的英文源稿（本地草稿）已于 2026-10-20 随账本 effort 清理移除；本文件即该稿的外发定稿。
 
 refs #14
 

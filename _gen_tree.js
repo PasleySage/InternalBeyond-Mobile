@@ -75,11 +75,13 @@ C2('R3-D17真机测试SOP.md', '真机复测 SOP（历史）');
 C2('_pr15.diff', 'PR #15 原始 diff');
 C2('pr16.diff', 'PR #16 第二层增量 diff（13 hunk）');
 C2('pr16diff说明.md', '增量包转发说明');
-C2L('_deploy_ctx_ledger.js', '旧部署脚本（已退役；镜像现行路线＝_sync_mirror.js）');
+C2('_deploy_ctx_ledger.js', '旧部署脚本（已退役；镜像现行路线＝_sync_mirror.js）');
+C2('toolchain/', '配套工具链四件：桩测模板（M 组）／净版生成器／语法检查／layer2 自检');
+C2L('design/', '历史设计记录（十份票规格全部 resolved ＋ effort 地图）');
 // 隐藏条目（集中列于末尾）
 F('.githooks/', '预提交守栏（core.hooksPath 指向处）');
 C1L('pre-commit', '6 活测试 + _check_docs + _probe_lint；任一失败即阻止提交');
-F('.scratch/', '本地 effort（.gitignore 不入库）：11 个 effort 目录 + 4 张 10-17 真机截图');
+F('.scratch/', '本地 effort（.gitignore 不入库）：10 个 effort 目录 + 4 张 10-17 真机截图');
 F('.workbuddy/', '会话记忆（memory/）＋项目技能 ib-upstream-issue-publish（.gitignore 不入库，不展开）');
 F('.obsidian/', 'Obsidian 配置（.gitignore 不入库）');
 F('.git/', '仓库元数据（不展开）');
@@ -109,7 +111,7 @@ ${lines.join('\n')}
 
 1. **上游同步件**（\`_sync_mirror.js\` 逐字节覆盖，本地勿编辑）：\`index.html\`、\`ib-sw.js\`、\`manifest.webmanifest\`、\`icon-192.png\`、\`icon-512.png\`、\`ib-ver.html\`、\`README.md\`、\`COPYRIGHT.md\`、\`LICENSE\`、\`apps/\`、\`assets/\`。
 2. **目录纪律**：根＝产品＋索引；\`docs/\`＝文档；\`tools/pages/\`＝被测静态页；\`data/\`＝素材；\`_archive/\`＝冻结历史区（_probe_lint ⑦ 整体豁免）；\`.scratch/\`＝本地 effort（不入库）。
-3. **2026-10-20 换基后的结构变化**：新增 \`_archive/ctx-ledger-v351p/\`（9 件）；\`_deploy_ctx_ledger.js\` 由根移入该归档；\`docs/briefs/\` 只剩 V3.1.3 一对（V3.1.1 应用户要求已删）；晚轮新增根目录 \`_gen_tree.js\`（目录树生成器，根文件 31→32）。
+3. **2026-10-20 换基后的结构变化**：新增 \`_archive/ctx-ledger-v351p/\`（现 26 件：成品／台账／diff／部署脚本＋\`toolchain/\` 四件＋\`design/\` 十二件）；\`_deploy_ctx_ledger.js\` 由根移入该归档；\`docs/briefs/\` 只剩 V3.1.3 一对（V3.1.1 应用户要求已删）；晚轮新增根目录 \`_gen_tree.js\`（目录树生成器，根文件 31→32）；\`.scratch/ib-ctx-ledger/\` 已整体移除（11→10 个 effort 目录）。
 4. **脚本用途与「什么时候可以删」**见 \`_工具与产物清单.md\`；本树只注结构、不注用法。架构树简版另见 \`docs/workspace-readme.md\`。
 
 ---
